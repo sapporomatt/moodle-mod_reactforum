@@ -138,7 +138,7 @@ Feature: A user can control their own subscription preferences for a discussion
     And I am on site homepage
     And I follow "Course 1"
     And I follow "Test reactforum name"
-    And I click on "Edit settings" "link" in the "Administration" "block"
+    And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
       | Subscription mode | Auto subscription |
     And I press "Save and return to course"
@@ -184,7 +184,7 @@ Feature: A user can control their own subscription preferences for a discussion
     And I am on site homepage
     And I follow "Course 1"
     And I follow "Test reactforum name"
-    And I click on "Edit settings" "link" in the "Administration" "block"
+    And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
       | Subscription mode | Auto subscription |
     And I press "Save and return to course"
@@ -320,36 +320,39 @@ Feature: A user can control their own subscription preferences for a discussion
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
-    And I follow "Test reactforum name"
-    When I follow "Test post subject one"
-    Then I should see "Subscribe to this reactforum"
-    And I should see "Subscribe to this discussion"
-    And I follow "Subscribe to this reactforum"
-    And I should see "Student One will be notified of new posts in 'Test reactforum name'"
+    When I follow "Test reactforum name"
+    Then "Subscribe to this reactforum" "link" should exist in current page administration
     And I follow "Test post subject one"
-    And I should see "Unsubscribe from this reactforum"
-    And I should see "Unsubscribe from this discussion"
-    And I follow "Unsubscribe from this discussion"
+    And "You are not subscribed to this discussion. Click to subscribe" "link" should exist
+    And I follow "Test reactforum name"
+    And I navigate to "Subscribe to this reactforum" in current page administration
+    And I should see "Student One will be notified of new posts in 'Test reactforum name'"
+    And "Unsubscribe from this reactforum" "link" should exist in current page administration
+    And I follow "Test post subject one"
+    And "You are subscribed to this discussion. Click to unsubscribe" "link" should exist
+    And I follow "You are subscribed to this discussion. Click to unsubscribe"
     And I should see "Student One will NOT be notified of new posts in 'Test post subject one' of 'Test reactforum name'"
     And I follow "Test post subject one"
-    And I should see "Unsubscribe from this reactforum"
-    And I should see "Subscribe to this discussion"
-    And I follow "Unsubscribe from this reactforum"
+    #And I should see "Unsubscribe from this reactforum"
+    And "You are not subscribed to this discussion. Click to subscribe" "link" should exist
+    And I follow "Test reactforum name"
+    And I navigate to "Unsubscribe from this reactforum" in current page administration
     And I should see "Student One will NOT be notified of new posts in 'Test reactforum name'"
+    And "Subscribe to this reactforum" "link" should exist in current page administration
     And I follow "Test post subject one"
-    And I should see "Subscribe to this reactforum"
-    And I should see "Subscribe to this discussion"
-    And I follow "Subscribe to this discussion"
+    And "You are not subscribed to this discussion. Click to subscribe" "link" should exist
+    And I follow "You are not subscribed to this discussion. Click to subscribe"
     And I should see "Student One will be notified of new posts in 'Test post subject one' of 'Test reactforum name'"
-    And I should see "Subscribe to this reactforum"
-    And I should see "Unsubscribe from this discussion"
-    And I follow "Subscribe to this reactforum"
+    And "You are subscribed to this discussion. Click to unsubscribe" "link" should exist
+    And I follow "Test reactforum name"
+    And I navigate to "Subscribe to this reactforum" in current page administration
     And I should see "Student One will be notified of new posts in 'Test reactforum name'"
+    And "Unsubscribe from this reactforum" "link" should exist in current page administration
     And I follow "Test post subject one"
-    And I should see "Unsubscribe from this reactforum"
-    And I should see "Unsubscribe from this discussion"
-    And I follow "Unsubscribe from this reactforum"
+    And "You are subscribed to this discussion. Click to unsubscribe" "link" should exist
+    And I follow "Test reactforum name"
+    And I navigate to "Unsubscribe from this reactforum" in current page administration
     And I should see "Student One will NOT be notified of new posts in 'Test reactforum name'"
+    And "Subscribe to this reactforum" "link" should exist in current page administration
     And I follow "Test post subject one"
-    And I should see "Subscribe to this reactforum"
-    And I should see "Subscribe to this discussion"
+    And "You are not subscribed to this discussion. Click to subscribe" "link" should exist

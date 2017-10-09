@@ -19,80 +19,67 @@
  * Edit and save a new post to a discussion
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');
 require_once('lib.php');
-require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->libdir.'/completionlib.php');
 
-$reply = optional_param('reply', 0, PARAM_INT);
-$reactforum = optional_param('reactforum', 0, PARAM_INT);
-$edit = optional_param('edit', 0, PARAM_INT);
-$delete = optional_param('delete', 0, PARAM_INT);
-$prune = optional_param('prune', 0, PARAM_INT);
-$name = optional_param('name', '', PARAM_CLEAN);
+$reply   = optional_param('reply', 0, PARAM_INT);
+$reactforum   = optional_param('reactforum', 0, PARAM_INT);
+$edit    = optional_param('edit', 0, PARAM_INT);
+$delete  = optional_param('delete', 0, PARAM_INT);
+$prune   = optional_param('prune', 0, PARAM_INT);
+$name    = optional_param('name', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $groupid = optional_param('groupid', null, PARAM_INT);
 
 $PAGE->set_url('/mod/reactforum/post.php', array(
-    'reply' => $reply,
-    'reactforum' => $reactforum,
-    'edit' => $edit,
-    'delete' => $delete,
-    'prune' => $prune,
-    'name' => $name,
-    'confirm' => $confirm,
-    'groupid' => $groupid,
-));
+        'reply' => $reply,
+        'reactforum' => $reactforum,
+        'edit'  => $edit,
+        'delete'=> $delete,
+        'prune' => $prune,
+        'name'  => $name,
+        'confirm'=>$confirm,
+        'groupid'=>$groupid,
+        ));
 //these page_params will be passed as hidden variables later in the form.
-$page_params = array('reply' => $reply, 'reactforum' => $reactforum, 'edit' => $edit);
+$page_params = array('reply'=>$reply, 'reactforum'=>$reactforum, 'edit'=>$edit);
 
 $sitecontext = context_system::instance();
 
-if (!isloggedin() or isguestuser())
-{
+if (!isloggedin() or isguestuser()) {
 
-    if (!isloggedin() and !get_local_referer())
-    {
+    if (!isloggedin() and !get_local_referer()) {
         // No referer+not logged in - probably coming in via email  See MDL-9052
         require_login();
     }
 
-    if (!empty($reactforum))
-    {      // User is starting a new discussion in a reactforum
-        if (!$reactforum = $DB->get_record('reactforum', array('id' => $reactforum)))
-        {
+    if (!empty($reactforum)) {      // User is starting a new discussion in a reactforum
+        if (! $reactforum = $DB->get_record('reactforum', array('id' => $reactforum))) {
             print_error('invalidreactforumid', 'reactforum');
         }
-    }
-    else if (!empty($reply))
-    {      // User is writing a new reply
-        if (!$parent = reactforum_get_post_full($reply))
-        {
+    } else if (!empty($reply)) {      // User is writing a new reply
+        if (! $parent = reactforum_get_post_full($reply)) {
             print_error('invalidparentpostid', 'reactforum');
         }
-        if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $parent->discussion)))
-        {
+        if (! $discussion = $DB->get_record('reactforum_discussions', array('id' => $parent->discussion))) {
             print_error('notpartofdiscussion', 'reactforum');
         }
-        if (!$reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum)))
-        {
+        if (! $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum))) {
             print_error('invalidreactforumid');
         }
     }
-    if (!$course = $DB->get_record('course', array('id' => $reactforum->course)))
-    {
+    if (! $course = $DB->get_record('course', array('id' => $reactforum->course))) {
         print_error('invalidcourseid');
     }
 
-    if (!$cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id))
-    { // For the logs
+    if (!$cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id)) { // For the logs
         print_error('invalidcoursemodule');
-    }
-    else
-    {
+    } else {
         $modcontext = context_module::instance($cm->id);
     }
 
@@ -103,46 +90,32 @@ if (!isloggedin() or isguestuser())
     $referer = get_local_referer(false);
 
     echo $OUTPUT->header();
-    echo $OUTPUT->confirm(get_string('noguestpost', 'reactforum') . '<br /><br />' . get_string('liketologin'), get_login_url(), $referer);
+    echo $OUTPUT->confirm(get_string('noguestpost', 'reactforum').'<br /><br />'.get_string('liketologin'), get_login_url(), $referer);
     echo $OUTPUT->footer();
     exit;
 }
 
 require_login(0, false);   // Script is useless unless they're logged in
 
-if (!empty($reactforum))
-{      // User is starting a new discussion in a reactforum
-
-    if (!$reactforum = $DB->get_record("reactforum", array("id" => $reactforum)))
-    {
+if (!empty($reactforum)) {      // User is starting a new discussion in a reactforum
+    if (! $reactforum = $DB->get_record("reactforum", array("id" => $reactforum))) {
         print_error('invalidreactforumid', 'reactforum');
     }
-    if (!$course = $DB->get_record("course", array("id" => $reactforum->course)))
-    {
+    if (! $course = $DB->get_record("course", array("id" => $reactforum->course))) {
         print_error('invalidcourseid');
     }
-    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id))
-    {
+    if (! $cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id)) {
         print_error("invalidcoursemodule");
     }
 
-    if($reactforum->reactiontype == 'discussion')
-    {
-        reactforum_form_call_js($PAGE);
-    }
-
     // Retrieve the contexts.
-    $modcontext = context_module::instance($cm->id);
+    $modcontext    = context_module::instance($cm->id);
     $coursecontext = context_course::instance($course->id);
 
-    if (!reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm))
-    {
-        if (!isguestuser())
-        {
-            if (!is_enrolled($coursecontext))
-            {
-                if (enrol_selfenrol_available($course->id))
-                {
+    if (! reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm)) {
+        if (!isguestuser()) {
+            if (!is_enrolled($coursecontext)) {
+                if (enrol_selfenrol_available($course->id)) {
                     $SESSION->wantsurl = qualified_me();
                     $SESSION->enrolcancel = get_local_referer(false);
                     redirect(new moodle_url('/enrol/index.php', array('id' => $course->id,
@@ -154,8 +127,7 @@ if (!empty($reactforum))
         print_error('nopostreactforum', 'reactforum');
     }
 
-    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $modcontext))
-    {
+    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $modcontext)) {
         print_error("activityiscurrentlyhidden");
     }
 
@@ -164,51 +136,40 @@ if (!empty($reactforum))
     // Load up the $post variable.
 
     $post = new stdClass();
-    $post->course = $course->id;
-    $post->reactforum = $reactforum->id;
-    $post->discussion = 0;           // ie discussion # not defined yet
-    $post->parent = 0;
-    $post->subject = '';
-    $post->userid = $USER->id;
-    $post->message = '';
+    $post->course        = $course->id;
+    $post->reactforum         = $reactforum->id;
+    $post->discussion    = 0;           // ie discussion # not defined yet
+    $post->parent        = 0;
+    $post->subject       = '';
+    $post->userid        = $USER->id;
+    $post->message       = '';
     $post->messageformat = editors_get_preferred_format();
-    $post->messagetrust = 0;
-    $post->reactiontype = 'none';
+    $post->messagetrust  = 0;
 
-    if (isset($groupid))
-    {
+    if (isset($groupid)) {
         $post->groupid = $groupid;
-    }
-    else
-    {
+    } else {
         $post->groupid = groups_get_activity_group($cm);
     }
 
     // Unsetting this will allow the correct return URL to be calculated later.
     unset($SESSION->fromdiscussion);
 
-}
-else if (!empty($reply))
-{      // User is writing a new reply
+} else if (!empty($reply)) {      // User is writing a new reply
 
-    if (!$parent = reactforum_get_post_full($reply))
-    {
+    if (! $parent = reactforum_get_post_full($reply)) {
         print_error('invalidparentpostid', 'reactforum');
     }
-    if (!$discussion = $DB->get_record("reactforum_discussions", array("id" => $parent->discussion)))
-    {
+    if (! $discussion = $DB->get_record("reactforum_discussions", array("id" => $parent->discussion))) {
         print_error('notpartofdiscussion', 'reactforum');
     }
-    if (!$reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum)))
-    {
+    if (! $reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum))) {
         print_error('invalidreactforumid', 'reactforum');
     }
-    if (!$course = $DB->get_record("course", array("id" => $discussion->course)))
-    {
+    if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
         print_error('invalidcourseid');
     }
-    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id))
-    {
+    if (! $cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id)) {
         print_error('invalidcoursemodule');
     }
 
@@ -216,15 +177,12 @@ else if (!empty($reply))
     $PAGE->set_cm($cm, $course, $reactforum);
 
     // Retrieve the contexts.
-    $modcontext = context_module::instance($cm->id);
+    $modcontext    = context_module::instance($cm->id);
     $coursecontext = context_course::instance($course->id);
 
-    if (!reactforum_user_can_post($reactforum, $discussion, $USER, $cm, $course, $modcontext))
-    {
-        if (!isguestuser())
-        {
-            if (!is_enrolled($coursecontext))
-            {  // User is a guest here!
+    if (! reactforum_user_can_post($reactforum, $discussion, $USER, $cm, $course, $modcontext)) {
+        if (!isguestuser()) {
+            if (!is_enrolled($coursecontext)) {  // User is a guest here!
                 $SESSION->wantsurl = qualified_me();
                 $SESSION->enrolcancel = get_local_referer(false);
                 redirect(new moodle_url('/enrol/index.php', array('id' => $course->id,
@@ -236,224 +194,148 @@ else if (!empty($reply))
     }
 
     // Make sure user can post here
-    if (isset($cm->groupmode) && empty($course->groupmodeforce))
-    {
-        $groupmode = $cm->groupmode;
-    }
-    else
-    {
+    if (isset($cm->groupmode) && empty($course->groupmodeforce)) {
+        $groupmode =  $cm->groupmode;
+    } else {
         $groupmode = $course->groupmode;
     }
-    if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $modcontext))
-    {
-        if ($discussion->groupid == -1)
-        {
+    if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $modcontext)) {
+        if ($discussion->groupid == -1) {
             print_error('nopostreactforum', 'reactforum');
-        }
-        else
-        {
-            if (!groups_is_member($discussion->groupid))
-            {
+        } else {
+            if (!groups_is_member($discussion->groupid)) {
                 print_error('nopostreactforum', 'reactforum');
             }
         }
     }
 
-    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $modcontext))
-    {
+    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $modcontext)) {
         print_error("activityiscurrentlyhidden");
     }
 
     // Load up the $post variable.
 
     $post = new stdClass();
-    $post->course = $course->id;
-    $post->reactforum = $reactforum->id;
-    $post->discussion = $parent->discussion;
-    $post->parent = $parent->id;
-    $post->subject = $parent->subject;
-    $post->userid = $USER->id;
-    $post->message = '';
+    $post->course      = $course->id;
+    $post->reactforum       = $reactforum->id;
+    $post->discussion  = $parent->discussion;
+    $post->parent      = $parent->id;
+    $post->subject     = $parent->subject;
+    $post->userid      = $USER->id;
+    $post->message     = '';
 
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
     $strre = get_string('re', 'reactforum');
-    if (!(substr($post->subject, 0, strlen($strre)) == $strre))
-    {
-        $post->subject = $strre . ' ' . $post->subject;
+    if (!(substr($post->subject, 0, strlen($strre)) == $strre)) {
+        $post->subject = $strre.' '.$post->subject;
     }
 
     // Unsetting this will allow the correct return URL to be calculated later.
     unset($SESSION->fromdiscussion);
 
-}
-else if (!empty($edit))
-{  // User is editing their own post
+} else if (!empty($edit)) {  // User is editing their own post
 
-    if (!$post = reactforum_get_post_full($edit))
-    {
+    if (! $post = reactforum_get_post_full($edit)) {
         print_error('invalidpostid', 'reactforum');
     }
-    if ($post->parent)
-    {
-        if (!$parent = reactforum_get_post_full($post->parent))
-        {
+    if ($post->parent) {
+        if (! $parent = reactforum_get_post_full($post->parent)) {
             print_error('invalidparentpostid', 'reactforum');
         }
     }
 
-    if (!$discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion)))
-    {
+    if (! $discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'reactforum');
     }
-    if (!$reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum)))
-    {
+    if (! $reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum))) {
         print_error('invalidreactforumid', 'reactforum');
     }
-    if (!$course = $DB->get_record("course", array("id" => $discussion->course)))
-    {
+    if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
         print_error('invalidcourseid');
     }
-    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id))
-    {
+    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $course->id)) {
         print_error('invalidcoursemodule');
-    }
-    else
-    {
+    } else {
         $modcontext = context_module::instance($cm->id);
     }
 
     $PAGE->set_cm($cm, $course, $reactforum);
 
-    if (!($reactforum->type == 'news' && !$post->parent && $discussion->timestart > time()))
-    {
+    if (!($reactforum->type == 'news' && !$post->parent && $discussion->timestart > time())) {
         if (((time() - $post->created) > $CFG->maxeditingtime) and
-            !has_capability('mod/reactforum:editanypost', $modcontext)
-        )
-        {
+                    !has_capability('mod/reactforum:editanypost', $modcontext)) {
             print_error('maxtimehaspassed', 'reactforum', '', format_time($CFG->maxeditingtime));
         }
     }
     if (($post->userid <> $USER->id) and
-        !has_capability('mod/reactforum:editanypost', $modcontext)
-    )
-    {
+                !has_capability('mod/reactforum:editanypost', $modcontext)) {
         print_error('cannoteditposts', 'reactforum');
     }
 
 
     // Load up the $post variable.
-    $post->edit = $edit;
+    $post->edit   = $edit;
     $post->course = $course->id;
-    $post->reactforum = $reactforum->id;
+    $post->reactforum  = $reactforum->id;
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
     $post = trusttext_pre_edit($post, 'message', $modcontext);
 
-    // LOAD REACTIONS
-    if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
-    {
-        $post->reactiontype = $discussion->reactiontype;
-
-        $reactions_values = array();
-        $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
-
-        foreach($reactions as $reactionObj)
-        {
-            array_push($reactions_values, array("id" => $reactionObj->id, "value" => $reactionObj->reaction));
-        }
-
-        $reactions_js = json_encode(array(
-            "type" => $discussion->reactiontype,
-            "reactions" => $reactions_values,
-            'level' => 'discussion'
-        ));
-
-        $PAGE->requires->js_init_code("reactions_oldvalues = {$reactions_js};", false);
-
-        reactforum_form_call_js($PAGE);
-    }
-
     // Unsetting this will allow the correct return URL to be calculated later.
     unset($SESSION->fromdiscussion);
 
-}
-else if (!empty($delete))
-{  // User is deleting a post
+}else if (!empty($delete)) {  // User is deleting a post
 
-    if (!$post = reactforum_get_post_full($delete))
-    {
+    if (! $post = reactforum_get_post_full($delete)) {
         print_error('invalidpostid', 'reactforum');
     }
-    if (!$discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion)))
-    {
+    if (! $discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'reactforum');
     }
-    if (!$reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum)))
-    {
+    if (! $reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum))) {
         print_error('invalidreactforumid', 'reactforum');
     }
-    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $reactforum->course))
-    {
+    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $reactforum->course)) {
         print_error('invalidcoursemodule');
     }
-    if (!$course = $DB->get_record('course', array('id' => $reactforum->course)))
-    {
+    if (!$course = $DB->get_record('course', array('id' => $reactforum->course))) {
         print_error('invalidcourseid');
     }
 
     require_login($course, false, $cm);
     $modcontext = context_module::instance($cm->id);
 
-    if (!(($post->userid == $USER->id && has_capability('mod/reactforum:deleteownpost', $modcontext))
-        || has_capability('mod/reactforum:deleteanypost', $modcontext))
-    )
-    {
+    if ( !(($post->userid == $USER->id && has_capability('mod/reactforum:deleteownpost', $modcontext))
+                || has_capability('mod/reactforum:deleteanypost', $modcontext)) ) {
         print_error('cannotdeletepost', 'reactforum');
     }
 
 
     $replycount = reactforum_count_replies($post);
 
-    if (!empty($confirm) && confirm_sesskey())
-    {    // User has confirmed the delete
+    if (!empty($confirm) && confirm_sesskey()) {    // User has confirmed the delete
         //check user capability to delete post.
         $timepassed = time() - $post->created;
-        if (($timepassed > $CFG->maxeditingtime) && !has_capability('mod/reactforum:deleteanypost', $modcontext))
-        {
+        if (($timepassed > $CFG->maxeditingtime) && !has_capability('mod/reactforum:deleteanypost', $modcontext)) {
             print_error("cannotdeletepost", "reactforum",
-                reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
-        }
-
-        if ($post->totalscore)
-        {
-            notice(get_string('couldnotdeleteratings', 'rating'),
-                reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
-
-        }
-        else if ($replycount && !has_capability('mod/reactforum:deleteanypost', $modcontext))
-        {
-            print_error("couldnotdeletereplies", "reactforum",
-                reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
-
-        }
-        else
-        {
-            if (!$post->parent)
-            {  // post is a discussion topic as well, so delete discussion
-                if ($reactforum->type == 'single')
-                {
-                    notice("Sorry, but you are not allowed to delete that discussion!",
                         reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
-                }
+        }
 
-                // DELETE REACTIONS
-                $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
-                foreach($reactions as $reactionObj)
-                {
-                    reactforum_remove_reaction($reactionObj->id);
-                }
+        if ($post->totalscore) {
+            notice(get_string('couldnotdeleteratings', 'rating'),
+                   reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
 
+        } else if ($replycount && !has_capability('mod/reactforum:deleteanypost', $modcontext)) {
+            print_error("couldnotdeletereplies", "reactforum",
+                        reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
+
+        } else {
+            if (! $post->parent) {  // post is a discussion topic as well, so delete discussion
+                if ($reactforum->type == 'single') {
+                    notice("Sorry, but you are not allowed to delete that discussion!",
+                           reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
+                }
                 reactforum_delete_discussion($discussion, false, $course, $cm, $reactforum);
 
                 $params = array(
@@ -470,71 +352,56 @@ else if (!empty($delete))
 
                 redirect("view.php?f=$discussion->reactforum");
 
-            }
-            else if (reactforum_delete_post($post, has_capability('mod/reactforum:deleteanypost', $modcontext),
-                $course, $cm, $reactforum))
-            {
-                $DB->delete_records("reactforum_user_reactions", array("post_id" => $post->id));
+            } else if (reactforum_delete_post($post, has_capability('mod/reactforum:deleteanypost', $modcontext),
+                $course, $cm, $reactforum)) {
 
-                if ($reactforum->type == 'single')
-                {
+                if ($reactforum->type == 'single') {
                     // Single discussion reactforums are an exception. We show
                     // the reactforum itself since it only has one discussion
                     // thread.
                     $discussionurl = new moodle_url("/mod/reactforum/view.php", array('f' => $reactforum->id));
-                }
-                else
-                {
+                } else {
                     $discussionurl = new moodle_url("/mod/reactforum/discuss.php", array('d' => $discussion->id));
                 }
 
                 redirect(reactforum_go_back_to($discussionurl));
-            }
-            else
-            {
+            } else {
                 print_error('errorwhiledelete', 'reactforum');
             }
         }
 
 
-    }
-    else
-    { // User just asked to delete something
+    } else { // User just asked to delete something
 
         reactforum_set_return();
         $PAGE->navbar->add(get_string('delete', 'reactforum'));
         $PAGE->set_title($course->shortname);
         $PAGE->set_heading($course->fullname);
 
-        if ($replycount)
-        {
-            if (!has_capability('mod/reactforum:deleteanypost', $modcontext))
-            {
+        if ($replycount) {
+            if (!has_capability('mod/reactforum:deleteanypost', $modcontext)) {
                 print_error("couldnotdeletereplies", "reactforum",
-                    reactforum_go_back_to(new moodle_url('/mod/reactforum/discuss.php', array('d' => $post->discussion), 'p' . $post->id)));
+                      reactforum_go_back_to(new moodle_url('/mod/reactforum/discuss.php', array('d' => $post->discussion), 'p'.$post->id)));
             }
             echo $OUTPUT->header();
             echo $OUTPUT->heading(format_string($reactforum->name), 2);
-            echo $OUTPUT->confirm(get_string("deletesureplural", "reactforum", $replycount + 1),
-                "post.php?delete=$delete&confirm=$delete",
-                $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . '#p' . $post->id);
+            echo $OUTPUT->confirm(get_string("deletesureplural", "reactforum", $replycount+1),
+                         "post.php?delete=$delete&confirm=$delete",
+                         $CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.'#p'.$post->id);
 
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, false, false, false);
 
-            if (empty($post->edit))
-            {
+            if (empty($post->edit)) {
                 $reactforumtracked = reactforum_tp_is_tracked($reactforum);
                 $posts = reactforum_get_all_discussion_posts($discussion->id, "created ASC", $reactforumtracked);
                 reactforum_print_posts_nested($course, $cm, $reactforum, $discussion, $post, false, false, $reactforumtracked, $posts);
             }
-        }
-        else
-        {
+        } else {
             echo $OUTPUT->header();
             echo $OUTPUT->heading(format_string($reactforum->name), 2);
             echo $OUTPUT->confirm(get_string("deletesure", "reactforum", $replycount),
-                "post.php?delete=$delete&confirm=$delete",
-                $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . '#p' . $post->id);
+                         "post.php?delete=$delete&confirm=$delete",
+                         $CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.'#p'.$post->id);
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, false, false, false);
         }
 
@@ -543,40 +410,29 @@ else if (!empty($delete))
     die;
 
 
-}
-else if (!empty($prune))
-{  // Pruning
+} else if (!empty($prune)) {  // Pruning
 
-    if (!$post = reactforum_get_post_full($prune))
-    {
+    if (!$post = reactforum_get_post_full($prune)) {
         print_error('invalidpostid', 'reactforum');
     }
-    if (!$discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion)))
-    {
+    if (!$discussion = $DB->get_record("reactforum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'reactforum');
     }
-    if (!$reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum)))
-    {
+    if (!$reactforum = $DB->get_record("reactforum", array("id" => $discussion->reactforum))) {
         print_error('invalidreactforumid', 'reactforum');
     }
-    if ($reactforum->type == 'single')
-    {
+    if ($reactforum->type == 'single') {
         print_error('cannotsplit', 'reactforum');
     }
-    if (!$post->parent)
-    {
+    if (!$post->parent) {
         print_error('alreadyfirstpost', 'reactforum');
     }
-    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $reactforum->course))
-    { // For the logs
+    if (!$cm = get_coursemodule_from_instance("reactforum", $reactforum->id, $reactforum->course)) { // For the logs
         print_error('invalidcoursemodule');
-    }
-    else
-    {
+    } else {
         $modcontext = context_module::instance($cm->id);
     }
-    if (!has_capability('mod/reactforum:splitdiscussions', $modcontext))
-    {
+    if (!has_capability('mod/reactforum:splitdiscussions', $modcontext)) {
         print_error('cannotsplit', 'reactforum');
     }
 
@@ -586,30 +442,27 @@ else if (!empty($prune))
     $prunemform = new mod_reactforum_prune_form(null, array('prune' => $prune, 'confirm' => $prune));
 
 
-    if ($prunemform->is_cancelled())
-    {
+    if ($prunemform->is_cancelled()) {
         redirect(reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
-    }
-    else if ($fromform = $prunemform->get_data())
-    {
+    } else if ($fromform = $prunemform->get_data()) {
         // User submits the data.
         $newdiscussion = new stdClass();
-        $newdiscussion->course = $discussion->course;
-        $newdiscussion->reactforum = $discussion->reactforum;
-        $newdiscussion->name = $name;
-        $newdiscussion->firstpost = $post->id;
-        $newdiscussion->userid = $discussion->userid;
-        $newdiscussion->groupid = $discussion->groupid;
-        $newdiscussion->assessed = $discussion->assessed;
+        $newdiscussion->course       = $discussion->course;
+        $newdiscussion->reactforum        = $discussion->reactforum;
+        $newdiscussion->name         = $name;
+        $newdiscussion->firstpost    = $post->id;
+        $newdiscussion->userid       = $discussion->userid;
+        $newdiscussion->groupid      = $discussion->groupid;
+        $newdiscussion->assessed     = $discussion->assessed;
         $newdiscussion->usermodified = $post->userid;
-        $newdiscussion->timestart = $discussion->timestart;
-        $newdiscussion->timeend = $discussion->timeend;
+        $newdiscussion->timestart    = $discussion->timestart;
+        $newdiscussion->timeend      = $discussion->timeend;
 
         $newid = $DB->insert_record('reactforum_discussions', $newdiscussion);
 
         $newpost = new stdClass();
-        $newpost->id = $post->id;
-        $newpost->parent = 0;
+        $newpost->id      = $post->id;
+        $newpost->parent  = 0;
         $newpost->subject = $name;
 
         $DB->update_record("reactforum_posts", $newpost);
@@ -656,14 +509,12 @@ else if (!empty($prune))
 
         redirect(reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $newid))));
 
-    }
-    else
-    {
+    } else {
         // Display the prune form.
         $course = $DB->get_record('course', array('id' => $reactforum->course));
-        $PAGE->navbar->add(format_string($post->subject, true), new moodle_url('/mod/reactforum/discuss.php', array('d' => $discussion->id)));
+        $PAGE->navbar->add(format_string($post->subject, true), new moodle_url('/mod/reactforum/discuss.php', array('d'=>$discussion->id)));
         $PAGE->navbar->add(get_string("prune", "reactforum"));
-        $PAGE->set_title(format_string($discussion->name) . ": " . format_string($post->subject));
+        $PAGE->set_title(format_string($discussion->name).": ".format_string($post->subject));
         $PAGE->set_heading($course->fullname);
         echo $OUTPUT->header();
         echo $OUTPUT->heading(format_string($reactforum->name), 2);
@@ -676,15 +527,12 @@ else if (!empty($prune))
 
     echo $OUTPUT->footer();
     die;
-}
-else
-{
+} else {
     print_error('unknowaction');
 
 }
 
-if (!isset($coursecontext))
-{
+if (!isset($coursecontext)) {
     // Has not yet been set by post.php.
     $coursecontext = context_course::instance($reactforum->course);
 }
@@ -692,73 +540,60 @@ if (!isset($coursecontext))
 
 // from now on user must be logged on properly
 
-if (!$cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id))
-{ // For the logs
+if (!$cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id)) { // For the logs
     print_error('invalidcoursemodule');
 }
 $modcontext = context_module::instance($cm->id);
 require_login($course, false, $cm);
 
-if (isguestuser())
-{
+if (isguestuser()) {
     // just in case
     print_error('noguest');
 }
 
-if (!isset($reactforum->maxattachments))
-{  // TODO - delete this once we add a field to the reactforum table
+if (!isset($reactforum->maxattachments)) {  // TODO - delete this once we add a field to the reactforum table
     $reactforum->maxattachments = 3;
 }
 
 $thresholdwarning = reactforum_check_throttling($reactforum, $cm);
 $mform_post = new mod_reactforum_post_form('post.php', array('course' => $course,
-    'cm' => $cm,
-    'coursecontext' => $coursecontext,
-    'modcontext' => $modcontext,
-    'reactforum' => $reactforum,
-    'post' => $post,
-    'subscribe' => \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum,
-        null, $cm),
-    'thresholdwarning' => $thresholdwarning,
-    'edit' => $edit), 'post', '', array('id' => 'mformreactforum'));
+                                                        'cm' => $cm,
+                                                        'coursecontext' => $coursecontext,
+                                                        'modcontext' => $modcontext,
+                                                        'reactforum' => $reactforum,
+                                                        'post' => $post,
+                                                        'subscribe' => \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum,
+                                                                null, $cm),
+                                                        'thresholdwarning' => $thresholdwarning,
+                                                        'edit' => $edit), 'post', '', array('id' => 'mformreactforum'));
 
 $draftitemid = file_get_submitted_draft_itemid('attachments');
-file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_reactforum', 'attachment', empty($post->id) ? null : $post->id, mod_reactforum_post_form::attachment_options($reactforum));
+file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_reactforum', 'attachment', empty($post->id)?null:$post->id, mod_reactforum_post_form::attachment_options($reactforum));
 
 //load data into form NOW!
 
-if ($USER->id != $post->userid)
-{   // Not the original author, so add a message to the end
+if ($USER->id != $post->userid) {   // Not the original author, so add a message to the end
     $data = new stdClass();
     $data->date = userdate($post->modified);
-    if ($post->messageformat == FORMAT_HTML)
-    {
-        $data->name = '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $USER->id . '&course=' . $post->course . '">' .
-            fullname($USER) . '</a>';
-        $post->message .= '<p><span class="edited">(' . get_string('editedby', 'reactforum', $data) . ')</span></p>';
-    }
-    else
-    {
+    if ($post->messageformat == FORMAT_HTML) {
+        $data->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$USER->id.'&course='.$post->course.'">'.
+                       fullname($USER).'</a>';
+        $post->message .= '<p><span class="edited">('.get_string('editedby', 'reactforum', $data).')</span></p>';
+    } else {
         $data->name = fullname($USER);
-        $post->message .= "\n\n(" . get_string('editedby', 'reactforum', $data) . ')';
+        $post->message .= "\n\n(".get_string('editedby', 'reactforum', $data).')';
     }
     unset($data);
 }
 
 $formheading = '';
-if (!empty($parent))
-{
+if (!empty($parent)) {
     $heading = get_string("yourreply", "reactforum");
     $formheading = get_string('reply', 'reactforum');
-}
-else
-{
-    if ($reactforum->type == 'qanda')
-    {
+} else {
+    if ($reactforum->type == 'qanda') {
         $heading = get_string('yournewquestion', 'reactforum');
-    }
-    else
-    {
+    } else {
         $heading = get_string('yournewtopic', 'reactforum');
     }
 }
@@ -768,115 +603,93 @@ $draftid_editor = file_get_submitted_draft_itemid('message');
 $currenttext = file_prepare_draft_area($draftid_editor, $modcontext->id, 'mod_reactforum', 'post', $postid, mod_reactforum_post_form::editor_options($modcontext, $postid), $post->message);
 
 $manageactivities = has_capability('moodle/course:manageactivities', $coursecontext);
-if (\mod_reactforum\subscriptions::subscription_disabled($reactforum) && !$manageactivities)
-{
+if (\mod_reactforum\subscriptions::subscription_disabled($reactforum) && !$manageactivities) {
     // User does not have permission to subscribe to this discussion at all.
     $discussionsubscribe = false;
-}
-else if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum))
-{
+} else if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
     // User does not have permission to unsubscribe from this discussion at all.
     $discussionsubscribe = true;
-}
-else
-{
-    if (isset($discussion) && \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum, $discussion->id, $cm))
-    {
+} else {
+    if (isset($discussion) && \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum, $discussion->id, $cm)) {
         // User is subscribed to the discussion - continue the subscription.
         $discussionsubscribe = true;
-    }
-    else if (!isset($discussion) && \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum, null, $cm))
-    {
+    } else if (!isset($discussion) && \mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum, null, $cm)) {
         // Starting a new discussion, and the user is subscribed to the reactforum - subscribe to the discussion.
         $discussionsubscribe = true;
-    }
-    else
-    {
+    } else {
         // User is not subscribed to either reactforum or discussion. Follow user preference.
         $discussionsubscribe = $USER->autosubscribe;
     }
 }
 
-$mform_post->set_data(array('attachments' => $draftitemid,
-        'general' => $heading,
-        'subject' => $post->subject,
-        'message' => array(
-            'text' => $currenttext,
-            'format' => empty($post->messageformat) ? editors_get_preferred_format() : $post->messageformat,
-            'itemid' => $draftid_editor
-        ),
-        'discussionsubscribe' => $discussionsubscribe,
-        'mailnow' => !empty($post->mailnow),
-        'userid' => $post->userid,
-        'parent' => $post->parent,
-        'discussion' => $post->discussion,
-        'course' => $course->id,
-        'reactiontype' => $post->reactiontype,
-    ) + $page_params +
-    (isset($post->format) ? array(
-        'format' => $post->format) :
-        array()) +
+$mform_post->set_data(array(        'attachments'=>$draftitemid,
+                                    'general'=>$heading,
+                                    'subject'=>$post->subject,
+                                    'message'=>array(
+                                        'text'=>$currenttext,
+                                        'format'=>empty($post->messageformat) ? editors_get_preferred_format() : $post->messageformat,
+                                        'itemid'=>$draftid_editor
+                                    ),
+                                    'discussionsubscribe' => $discussionsubscribe,
+                                    'mailnow'=>!empty($post->mailnow),
+                                    'userid'=>$post->userid,
+                                    'parent'=>$post->parent,
+                                    'discussion'=>$post->discussion,
+                                    'course'=>$course->id) +
+                                    $page_params +
 
-    (isset($discussion->timestart) ? array(
-        'timestart' => $discussion->timestart) :
-        array()) +
+                            (isset($post->format)?array(
+                                    'format'=>$post->format):
+                                array())+
 
-    (isset($discussion->timeend) ? array(
-        'timeend' => $discussion->timeend) :
-        array()) +
+                            (isset($discussion->timestart)?array(
+                                    'timestart'=>$discussion->timestart):
+                                array())+
 
-    (isset($discussion->pinned) ? array(
-        'pinned' => $discussion->pinned) :
-        array()) +
+                            (isset($discussion->timeend)?array(
+                                    'timeend'=>$discussion->timeend):
+                                array())+
 
-    (isset($post->groupid) ? array(
-        'groupid' => $post->groupid) :
-        array()) +
+                            (isset($discussion->pinned) ? array(
+                                     'pinned' => $discussion->pinned) :
+                                array()) +
 
-    (isset($discussion->id) ?
-        array('discussion' => $discussion->id) :
-        array()));
+                            (isset($post->groupid)?array(
+                                    'groupid'=>$post->groupid):
+                                array())+
 
-if ($mform_post->is_cancelled())
-{
-    if (!isset($discussion->id) || $reactforum->type === 'qanda')
-    {
+                            (isset($discussion->id)?
+                                    array('discussion'=>$discussion->id):
+                                    array()));
+
+if ($mform_post->is_cancelled()) {
+    if (!isset($discussion->id) || $reactforum->type === 'qanda') {
         // Q and A reactforums don't have a discussion page, so treat them like a new thread..
         redirect(new moodle_url('/mod/reactforum/view.php', array('f' => $reactforum->id)));
-    }
-    else
-    {
+    } else {
         redirect(new moodle_url('/mod/reactforum/discuss.php', array('d' => $discussion->id)));
     }
-}
-else if ($fromform = $mform_post->get_data())
-{
-    $fs = get_file_storage();
+} else if ($fromform = $mform_post->get_data()) {
 
-    if (empty($SESSION->fromurl))
-    {
+    if (empty($SESSION->fromurl)) {
         $errordestination = "$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id";
-    }
-    else
-    {
+    } else {
         $errordestination = $SESSION->fromurl;
     }
 
-    $fromform->itemid = $fromform->message['itemid'];
+    $fromform->itemid        = $fromform->message['itemid'];
     $fromform->messageformat = $fromform->message['format'];
-    $fromform->message = $fromform->message['text'];
+    $fromform->message       = $fromform->message['text'];
     // WARNING: the $fromform->message array has been overwritten, do not use it anymore!
-    $fromform->messagetrust = trusttext_trusted($modcontext);
+    $fromform->messagetrust  = trusttext_trusted($modcontext);
 
-    if ($fromform->edit)
-    {           // Updating a post
+    if ($fromform->edit) {           // Updating a post
         unset($fromform->groupid);
         $fromform->id = $fromform->edit;
         $message = '';
 
         //fix for bug #4314
-        if (!$realpost = $DB->get_record('reactforum_posts', array('id' => $fromform->id)))
-        {
+        if (!$realpost = $DB->get_record('reactforum_posts', array('id' => $fromform->id))) {
             $realpost = new stdClass();
             $realpost->userid = -1;
         }
@@ -886,78 +699,61 @@ else if ($fromform = $mform_post->get_data())
         // or has either startnewdiscussion or reply capability and is editting own post
         // then he can proceed
         // MDL-7066
-        if (!(($realpost->userid == $USER->id && (has_capability('mod/reactforum:replypost', $modcontext)
-                    || has_capability('mod/reactforum:startdiscussion', $modcontext))) ||
-            has_capability('mod/reactforum:editanypost', $modcontext))
-        )
-        {
+        if ( !(($realpost->userid == $USER->id && (has_capability('mod/reactforum:replypost', $modcontext)
+                            || has_capability('mod/reactforum:startdiscussion', $modcontext))) ||
+                            has_capability('mod/reactforum:editanypost', $modcontext)) ) {
             print_error('cannotupdatepost', 'reactforum');
         }
 
         // If the user has access to all groups and they are changing the group, then update the post.
-        if (isset($fromform->groupinfo) && has_capability('mod/reactforum:movediscussions', $modcontext))
-        {
-            if (empty($fromform->groupinfo))
-            {
+        if (isset($fromform->groupinfo) && has_capability('mod/reactforum:movediscussions', $modcontext)) {
+            if (empty($fromform->groupinfo)) {
                 $fromform->groupinfo = -1;
             }
 
-            if (!reactforum_user_can_post_discussion($reactforum, $fromform->groupinfo, null, $cm, $modcontext))
-            {
+            if (!reactforum_user_can_post_discussion($reactforum, $fromform->groupinfo, null, $cm, $modcontext)) {
                 print_error('cannotupdatepost', 'reactforum');
             }
 
-            $DB->set_field('reactforum_discussions', 'groupid', $fromform->groupinfo, array('firstpost' => $fromform->id));
+            $DB->set_field('reactforum_discussions' ,'groupid' , $fromform->groupinfo, array('firstpost' => $fromform->id));
         }
         // When editing first post/discussion.
-        if (!$fromform->parent)
-        {
-            if (has_capability('mod/reactforum:pindiscussions', $modcontext))
-            {
+        if (!$fromform->parent) {
+            if (has_capability('mod/reactforum:pindiscussions', $modcontext)) {
                 // Can change pinned if we have capability.
                 $fromform->pinned = !empty($fromform->pinned) ? REACTFORUM_DISCUSSION_PINNED : REACTFORUM_DISCUSSION_UNPINNED;
-            }
-            else
-            {
+            } else {
                 // We don't have the capability to change so keep to previous value.
                 unset($fromform->pinned);
             }
         }
         $updatepost = $fromform; //realpost
         $updatepost->reactforum = $reactforum->id;
-        if (!reactforum_update_post($updatepost, $mform_post))
-        {
+        if (!reactforum_update_post($updatepost, $mform_post)) {
             print_error("couldnotupdate", "reactforum", $errordestination);
         }
 
         // MDL-11818
-        if (($reactforum->type == 'single') && ($updatepost->parent == '0'))
-        { // updating first post of single discussion type -> updating reactforum intro
+        if (($reactforum->type == 'single') && ($updatepost->parent == '0')){ // updating first post of single discussion type -> updating reactforum intro
             $reactforum->intro = $updatepost->message;
             $reactforum->timemodified = time();
             $DB->update_record("reactforum", $reactforum);
         }
 
-        if ($realpost->userid == $USER->id)
-        {
+        if ($realpost->userid == $USER->id) {
             $message .= get_string("postupdated", "reactforum");
-        }
-        else
-        {
+        } else {
             $realuser = $DB->get_record('user', array('id' => $realpost->userid));
             $message .= get_string("editedpostupdated", "reactforum", fullname($realuser));
         }
 
         $subscribemessage = reactforum_post_subscription($fromform, $reactforum, $discussion);
-        if ($reactforum->type == 'single')
-        {
+        if ($reactforum->type == 'single') {
             // Single discussion reactforums are an exception. We show
             // the reactforum itself since it only has one discussion
             // thread.
             $discussionurl = new moodle_url("/mod/reactforum/view.php", array('f' => $reactforum->id));
-        }
-        else
-        {
+        } else {
             $discussionurl = new moodle_url("/mod/reactforum/discuss.php", array('d' => $discussion->id), 'p' . $fromform->id);
         }
 
@@ -971,159 +767,46 @@ else if ($fromform = $mform_post->get_data())
             )
         );
 
-        if ($realpost->userid !== $USER->id)
-        {
+        if ($realpost->userid !== $USER->id) {
             $params['relateduserid'] = $realpost->userid;
         }
-
-
 
         $event = \mod_reactforum\event\post_updated::create($params);
         $event->add_record_snapshot('reactforum_discussions', $discussion);
         $event->trigger();
 
-        // EDITING REACTIONS: START
-        if($fromform->parent == 0 && $reactforum->reactiontype == 'discussion')
-        {
-            if($fromform->reactiontype != $discussion->reactiontype || $fromform->reactiontype == 'none')
-            {
-                $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
-                foreach ($reactions as $reaction)
-                {
-                    reactforum_remove_reaction($reaction->id);
-                }
-
-                $editdiscussion = new stdClass();
-                $editdiscussion->id = $discussion->id;
-                $editdiscussion->reactiontype = $fromform->reactiontype;
-                $DB->update_record('reactforum_discussions', $editdiscussion);
-            }
-
-            if($fromform->reactiontype == 'text' && isset($_POST['reactions']))
-            {
-                if(isset($_POST['reactions']['edit']))
-                {
-                    foreach($_POST['reactions']['edit'] as $reactionid => $reaction)
-                    {
-                        if(trim($reaction) == '')
-                        {
-                            continue;
-                        }
-
-                        $reactionobj = new stdClass();
-                        $reactionobj->id = $reactionid;
-                        $reactionobj->reaction = $reaction;
-                        $DB->update_record('reactforum_reactions', $reactionobj);
-                    }
-                }
-
-                if(isset($_POST['reactions']['delete']))
-                {
-                    foreach($_POST['reactions']['delete'] as $reactionid)
-                    {
-                        reactforum_remove_reaction($reactionid);
-                    }
-                }
-
-                if(isset($_POST['reactions']['new']))
-                {
-                    $newreactions = array();
-                    foreach ($_POST['reactions']['new'] as $reaction)
-                    {
-                        if(trim($reaction) == '')
-                        {
-                            continue;
-                        }
-
-                        $reactionobj = new stdClass();
-                        $reactionobj->discussion_id = $discussion->id;
-                        $reactionobj->reaction = $reaction;
-
-                        array_push($newreactions, $reactionobj);
-                    }
-
-                    $DB->insert_records('reactforum_reactions', $newreactions);
-                }
-            }
-            else if($fromform->reactiontype == 'image' && isset($_POST['reactions']))
-            {
-                foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid)
-                {
-                    if($tempfileid > 0)
-                    {
-                        if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $reactionid))
-                        {
-                            print_error("error", "reactforum", $errordestination);
-                        }
-                    }
-                }
-
-                if (isset($_POST['reactions']['delete']))
-                {
-                    foreach ($_POST['reactions']['delete'] as $reactionid)
-                    {
-                        reactforum_remove_reaction($reactionid);
-                    }
-                }
-
-                foreach ($_POST['reactions']['new'] as $tempfileid)
-                {
-                    $reactionobj = new stdClass();
-                    $reactionobj->discussion_id = $discussion->id;
-                    $reactionobj->reaction = '';
-
-                    $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-
-                    if(!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid))
-                    {
-                        print_error("error", "reactforum", $errordestination);
-                    }
-                }
-            }
-        }
-        // EDITTING REACTIONS: END
-
         redirect(
-            reactforum_go_back_to($discussionurl),
-            $message . $subscribemessage,
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+                reactforum_go_back_to($discussionurl),
+                $message . $subscribemessage,
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
 
-    }
-    else if ($fromform->discussion)
-    { // Adding a new post to an existing discussion
+    } else if ($fromform->discussion) { // Adding a new post to an existing discussion
         // Before we add this we must check that the user will not exceed the blocking threshold.
         reactforum_check_blocking_threshold($thresholdwarning);
 
         unset($fromform->groupid);
         $message = '';
         $addpost = $fromform;
-        $addpost->reactforum = $reactforum->id;
-        if ($fromform->id = reactforum_add_new_post($addpost, $mform_post))
-        {
+        $addpost->reactforum=$reactforum->id;
+        if ($fromform->id = reactforum_add_new_post($addpost, $mform_post)) {
             $subscribemessage = reactforum_post_subscription($fromform, $reactforum, $discussion);
 
-            if (!empty($fromform->mailnow))
-            {
+            if (!empty($fromform->mailnow)) {
                 $message .= get_string("postmailnow", "reactforum");
-            }
-            else
-            {
-                $message .= '<p>' . get_string("postaddedsuccess", "reactforum") . '</p>';
-                $message .= '<p>' . get_string("postaddedtimeleft", "reactforum", format_time($CFG->maxeditingtime)) . '</p>';
+            } else {
+                $message .= '<p>'.get_string("postaddedsuccess", "reactforum") . '</p>';
+                $message .= '<p>'.get_string("postaddedtimeleft", "reactforum", format_time($CFG->maxeditingtime)) . '</p>';
             }
 
-            if ($reactforum->type == 'single')
-            {
+            if ($reactforum->type == 'single') {
                 // Single discussion reactforums are an exception. We show
                 // the reactforum itself since it only has one discussion
                 // thread.
-                $discussionurl = new moodle_url("/mod/reactforum/view.php", array('f' => $reactforum->id), 'p' . $fromform->id);
-            }
-            else
-            {
-                $discussionurl = new moodle_url("/mod/reactforum/discuss.php", array('d' => $discussion->id), 'p' . $fromform->id);
+                $discussionurl = new moodle_url("/mod/reactforum/view.php", array('f' => $reactforum->id), 'p'.$fromform->id);
+            } else {
+                $discussionurl = new moodle_url("/mod/reactforum/discuss.php", array('d' => $discussion->id), 'p'.$fromform->id);
             }
 
             $params = array(
@@ -1141,31 +824,25 @@ else if ($fromform = $mform_post->get_data())
             $event->trigger();
 
             // Update completion state
-            $completion = new completion_info($course);
-            if ($completion->is_enabled($cm) &&
-                ($reactforum->completionreplies || $reactforum->completionposts)
-            )
-            {
-                $completion->update_state($cm, COMPLETION_COMPLETE);
+            $completion=new completion_info($course);
+            if($completion->is_enabled($cm) &&
+                ($reactforum->completionreplies || $reactforum->completionposts)) {
+                $completion->update_state($cm,COMPLETION_COMPLETE);
             }
 
             redirect(
-                reactforum_go_back_to($discussionurl),
-                $message . $subscribemessage,
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    reactforum_go_back_to($discussionurl),
+                    $message . $subscribemessage,
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
 
-        }
-        else
-        {
+        } else {
             print_error("couldnotadd", "reactforum", $errordestination);
         }
         exit;
 
-    }
-    else
-    { // Adding a new discussion.
+    } else { // Adding a new discussion.
         // The location to redirect to after successfully posting.
         $redirectto = new moodle_url('view.php', array('f' => $fromform->reactforum));
 
@@ -1175,19 +852,15 @@ else if ($fromform = $mform_post->get_data())
         $discussion->name = $fromform->subject;
 
         $newstopic = false;
-        if ($reactforum->type == 'news' && !$fromform->parent)
-        {
+        if ($reactforum->type == 'news' && !$fromform->parent) {
             $newstopic = true;
         }
         $discussion->timestart = $fromform->timestart;
         $discussion->timeend = $fromform->timeend;
 
-        if (has_capability('mod/reactforum:pindiscussions', $modcontext) && !empty($fromform->pinned))
-        {
+        if (has_capability('mod/reactforum:pindiscussions', $modcontext) && !empty($fromform->pinned)) {
             $discussion->pinned = REACTFORUM_DISCUSSION_PINNED;
-        }
-        else
-        {
+        } else {
             $discussion->pinned = REACTFORUM_DISCUSSION_UNPINNED;
         }
 
@@ -1195,36 +868,27 @@ else if ($fromform = $mform_post->get_data())
         $groupstopostto = array();
 
         // If we are posting a copy to all groups the user has access to.
-        if (isset($fromform->posttomygroups))
-        {
+        if (isset($fromform->posttomygroups)) {
             // Post to each of my groups.
             require_capability('mod/reactforum:canposttomygroups', $modcontext);
 
             // Fetch all of this user's groups.
             // Note: all groups are returned when in visible groups mode so we must manually filter.
             $allowedgroups = groups_get_activity_allowed_groups($cm);
-            foreach ($allowedgroups as $groupid => $group)
-            {
-                if (reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm, $modcontext))
-                {
+            foreach ($allowedgroups as $groupid => $group) {
+                if (reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm, $modcontext)) {
                     $groupstopostto[] = $groupid;
                 }
             }
-        }
-        else if (isset($fromform->groupinfo))
-        {
+        } else if (isset($fromform->groupinfo)) {
             // Use the value provided in the dropdown group selection.
             $groupstopostto[] = $fromform->groupinfo;
             $redirectto->param('group', $fromform->groupinfo);
-        }
-        else if (isset($fromform->groupid) && !empty($fromform->groupid))
-        {
+        } else if (isset($fromform->groupid) && !empty($fromform->groupid)) {
             // Use the value provided in the hidden form element instead.
             $groupstopostto[] = $fromform->groupid;
             $redirectto->param('group', $fromform->groupid);
-        }
-        else
-        {
+        } else {
             // Use the value for all participants instead.
             $groupstopostto[] = -1;
         }
@@ -1232,61 +896,14 @@ else if ($fromform = $mform_post->get_data())
         // Before we post this we must check that the user will not exceed the blocking threshold.
         reactforum_check_blocking_threshold($thresholdwarning);
 
-        foreach ($groupstopostto as $group)
-        {
-            if (!reactforum_user_can_post_discussion($reactforum, $group, -1, $cm, $modcontext))
-            {
+        foreach ($groupstopostto as $group) {
+            if (!reactforum_user_can_post_discussion($reactforum, $group, -1, $cm, $modcontext)) {
                 print_error('cannotcreatediscussion', 'reactforum');
             }
 
             $discussion->groupid = $group;
             $message = '';
-            if ($discussion->id = reactforum_add_discussion($discussion, $mform_post))
-            {
-                // REACTIONS_ADD: START
-                if($reactforum->reactiontype == 'discussion')
-                {
-                    if ($fromform->reactiontype == 'text')
-                    {
-                        if (isset($_POST['reactions']['new']))
-                        {
-                            $reactionobjects = array();
-
-                            foreach ($_POST['reactions']['new'] as $reaction)
-                            {
-                                if (trim($reaction) == '')
-                                {
-                                    continue;
-                                }
-
-                                $reactionobj = new stdClass();
-                                $reactionobj->discussion_id = $discussion->id;
-                                $reactionobj->reaction = $reaction;
-
-                                array_push($reactionobjects, $reactionobj);
-                            }
-
-                            $DB->insert_records('reactforum_reactions', $reactionobjects);
-                        }
-                    }
-                    else if ($fromform->reactiontype == 'image')
-                    {
-                        foreach ($tempfiles['new'] as $tempfile)
-                        {
-                            $reactionobj = new stdClass();
-                            $reactionobj->discussion_id = $discussion->id;
-                            $reactionobj->reaction = '';
-
-                            $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-
-                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid))
-                            {
-                                print_error("error", "reactforum", $errordestination);
-                            }
-                        }
-                    }
-                }
-                // REACTIONS_ADD: END
+            if ($discussion->id = reactforum_add_discussion($discussion, $mform_post)) {
 
                 $params = array(
                     'context' => $modcontext,
@@ -1299,20 +916,15 @@ else if ($fromform = $mform_post->get_data())
                 $event->add_record_snapshot('reactforum_discussions', $discussion);
                 $event->trigger();
 
-                if ($fromform->mailnow)
-                {
+                if ($fromform->mailnow) {
                     $message .= get_string("postmailnow", "reactforum");
-                }
-                else
-                {
-                    $message .= '<p>' . get_string("postaddedsuccess", "reactforum") . '</p>';
-                    $message .= '<p>' . get_string("postaddedtimeleft", "reactforum", format_time($CFG->maxeditingtime)) . '</p>';
+                } else {
+                    $message .= '<p>'.get_string("postaddedsuccess", "reactforum") . '</p>';
+                    $message .= '<p>'.get_string("postaddedtimeleft", "reactforum", format_time($CFG->maxeditingtime)) . '</p>';
                 }
 
                 $subscribemessage = reactforum_post_subscription($fromform, $reactforum, $discussion);
-            }
-            else
-            {
+            } else {
                 print_error("couldnotadd", "reactforum", $errordestination);
             }
         }
@@ -1320,24 +932,20 @@ else if ($fromform = $mform_post->get_data())
         // Update completion status.
         $completion = new completion_info($course);
         if ($completion->is_enabled($cm) &&
-            ($reactforum->completiondiscussions || $reactforum->completionposts)
-        )
-        {
+                ($reactforum->completiondiscussions || $reactforum->completionposts)) {
             $completion->update_state($cm, COMPLETION_COMPLETE);
         }
 
         // Redirect back to the discussion.
         redirect(
-            reactforum_go_back_to($redirectto->out()),
-            $message . $subscribemessage,
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+                reactforum_go_back_to($redirectto->out()),
+                $message . $subscribemessage,
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
     }
-
-    // Clear temp files
-    reactforum_clear_temp($fs);
 }
+
 
 
 // To get here they need to edit a post, and the $post
@@ -1346,129 +954,102 @@ else if ($fromform = $mform_post->get_data())
 
 // $course, $reactforum are defined.  $discussion is for edit and reply only.
 
-if ($post->discussion)
-{
-    if (!$toppost = $DB->get_record("reactforum_posts", array("discussion" => $post->discussion, "parent" => 0)))
-    {
+if ($post->discussion) {
+    if (! $toppost = $DB->get_record("reactforum_posts", array("discussion" => $post->discussion, "parent" => 0))) {
         print_error('cannotfindparentpost', 'reactforum', '', $post->id);
     }
-}
-else
-{
+} else {
     $toppost = new stdClass();
     $toppost->subject = ($reactforum->type == "news") ? get_string("addanewtopic", "reactforum") :
-        get_string("addanewdiscussion", "reactforum");
+                                                   get_string("addanewdiscussion", "reactforum");
 }
 
-if (empty($post->edit))
-{
+if (empty($post->edit)) {
     $post->edit = '';
 }
 
-if (empty($discussion->name))
-{
-    if (empty($discussion))
-    {
+if (empty($discussion->name)) {
+    if (empty($discussion)) {
         $discussion = new stdClass();
     }
     $discussion->name = $reactforum->name;
 }
-if ($reactforum->type == 'single')
-{
+if ($reactforum->type == 'single') {
     // There is only one discussion thread for this reactforum type. We should
     // not show the discussion name (same as reactforum name in this case) in
     // the breadcrumbs.
     $strdiscussionname = '';
-}
-else
-{
+} else {
     // Show the discussion name in the breadcrumbs.
-    $strdiscussionname = format_string($discussion->name) . ':';
+    $strdiscussionname = format_string($discussion->name).':';
 }
 
 $forcefocus = empty($reply) ? NULL : 'message';
 
-if (!empty($discussion->id))
-{
+if (!empty($discussion->id)) {
     $PAGE->navbar->add(format_string($toppost->subject, true), "discuss.php?d=$discussion->id");
 }
 
-if ($post->parent)
-{
+if ($post->parent) {
     $PAGE->navbar->add(get_string('reply', 'reactforum'));
 }
 
-if ($edit)
-{
+if ($edit) {
     $PAGE->navbar->add(get_string('edit', 'reactforum'));
 }
 
-$PAGE->set_title("$course->shortname: $strdiscussionname " . format_string($toppost->subject));
+$PAGE->set_title("$course->shortname: $strdiscussionname ".format_string($toppost->subject));
 $PAGE->set_heading($course->fullname);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($reactforum->name), 2);
 
 // checkup
-if (!empty($parent) && !reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm))
-{
+if (!empty($parent) && !reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm)) {
     print_error('cannotreply', 'reactforum');
 }
-if (empty($parent) && empty($edit) && !reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm, $modcontext))
-{
+if (empty($parent) && empty($edit) && !reactforum_user_can_post_discussion($reactforum, $groupid, -1, $cm, $modcontext)) {
     print_error('cannotcreatediscussion', 'reactforum');
 }
 
 if ($reactforum->type == 'qanda'
-    && !has_capability('mod/reactforum:viewqandawithoutposting', $modcontext)
-    && !empty($discussion->id)
-    && !reactforum_user_has_posted($reactforum->id, $discussion->id, $USER->id)
-)
-{
-    echo $OUTPUT->notification(get_string('qandanotify', 'reactforum'));
+            && !has_capability('mod/reactforum:viewqandawithoutposting', $modcontext)
+            && !empty($discussion->id)
+            && !reactforum_user_has_posted($reactforum->id, $discussion->id, $USER->id)) {
+    echo $OUTPUT->notification(get_string('qandanotify','reactforum'));
 }
 
 // If there is a warning message and we are not editing a post we need to handle the warning.
-if (!empty($thresholdwarning) && !$edit)
-{
+if (!empty($thresholdwarning) && !$edit) {
     // Here we want to throw an exception if they are no longer allowed to post.
     reactforum_check_blocking_threshold($thresholdwarning);
 }
 
-if (!empty($parent))
-{
-    if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $parent->discussion)))
-    {
+if (!empty($parent)) {
+    if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $parent->discussion))) {
         print_error('notpartofdiscussion', 'reactforum');
     }
 
     reactforum_print_post($parent, $discussion, $reactforum, $cm, $course, false, false, false);
-    if (empty($post->edit))
-    {
-        if ($reactforum->type != 'qanda' || reactforum_user_can_see_discussion($reactforum, $discussion, $modcontext))
-        {
+    if (empty($post->edit)) {
+        if ($reactforum->type != 'qanda' || reactforum_user_can_see_discussion($reactforum, $discussion, $modcontext)) {
             $reactforumtracked = reactforum_tp_is_tracked($reactforum);
             $posts = reactforum_get_all_discussion_posts($discussion->id, "created ASC", $reactforumtracked);
             reactforum_print_posts_threaded($course, $cm, $reactforum, $discussion, $parent, 0, false, $reactforumtracked, $posts);
         }
     }
-}
-else
-{
-    if (!empty($reactforum->intro))
-    {
+} else {
+    if (!empty($reactforum->intro)) {
         echo $OUTPUT->box(format_module_intro('reactforum', $reactforum, $cm->id), 'generalbox', 'intro');
 
-        if (!empty($CFG->enableplagiarism))
-        {
-            require_once($CFG->libdir . '/plagiarismlib.php');
+        if (!empty($CFG->enableplagiarism)) {
+            require_once($CFG->libdir.'/plagiarismlib.php');
             echo plagiarism_print_disclosure($cm->id);
         }
     }
 }
 
-if (!empty($formheading))
-{
+if (!empty($formheading)) {
     echo $OUTPUT->heading($formheading, 2, array('class' => 'accesshide'));
 }
 $mform_post->display();

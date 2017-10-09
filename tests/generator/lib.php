@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_generator extends testing_module_generator {

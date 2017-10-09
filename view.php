@@ -17,7 +17,7 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -106,13 +106,15 @@
     $PAGE->add_body_class('reactforumtype-'.$reactforum->type);
     $PAGE->set_heading($course->fullname);
 
-/// Some capability checks.
+    // Some capability checks.
+    $courselink = new moodle_url('/course/view.php', ['id' => $cm->course]);
+
     if (empty($cm->visible) and !has_capability('moodle/course:viewhiddenactivities', $context)) {
-        notice(get_string("activityiscurrentlyhidden"));
+        notice(get_string("activityiscurrentlyhidden"), $courselink);
     }
 
     if (!has_capability('mod/reactforum:viewdiscussion', $context)) {
-        notice(get_string('noviewdiscussionspermission', 'reactforum'));
+        notice(get_string('noviewdiscussionspermission', 'reactforum'), $courselink);
     }
 
     // Mark viewed and trigger the course_module_viewed event.
@@ -228,6 +230,5 @@
 
     // Add the subscription toggle JS.
     $PAGE->requires->yui_module('moodle-mod_reactforum-subscriptiontoggle', 'Y.M.mod_reactforum.subscriptiontoggle.init');
-    $PAGE->requires->js(new moodle_url("/mod/reactforum/script.js"));
 
     echo $OUTPUT->footer($course);

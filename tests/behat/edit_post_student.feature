@@ -44,14 +44,13 @@ Feature: Students can edit or delete their reactforum posts within a set time li
   Scenario: Time limit expires
     Given I log out
     And I log in as "admin"
-    And I expand "Site administration" node
-    And I expand "Security" node
-    And I follow "Site policies"
+    And I navigate to "Security > Site policies" in site administration
     And I set the field "Maximum time to edit posts" to "1 minutes"
     And I press "Save changes"
     And I am on site homepage
     And I follow "Course 1"
     And I turn editing mode on
+    And I add the "Recent activity" block
     And I add a "ReactForum" to section "1" and I fill the form with:
       | ReactForum name | Test reactforum name |
       | ReactForum type | Standard reactforum for general use |

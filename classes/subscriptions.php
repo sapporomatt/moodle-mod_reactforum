@@ -18,7 +18,7 @@
  * ReactForum subscription manager.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * ReactForum subscription manager.
  *
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class subscriptions {
@@ -164,7 +164,8 @@ class subscriptions {
      * @return bool
      */
     public static function is_subscribable($reactforum) {
-        return (!\mod_reactforum\subscriptions::is_forcesubscribed($reactforum) &&
+        return (isloggedin() && !isguestuser() &&
+                !\mod_reactforum\subscriptions::is_forcesubscribed($reactforum) &&
                 !\mod_reactforum\subscriptions::subscription_disabled($reactforum));
     }
 

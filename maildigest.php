@@ -18,12 +18,12 @@
 /**
  * Set the mail digest option in a specific reactforum for a user.
  *
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2013 Andrew Nicols
  * @package   mod_reactforum
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(__DIR__)) . '/config.php');
+require(__DIR__.'/../../config.php');
 require_once($CFG->dirroot.'/mod/reactforum/lib.php');
 
 $id = required_param('id', PARAM_INT);

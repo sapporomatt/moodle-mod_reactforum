@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @subpackage core_message
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +34,7 @@ require_once($CFG->libdir . '/completionlib.php');
 /**
  * A Handler to process replies to reactforum posts.
  *
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class reply_handler extends \core\message\inbound\handler {

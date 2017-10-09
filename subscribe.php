@@ -27,11 +27,11 @@
  * sesskey.
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+require(__DIR__.'/../../config.php');
 require_once($CFG->dirroot.'/mod/reactforum/lib.php');
 
 $id             = required_param('id', PARAM_INT);             // The reactforum to set subscription on.

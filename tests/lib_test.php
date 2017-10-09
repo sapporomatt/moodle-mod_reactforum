@@ -18,7 +18,7 @@
  * The module reactforums tests
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2013 Frédéric Massart
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -1422,7 +1422,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertEmpty($neighbours['next']);
 
         // Querying the neighbours of a discussion passing the wrong CM.
-        $this->setExpectedException('coding_exception');
+        $this->expectException('coding_exception');
         reactforum_get_discussion_neighbours($cm2, $disc11, $reactforum2);
     }
 
@@ -1622,7 +1622,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertEmpty($neighbours['next']);
 
         // Querying the neighbours of a discussion passing the wrong CM.
-        $this->setExpectedException('coding_exception');
+        $this->expectException('coding_exception');
         reactforum_get_discussion_neighbours($cm2, $disc11, $reactforum2);
     }
 
@@ -2023,9 +2023,9 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
 
         // Create groups.
-        $group1 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
-        $group2 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
-        $group3 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
+        $group1 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group1'));
+        $group2 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group2'));
+        $group3 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group3'));
 
         // Add the user1 to g1 and g2 groups.
         groups_add_member($group1->id, $user1->id);
@@ -3012,6 +3012,41 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertCount($expectedreplycount, $unmailed);
     }
 
+    /**
+     * Test for reactforum_is_author_hidden.
+     */
+    public function test_reactforum_is_author_hidden() {
+        // First post, different reactforum type.
+        $post = (object) ['parent' => 0];
+        $reactforum = (object) ['type' => 'standard'];
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // Child post, different reactforum type.
+        $post->parent = 1;
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // First post, single simple discussion reactforum type.
+        $post->parent = 0;
+        $reactforum->type = 'single';
+        $this->assertTrue(reactforum_is_author_hidden($post, $reactforum));
+
+        // Child post, single simple discussion reactforum type.
+        $post->parent = 1;
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // Incorrect parameters: $post.
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('$post->parent must be set.');
+        unset($post->parent);
+        reactforum_is_author_hidden($post, $reactforum);
+
+        // Incorrect parameters: $reactforum.
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('$reactforum->type must be set.');
+        unset($reactforum->type);
+        reactforum_is_author_hidden($post, $reactforum);
+    }
+
     public function reactforum_get_unmailed_posts_provider() {
         return [
             'Untimed discussion; Single post; maxeditingtime not expired' => [
@@ -3167,5 +3202,116 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
                 'replycount'        => 0,
             ],
         ];
+    }
+
+    /**
+     * Test the reactforum_discussion_is_locked function.
+     *
+     * @dataProvider reactforum_discussion_is_locked_provider
+     * @param   stdClass    $reactforum
+     * @param   stdClass    $discussion
+     * @param   bool        $expect
+     */
+    public function test_reactforum_discussion_is_locked($reactforum, $discussion, $expect) {
+        $this->assertEquals($expect, reactforum_discussion_is_locked($reactforum, $discussion));
+    }
+
+    /**
+     * Dataprovider for reactforum_discussion_is_locked tests.
+     *
+     * @return  array
+     */
+    public function reactforum_discussion_is_locked_provider() {
+        return [
+            'Unlocked: lockdiscussionafter is unset' => [
+                (object) [],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is false' => [
+                (object) ['lockdiscussionafter' => false],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is null' => [
+                (object) ['lockdiscussionafter' => null],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type single; post is recent' => [
+                (object) ['lockdiscussionafter' => DAYSECS, 'type' => 'single'],
+                (object) ['timemodified' => time()],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type single; post is old' => [
+                (object) ['lockdiscussionafter' => MINSECS, 'type' => 'single'],
+                (object) ['timemodified' => time() - DAYSECS],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type eachuser; post is recent' => [
+                (object) ['lockdiscussionafter' => DAYSECS, 'type' => 'eachuser'],
+                (object) ['timemodified' => time()],
+                false
+            ],
+            'Locked: lockdiscussionafter is set; reactforum is of type eachuser; post is old' => [
+                (object) ['lockdiscussionafter' => MINSECS, 'type' => 'eachuser'],
+                (object) ['timemodified' => time() - DAYSECS],
+                true
+            ],
+        ];
+    }
+
+    /**
+     * Test that {@link reactforum_update_post()} keeps correct reactforum_discussions usermodified.
+     */
+    public function test_reactforum_update_post_keeps_discussions_usermodified() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Let there be light.
+        $teacher = self::getDataGenerator()->create_user();
+        $student = self::getDataGenerator()->create_user();
+        $course = self::getDataGenerator()->create_course();
+
+        $reactforum = self::getDataGenerator()->create_module('reactforum', (object)[
+            'course' => $course->id,
+        ]);
+
+        $generator = self::getDataGenerator()->get_plugin_generator('mod_reactforum');
+
+        // Let the teacher start a discussion.
+        $discussion = $generator->create_discussion((object)[
+            'course' => $course->id,
+            'userid' => $teacher->id,
+            'reactforum' => $reactforum->id,
+        ]);
+
+        // On this freshly created discussion, the teacher is the author of the last post.
+        $this->assertEquals($teacher->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
+
+        // Let the student reply to the teacher's post.
+        $reply = $generator->create_post((object)[
+            'course' => $course->id,
+            'userid' => $student->id,
+            'reactforum' => $reactforum->id,
+            'discussion' => $discussion->id,
+            'parent' => $discussion->firstpost,
+        ]);
+
+        // The student should now be the last post's author.
+        $this->assertEquals($student->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
+
+        // Let the teacher edit the student's reply.
+        $this->setUser($teacher->id);
+        $newpost = (object)[
+            'id' => $reply->id,
+            'itemid' => 0,
+            'subject' => 'Amended subject',
+        ];
+        reactforum_update_post($newpost, null);
+
+        // The student should be still the last post's author.
+        $this->assertEquals($student->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
     }
 }

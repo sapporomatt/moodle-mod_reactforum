@@ -20,7 +20,7 @@
  *
  * @package   mod_reactforum
  * @category rss
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2001 Eloy Lafuente (stronk7) http://contiento.com
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
