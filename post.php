@@ -174,6 +174,7 @@ if (!empty($reactforum))
     $post->messageformat = editors_get_preferred_format();
     $post->messagetrust = 0;
     $post->reactiontype = 'none';
+    $post->reactionallreplies = 0;
 
     if (isset($groupid))
     {
@@ -354,6 +355,7 @@ else if (!empty($edit))
     if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
     {
         $post->reactiontype = $discussion->reactiontype;
+        $post->reactionallreplies = $discussion->reactionallreplies;
 
         $reactions_values = array();
         $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
@@ -812,6 +814,7 @@ $mform_post->set_data(array('attachments' => $draftitemid,
         'discussion' => $post->discussion,
         'course' => $course->id,
         'reactiontype' => $post->reactiontype,
+        'reactionallreplies' => $post->reactionallreplies
     ) + $page_params +
     (isset($post->format) ? array(
         'format' => $post->format) :
@@ -985,6 +988,17 @@ else if ($fromform = $mform_post->get_data())
         // EDITING REACTIONS: START
         if($fromform->parent == 0 && $reactforum->reactiontype == 'discussion')
         {
+            $editdiscussion = new stdClass();
+            $editdiscussion->id = $discussion->id;
+
+            $discussionchanged = false;
+
+            if($fromform->reactionallreplies != $discussion->reactionallreplies)
+            {
+                $editdiscussion->reactionallreplies = $fromform->reactionallreplies ? 1 : 0;
+                $discussionchanged = true;
+            }
+
             if($fromform->reactiontype != $discussion->reactiontype || $fromform->reactiontype == 'none')
             {
                 $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
@@ -993,9 +1007,12 @@ else if ($fromform = $mform_post->get_data())
                     reactforum_remove_reaction($reaction->id);
                 }
 
-                $editdiscussion = new stdClass();
-                $editdiscussion->id = $discussion->id;
                 $editdiscussion->reactiontype = $fromform->reactiontype;
+                $discussionchanged = true;
+            }
+
+            if($discussionchanged)
+            {
                 $DB->update_record('reactforum_discussions', $editdiscussion);
             }
 

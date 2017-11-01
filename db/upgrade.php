@@ -143,5 +143,24 @@ function xmldb_reactforum_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2017072700,'reactforum');
     }
 
+    if($oldversion < 2017102400)
+    {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('reactforum_discussions');
+        $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2017102400, 'reactforum');
+    }
+
     return true;
 }

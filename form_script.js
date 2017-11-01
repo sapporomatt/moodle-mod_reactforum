@@ -31,6 +31,8 @@ require(['jquery'], function ($)
         var $filepicker = $('div#fitem_id_reactionimage');
         $filepicker.hide();
 
+        var $reactionallreplies = $('div#fitem_id_reactionallreplies');
+
         var reaction_type = 'text';
         var reactions = [];
         var level = '';
@@ -311,10 +313,12 @@ require(['jquery'], function ($)
             {
                 reactions = [];
                 $maindiv.hide();
+                $reactionallreplies.hide();
             }
             else
             {
                 $maindiv.show();
+                $reactionallreplies.show();
             }
         });
 
@@ -330,17 +334,20 @@ require(['jquery'], function ($)
                 $('input#id_reactiontype_text').prop('checked', true);
                 $.prepare_text_reactions();
                 $maindiv.show();
+                $reactionallreplies.show();
             }
             else if(reaction_type === 'image')
             {
                 $('input#id_reactiontype_image').prop('checked', true);
                 $.prepare_image_reactions();
                 $maindiv.show();
+                $reactionallreplies.show();
             }
         }
         else
         {
             $maindiv.hide();
+            $reactionallreplies.hide();
         }
     });
 });

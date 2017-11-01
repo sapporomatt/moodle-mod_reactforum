@@ -173,6 +173,9 @@ class mod_reactforum_post_form extends moodleform
             $mform->addGroup(null, 'reactions', get_string('reactions', 'reactforum'), array('<br>'), false);
 
             $mform->addElement('filepicker', 'reactionimage', '', null, array('maxbytes' => 0, 'accepted_types' => array('image')));
+
+            $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
+            $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
         }
 
         if ($groupmode = groups_get_activity_groupmode($cm, $course))
