@@ -195,8 +195,131 @@ function xmldb_reactforum_upgrade($oldversion) {
     // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.3.0 release upgrade line.
-    // Put any upgrade step following this.
+    if($oldversion < 2017071216)
+    {
+        $table = new xmldb_table('reactforum_discussions');
+        $field = new xmldb_field('reactiontype', XMLDB_TYPE_CHAR, '50', null, true, false, 'text', 'pinned');
+
+        if (!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2017071216, 'reactforum');
+    }
+
+    if($oldversion < 2017072700)
+    {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('reactiontype', XMLDB_TYPE_CHAR, '50', null, true, false, 'text', 'displaywordcount');
+        if (!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        //
+
+        $table = new xmldb_table('reactforum_reactions');
+
+        $field = new xmldb_field('reactforum_id', XMLDB_TYPE_INTEGER, '10', null, null, false, '0', 'id');
+        if (!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        $key = new xmldb_key('reactforum_id', XMLDB_KEY_FOREIGN, array('reactforum_id'), 'reactforum', 'id');
+        if (!$dbman->find_key_name($table, $key))
+        {
+            $dbman->add_key($table, $key);
+        }
+
+        $index = new xmldb_index('discussion_idx', XMLDB_INDEX_NOTUNIQUE, array('discussion_id'));
+        if(!$dbman->index_exists($table, $index))
+        {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('reactforum_idx', XMLDB_INDEX_NOTUNIQUE, array('reactforum_id'));
+        if(!$dbman->index_exists($table, $index))
+        {
+            $dbman->add_index($table, $index);
+        }
+
+        //
+
+        $table = new xmldb_table('reactforum_user_reactions');
+
+        $index = new xmldb_index('post_idx', XMLDB_INDEX_NOTUNIQUE, array('post_id'));
+        if(!$dbman->index_exists($table, $index))
+        {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('user_idx', XMLDB_INDEX_NOTUNIQUE, array('user_id'));
+        if(!$dbman->index_exists($table, $index))
+        {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('reaction_idxs', XMLDB_INDEX_NOTUNIQUE, array('reaction_id'));
+        if(!$dbman->index_exists($table, $index))
+        {
+            $dbman->add_index($table, $index);
+        }
+
+        //
+
+        upgrade_mod_savepoint(true, 2017072700,'reactforum');
+    }
+
+    // Upgrade for ReactForum Moodle 3.2
+    if($oldversion < 2017100900)
+    {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('lockdiscussionafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, false, '0', 'reactiontype');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2017100900, 'reactforum');
+    }
+
+    if($oldversion < 2017110100)
+    {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        $reactforums = $DB->get_records('reactforum');
+        foreach($reactforums as $reactforum)
+        {
+            $reactforum->reactionallreplies = 1;
+            $DB->update_record('reactforum', $reactforum);
+        }
+
+        $table = new xmldb_table('reactforum_discussions');
+        $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        $discussions = $DB->get_records('reactforum_discussions');
+        foreach($discussions as $discussion)
+        {
+            if($discussion->reactiontype)
+            {
+                $discussion->reactionallreplies = 1;
+                $DB->update_record('reactforum_discussions', $discussion);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2017110100, 'reactforum');
+    }
 
     return true;
 }

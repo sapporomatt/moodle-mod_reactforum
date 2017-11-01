@@ -46,6 +46,8 @@ $PAGE->set_url('/mod/reactforum/post.php', array(
         'confirm'=>$confirm,
         'groupid'=>$groupid,
         ));
+
+reactforum_include_styles();
 //these page_params will be passed as hidden variables later in the form.
 $page_params = array('reply'=>$reply, 'reactforum'=>$reactforum, 'edit'=>$edit);
 
@@ -108,6 +110,11 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
         print_error("invalidcoursemodule");
     }
 
+    if($reactforum->reactiontype == 'discussion')
+    {
+        reactforum_form_call_js($PAGE);
+    }
+
     // Retrieve the contexts.
     $modcontext    = context_module::instance($cm->id);
     $coursecontext = context_course::instance($course->id);
@@ -145,6 +152,8 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
     $post->message       = '';
     $post->messageformat = editors_get_preferred_format();
     $post->messagetrust  = 0;
+    $post->reactiontype = 'none';
+    $post->reactionallreplies = 0;
 
     if (isset($groupid)) {
         $post->groupid = $groupid;
@@ -282,6 +291,26 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
 
     $post = trusttext_pre_edit($post, 'message', $modcontext);
 
+    // LOAD REACTIONS
+    if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
+    {
+        $post->reactiontype = $discussion->reactiontype;
+        $post->reactionallreplies = $discussion->reactionallreplies;
+        $reactions_values = array();
+        $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
+        foreach($reactions as $reactionObj)
+        {
+            array_push($reactions_values, array("id" => $reactionObj->id, "value" => $reactionObj->reaction));
+        }
+        $reactions_js = json_encode(array(
+            "type" => $discussion->reactiontype,
+            "reactions" => $reactions_values,
+            'level' => 'discussion'
+        ));
+        $PAGE->requires->js_init_code("reactions_oldvalues = {$reactions_js};", false);
+        reactforum_form_call_js($PAGE);
+    }
+
     // Unsetting this will allow the correct return URL to be calculated later.
     unset($SESSION->fromdiscussion);
 
@@ -336,6 +365,16 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
                     notice("Sorry, but you are not allowed to delete that discussion!",
                            reactforum_go_back_to(new moodle_url("/mod/reactforum/discuss.php", array('d' => $post->discussion))));
                 }
+
+
+                // DELETE REACTIONS
+                $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
+                foreach($reactions as $reactionObj)
+                {
+                    reactforum_remove_reaction($reactionObj->id);
+                }
+
+
                 reactforum_delete_discussion($discussion, false, $course, $cm, $reactforum);
 
                 $params = array(
@@ -354,6 +393,8 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
 
             } else if (reactforum_delete_post($post, has_capability('mod/reactforum:deleteanypost', $modcontext),
                 $course, $cm, $reactforum)) {
+
+                $DB->delete_records("reactforum_user_reactions", array("post_id" => $post->id));
 
                 if ($reactforum->type == 'single') {
                     // Single discussion reactforums are an exception. We show
@@ -635,7 +676,9 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     'userid'=>$post->userid,
                                     'parent'=>$post->parent,
                                     'discussion'=>$post->discussion,
-                                    'course'=>$course->id) +
+                                    'course'=>$course->id,
+                                    'reactiontype' => $post->reactiontype,
+                                    'reactionallreplies' => $post->reactionallreplies) +
                                     $page_params +
 
                             (isset($post->format)?array(
@@ -670,6 +713,8 @@ if ($mform_post->is_cancelled()) {
         redirect(new moodle_url('/mod/reactforum/discuss.php', array('d' => $discussion->id)));
     }
 } else if ($fromform = $mform_post->get_data()) {
+
+    $fs = get_file_storage();
 
     if (empty($SESSION->fromurl)) {
         $errordestination = "$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id";
@@ -774,6 +819,107 @@ if ($mform_post->is_cancelled()) {
         $event = \mod_reactforum\event\post_updated::create($params);
         $event->add_record_snapshot('reactforum_discussions', $discussion);
         $event->trigger();
+
+        // EDITING REACTIONS: START
+        if($fromform->parent == 0 && $reactforum->reactiontype == 'discussion')
+        {
+            $editdiscussion = new stdClass();
+            $editdiscussion->id = $discussion->id;
+            $discussionchanged = false;
+            if($fromform->reactionallreplies != $discussion->reactionallreplies) {
+                $editdiscussion->reactionallreplies = $fromform->reactionallreplies ? 1 : 0;
+                $discussionchanged = true;
+            }
+
+            if($fromform->reactiontype != $discussion->reactiontype || $fromform->reactiontype == 'none')
+            {
+                $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
+                foreach ($reactions as $reaction)
+                {
+                    reactforum_remove_reaction($reaction->id);
+                }
+                $editdiscussion->reactiontype = $fromform->reactiontype;
+                $discussionchanged = true;
+            }
+
+            if($discussionchanged)
+            {
+                $DB->update_record('reactforum_discussions', $editdiscussion);
+            }
+
+            if($fromform->reactiontype == 'text' && isset($_POST['reactions']))
+            {
+                if(isset($_POST['reactions']['edit']))
+                {
+                    foreach($_POST['reactions']['edit'] as $reactionid => $reaction)
+                    {
+                        if(trim($reaction) == '')
+                        {
+                            continue;
+                        }
+                        $reactionobj = new stdClass();
+                        $reactionobj->id = $reactionid;
+                        $reactionobj->reaction = $reaction;
+                        $DB->update_record('reactforum_reactions', $reactionobj);
+                    }
+                }
+                if(isset($_POST['reactions']['delete']))
+                {
+                    foreach($_POST['reactions']['delete'] as $reactionid)
+                    {
+                        reactforum_remove_reaction($reactionid);
+                    }
+                }
+                if(isset($_POST['reactions']['new']))
+                {
+                    $newreactions = array();
+                    foreach ($_POST['reactions']['new'] as $reaction)
+                    {
+                        if(trim($reaction) == '')
+                        {
+                            continue;
+                        }
+                        $reactionobj = new stdClass();
+                        $reactionobj->discussion_id = $discussion->id;
+                        $reactionobj->reaction = $reaction;
+                        array_push($newreactions, $reactionobj);
+                    }
+                    $DB->insert_records('reactforum_reactions', $newreactions);
+                }
+            }
+            else if($fromform->reactiontype == 'image' && isset($_POST['reactions']))
+            {
+                foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid)
+                {
+                    if($tempfileid > 0)
+                    {
+                        if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $reactionid))
+                        {
+                            print_error("error", "reactforum", $errordestination);
+                        }
+                    }
+                }
+                if (isset($_POST['reactions']['delete']))
+                {
+                    foreach ($_POST['reactions']['delete'] as $reactionid)
+                    {
+                        reactforum_remove_reaction($reactionid);
+                    }
+                }
+                foreach ($_POST['reactions']['new'] as $tempfileid)
+                {
+                    $reactionobj = new stdClass();
+                    $reactionobj->discussion_id = $discussion->id;
+                    $reactionobj->reaction = '';
+                    $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
+                    if(!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid))
+                    {
+                        print_error("error", "reactforum", $errordestination);
+                    }
+                }
+            }
+        }
+        // EDITTING REACTIONS: END
 
         redirect(
                 reactforum_go_back_to($discussionurl),
@@ -905,6 +1051,45 @@ if ($mform_post->is_cancelled()) {
             $message = '';
             if ($discussion->id = reactforum_add_discussion($discussion, $mform_post)) {
 
+                // REACTIONS_ADD: START
+                if($reactforum->reactiontype == 'discussion')
+                {
+                    if ($fromform->reactiontype == 'text')
+                    {
+                        if (isset($_POST['reactions']['new']))
+                        {
+                            $reactionobjects = array();
+                            foreach ($_POST['reactions']['new'] as $reaction)
+                            {
+                                if (trim($reaction) == '')
+                                {
+                                    continue;
+                                }
+                                $reactionobj = new stdClass();
+                                $reactionobj->discussion_id = $discussion->id;
+                                $reactionobj->reaction = $reaction;
+                                array_push($reactionobjects, $reactionobj);
+                            }
+                            $DB->insert_records('reactforum_reactions', $reactionobjects);
+                        }
+                    }
+                    else if ($fromform->reactiontype == 'image')
+                    {
+                        foreach ($tempfiles['new'] as $tempfile)
+                        {
+                            $reactionobj = new stdClass();
+                            $reactionobj->discussion_id = $discussion->id;
+                            $reactionobj->reaction = '';
+                            $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
+                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid))
+                            {
+                                print_error("error", "reactforum", $errordestination);
+                            }
+                        }
+                    }
+                }
+                // REACTIONS_ADD: END
+
                 $params = array(
                     'context' => $modcontext,
                     'objectid' => $discussion->id,
@@ -944,6 +1129,9 @@ if ($mform_post->is_cancelled()) {
                 \core\output\notification::NOTIFY_SUCCESS
             );
     }
+
+    // Clear temp files
+    reactforum_clear_temp($fs);
 }
 
 

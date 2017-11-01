@@ -47,6 +47,9 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
             $paths[] = new restore_path_element('reactforum_digest', '/activity/reactforum/digests/digest');
             $paths[] = new restore_path_element('reactforum_read', '/activity/reactforum/readposts/read');
             $paths[] = new restore_path_element('reactforum_track', '/activity/reactforum/trackedprefs/track');
+
+            $paths[] = new restore_path_element('reactforum_reactions', '/activity/reactforum/reactions/reaction');
+            $paths[] = new restore_path_element('reactforum_user_reactions', '/activity/reactforum/reactions/reaction/user_reactions/user_reaction');
         }
 
         // Return the paths wrapped into standard activity structure
@@ -228,6 +231,42 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('reactforum_track_prefs', $data);
     }
 
+    protected function process_reactforum_reactions($data)
+    {
+        global $DB;
+
+        $data = (object)$data;
+        $oldID = $data->id;
+
+        if($data->reactforum_id > 0)
+        {
+            $data->reactforum_id = $this->get_new_parentid('reactforum');
+        }
+
+        if($data->discussion_id > 0)
+        {
+            $data->discussion_id = $this->get_mappingid('reactforum_discussion', $data->discussion_id);
+        }
+
+        $newItemID = $DB->insert_record("reactforum_reactions", $data);
+
+        $this->set_mapping("reactforum_reactions", $oldID, $newItemID, true);
+    }
+
+    protected function process_reactforum_user_reactions($data)
+    {
+        global $DB;
+
+        $data = (object)$data;
+        $oldID = $data->id;
+
+        $data->reaction_id = $this->get_new_parentid('reactforum_reactions');
+        $data->post_id = $this->get_mappingid('reactforum_post', $data->post_id);
+        $data->user_id = $this->get_mappingid('user', $data->user_id);
+
+        $newItemID = $DB->insert_record("reactforum_user_reactions", $data);
+    }
+
     protected function after_execute() {
         // Add reactforum related files, no need to match by itemname (just internally handled context)
         $this->add_related_files('mod_reactforum', 'intro', null);
@@ -235,6 +274,8 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         // Add post related files, matching by itemname = 'reactforum_post'
         $this->add_related_files('mod_reactforum', 'post', 'reactforum_post');
         $this->add_related_files('mod_reactforum', 'attachment', 'reactforum_post');
+
+        $this->add_related_files('mod_reactforum', 'reactions', 'reactforum_reactions');
     }
 
     protected function after_restore() {

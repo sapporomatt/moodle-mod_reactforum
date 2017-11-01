@@ -80,7 +80,10 @@ class mod_reactforum_post_form extends moodleform {
      * @return void
      */
     function definition() {
-        global $CFG, $OUTPUT;
+        global $CFG, $OUTPUT, $PAGE;
+
+        $PAGE->requires->jquery();
+        $PAGE->requires->js('/mod/reactforum/form_script.js');
 
         $mform =& $this->_form;
 
@@ -145,6 +148,23 @@ class mod_reactforum_post_form extends moodleform {
 
         if (empty($post->id) && $manageactivities) {
             $mform->addElement('checkbox', 'mailnow', get_string('mailnow', 'reactforum'));
+        }
+
+        // REACTIONS
+        if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
+        {
+            $radioarray = array();
+            array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_text', 'reactforum'), 'text'));
+            array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_image', 'reactforum'), 'image'));
+            array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_none', 'reactforum'), 'none'));
+            $mform->addGroup($radioarray, 'reactiontype', get_string('reactionstype', 'reactforum'), array('<br>'), false);
+
+            $mform->addGroup(null, 'reactions', get_string('reactions', 'reactforum'), array('<br>'), false);
+
+            $mform->addElement('filepicker', 'reactionimage', '', null, array('maxbytes' => 0, 'accepted_types' => array('image')));
+
+            $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
+            $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
         }
 
         if ($groupmode = groups_get_activity_groupmode($cm, $course)) {

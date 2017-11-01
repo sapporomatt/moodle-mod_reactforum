@@ -47,6 +47,8 @@
     }
     $PAGE->set_url('/mod/reactforum/view.php', $params);
 
+    reactforum_include_styles();
+
     if ($id) {
         if (! $cm = get_coursemodule_from_id('reactforum', $id)) {
             print_error('invalidcoursemodule');
@@ -230,5 +232,6 @@
 
     // Add the subscription toggle JS.
     $PAGE->requires->yui_module('moodle-mod_reactforum-subscriptiontoggle', 'Y.M.mod_reactforum.subscriptiontoggle.init');
+    $PAGE->requires->js(new moodle_url("/mod/reactforum/script.js"));
 
     echo $OUTPUT->footer($course);

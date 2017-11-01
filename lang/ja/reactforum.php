@@ -565,3 +565,28 @@ $string['warnformorepost'] = '警告! このReactフォーラムには2件以上
 $string['yournewquestion'] = 'あなたの新しい質問';
 $string['yournewtopic'] = 'あなたの新しいディスカッショントピック';
 $string['yourreply'] = 'あなたの返信';
+
+
+
+/** REACTIONS */
+
+$string['reactionstype'] = 'Reaction Buttons Type';
+$string['reactionstype_text'] = 'Text';
+$string['reactionstype_image'] = 'Image';
+$string['reactionstype_discussion'] = 'Decided by discussion owner';
+$string['reactionstype_none'] = 'None';
+$string['reactionstype_change_confirmation'] = 'All current reaction buttons will be removed. Are you sure that you want to change reaction type?';
+
+$string['reactions_allreplies'] = 'Apply reaction buttons on replies';
+$string['reactions_allreplies_help'] = 'If this option is checked, reaction buttons will appear on each topic and every reply as well. Otherwise, they appear on the discussion topic only.';
+
+$string['reactions'] = 'Reaction Buttons';
+$string['reactions_add'] = 'Add';
+$string['reactions_changeimage'] = 'Change Image';
+$string['reactions_selectfile'] = 'Please select new reaction image file';
+$string['reactions_cancel'] = 'Cancel';
+$string['reactions_delete'] = 'Delete';
+$string['reactions_delete_confirmation'] = 'Are you sure that you want to delete this reaction? All its data will be removed. (You can undo this action by not saving discussion edit)';
+$string['reactions_reupload'] = 'Reupload';
+
+$string['error'] = 'Unexpected Error';

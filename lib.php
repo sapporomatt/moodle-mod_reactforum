@@ -128,6 +128,46 @@ function reactforum_add_instance($reactforum, $mform = null) {
         }
     }
 
+
+    if(isset($_POST['reactions']['new']))
+    {
+        if ($reactforum->reactiontype == 'text')
+        {
+            foreach ($_POST['reactions']['new'] as $reactiontxt)
+            {
+                $reaction = new stdClass();
+                $reaction->reactforum_id = $reactforum->id;
+                $reaction->discussion_id = 0;
+                $reaction->reaction = $reactiontxt;
+                if (!$DB->insert_record('reactforum_reactions', $reaction))
+                {
+                    throw new moodle_exception('');
+                }
+            }
+        }
+        else if ($reactforum->reactiontype == 'image')
+        {
+            $fs = get_file_storage();
+            foreach ($_POST['reactions']['new'] as $fileid)
+            {
+                $reaction = new stdClass();
+                $reaction->reactforum_id = $reactforum->id;
+                $reaction->discussion_id = 0;
+                $reaction->reaction = '';
+                $reactionid = $DB->insert_record('reactforum_reactions', $reaction);
+                if (!$reactionid)
+                {
+                    throw new moodle_exception('');
+                }
+                if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($fileid), $reactionid))
+                {
+                    throw new moodle_exception('');
+                }
+            }
+            reactforum_clear_temp($fs);
+        }
+    }
+
     reactforum_grade_item_update($reactforum);
 
     $completiontimeexpected = !empty($reactforum->completionexpected) ? $reactforum->completionexpected : null;
@@ -240,6 +280,107 @@ function reactforum_update_instance($reactforum, $mform) {
         $DB->update_record('reactforum_discussions', $discussion);
     }
 
+    if(!$reactforum->reactionallreplies)
+    {
+        $reactforum->reactionallreplies = 0;
+    }
+
+    $fs = get_file_storage();
+    if($reactforum->reactiontype != $oldreactforum->reactiontype)
+    {
+        $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
+        foreach($reactions as $reaction)
+        {
+            reactforum_remove_reaction($reaction->id);
+        }
+        $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id));
+        foreach ($discussions as $discussion)
+        {
+            $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
+            foreach($reactions as $reaction)
+            {
+                reactforum_remove_reaction($reaction->id);
+            }
+        }
+    }
+    if(in_array($reactforum->reactiontype, array('text', 'image')))
+    {
+        if(isset($_POST['reactions']['delete']))
+        {
+            foreach($_POST['reactions']['delete'] as $reactionid)
+            {
+                reactforum_remove_reaction($reactionid);
+            }
+        }
+
+        if(isset($_POST['reactions']['edit']))
+        {
+            if($reactforum->reactiontype == 'text')
+            {
+                foreach($_POST['reactions']['edit'] as $reactionid => $reaction)
+                {
+                    if(trim($reaction) == '')
+                    {
+                        continue;
+                    }
+                    $reactionobj = new stdClass();
+                    $reactionobj->id = $reactionid;
+                    $reactionobj->reaction = $reaction;
+                    $DB->update_record('reactforum_reactions', $reactionobj);
+                }
+            }
+            else if($reactforum->reactiontype == 'image')
+            {
+                $context = reactforum_get_context($reactforum->id);
+                foreach($_POST['reactions']['edit'] as $reactionid => $filetempid)
+                {
+                    if($filetempid > 0)
+                    {
+                        reactforum_save_temp($fs, $context->id, $fs->get_file_by_id($filetempid), $reactionid);
+                    }
+                }
+            }
+        }
+        if(isset($_POST['reactions']['new']))
+        {
+            if ($reactforum->reactiontype == 'text')
+            {
+                foreach ($_POST['reactions']['new'] as $reactiontxt)
+                {
+                    $reaction = new stdClass();
+                    $reaction->reactforum_id = $reactforum->id;
+                    $reaction->discussion_id = 0;
+                    $reaction->reaction = $reactiontxt;
+                    if (!$DB->insert_record('reactforum_reactions', $reaction))
+                    {
+                        throw new moodle_exception();
+                    }
+                }
+            }
+            else if ($reactforum->reactiontype == 'image')
+            {
+                $context = reactforum_get_context($reactforum->id);
+                foreach ($_POST['reactions']['new'] as $fileid)
+                {
+                    $reaction = new stdClass();
+                    $reaction->reactforum_id = $reactforum->id;
+                    $reaction->discussion_id = 0;
+                    $reaction->reaction = '';
+                    $reactionid = $DB->insert_record('reactforum_reactions', $reaction);
+                    if (!$reactionid)
+                    {
+                        throw new moodle_exception();
+                    }
+                    if (!reactforum_save_temp($fs, $context->id, $fs->get_file_by_id($fileid), $reactionid))
+                    {
+                        throw new moodle_exception();
+                    }
+                }
+            }
+        }
+    }
+    reactforum_clear_temp($fs);
+
     $DB->update_record('reactforum', $reactforum);
 
     $modcontext = context_module::instance($reactforum->coursemodule);
@@ -288,6 +429,18 @@ function reactforum_delete_instance($id) {
     $fs->delete_area_files($context->id);
 
     $result = true;
+
+    // Delete reactions
+    $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $id));
+    $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $id));
+    foreach($discussions as $discussion)
+    {
+        $reactions += $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
+    }
+    foreach($reactions as $reaction)
+    {
+        reactforum_remove_reaction($reaction->id);
+    }
 
     \core_completion\api::update_completion_date_event($cm->id, 'reactforum', $reactforum->id, null);
 
@@ -3129,7 +3282,7 @@ function reactforum_get_course_reactforum($courseid, $type) {
  */
 function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $ownpost=false, $reply=false, $link=false,
                           $footer="", $highlight="", $postisread=null, $dummyifcantsee=true, $istracked=null, $return=false) {
-    global $USER, $CFG, $OUTPUT;
+    global $USER, $CFG, $OUTPUT, $DB;
 
     require_once($CFG->libdir . '/filelib.php');
 
@@ -3347,6 +3500,36 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     // Finished building commands
 
 
+    // Loading Reactions
+    $reactionallreplies = $reactforum->reactionallreplies;
+    $reactiontype = $reactforum->reactiontype;
+    if($reactiontype == 'discussion')
+    {
+        $reactiontype = $discussion->reactiontype;
+        $reactionallreplies = $discussion->reactionallreplies;
+    }
+    $reactable = $reactionallreplies || ($discussion->firstpost == $post->id);
+    $reactionData = array();
+    if($reactable)
+    {
+        $reactions = reactforum_get_reactions_from_discussion($discussion);
+        foreach ($reactions as $reaction) {
+            $countObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id), "COUNT(*) AS 'count'");
+            $userCountObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id, "user_id" => $USER->id), "COUNT(*) AS 'count'");
+            $item = array(
+                "id" => $reaction->id,
+                "reaction" => $reaction->reaction,
+                "count" => $countObj->count,
+                "reacted" => false
+            );
+            if ($userCountObj->count == 1) {
+                $item['reacted'] = true;
+            }
+            array_push($reactionData, $item);
+        }
+    }
+
+
     // Begin output
 
     $output  = '';
@@ -3484,6 +3667,46 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     if (!empty($attachments)) {
         $output .= html_writer::tag('div', $attachments, array('class' => 'attachments'));
+    }
+
+    // Reactions
+    if($reactable)
+    {
+        $output .= html_writer::start_tag('div', array('style' => 'margin: 15px 0;'));
+        foreach ($reactionData as $reactionDatum) {
+            $output .= html_writer::start_tag('div',
+                array(
+                    'style' => 'display: inline; margin: 0 8px 0 0;',
+                    'post-id' => $post->id,
+                    'reaction-id' => $reactionDatum['id'],
+                    'class' => 'reaction-container'
+                )
+            );
+            $class = 'btn-default';
+            if ($reactionDatum['reacted']) {
+                $class = 'btn-primary';
+            }
+            $buttonAttributes = array('class' => "btn {$class} react-btn");
+            if ($post->userid == $USER->id) {
+                $buttonAttributes['disabled'] = 'disabled';
+            }
+            $reactionhtml = '';
+            if ($reactiontype == 'text') {
+                $reactionhtml = $reactionDatum['reaction'];
+            } else if ($reactiontype == 'image') {
+                $reactionhtml = html_writer::empty_tag('img',
+                    array(
+                        'src' => 'reactionimg.php?id=' . $reactionDatum['id'] . '&sesskey=' . sesskey(),
+                        'alt' => '',
+                        'class' => 'reaction-img'
+                    )
+                );
+            }
+            $output .= html_writer::tag('button', $reactionhtml, $buttonAttributes);
+            $output .= ' ' . html_writer::tag('span', "{$reactionDatum['count']}") . ' ';
+            $output .= html_writer::end_tag('div');
+        }
+        $output .= html_writer::end_tag('div');
     }
 
     // Output ratings
@@ -4706,6 +4929,9 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
         require_once($CFG->dirroot.'/mod/reactforum/rsslib.php');
         reactforum_rss_delete_file($reactforum);
     }
+
+    // DELETE REACTIONS
+    $DB->delete_records("reactforum_user_reactions", array("post_id" => $post->id));
 
     if ($DB->delete_records("reactforum_posts", array("id" => $post->id))) {
 
@@ -8339,4 +8565,196 @@ function mod_reactforum_get_completion_active_rule_descriptions($cm) {
         }
     }
     return $descriptions;
+}
+
+/**
+ * CSS files inclusion
+ */
+function reactforum_include_styles()
+{
+    global $CFG, $PAGE;
+
+    $PAGE->requires->css('/mod/reactforum/styles-default.css');
+    $PAGE->requires->css('/mod/reactforum/styles-boost.css');
+}
+
+/**
+ * Remove reaction and its cascade records
+ * @param $reactionID
+ * @return bool
+ */
+function reactforum_remove_reaction($reactionID)
+{
+    global $DB;
+
+    $reaction = $DB->get_record('reactforum_reactions', array('id' => $reactionID));
+    if($reaction->reactforum_id > 0)
+    {
+        $reactforum = $DB->get_record('reactforum', array('id' => $reaction->reactforum_id));
+        $reactiontype = $reactforum->reactiontype;
+    }
+    else
+    {
+        $discussion = $DB->get_record('reactforum_discussions', array('id' => $reaction->discussion_id));
+        $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
+        $reactiontype = $discussion->reactiontype;
+    }
+
+    if($reactiontype == 'image')
+    {
+        $fs = get_file_storage();
+
+        $files = $fs->get_area_files(reactforum_get_context($reactforum->id)->id, 'mod_reactforum', 'reactions', $reactionID);
+        foreach($files as $file)
+        {
+            $file->delete();
+        }
+    }
+
+    if($DB->delete_records("reactforum_user_reactions", array("reaction_id" => $reactionID)) == false)
+    {
+        return false;
+    }
+
+    if($DB->delete_records("reactforum_reactions", array("id" => $reactionID)) == false)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Call script for form in post.php
+ * @param moodle_page $PAGE
+ */
+function reactforum_form_call_js(&$PAGE)
+{
+    $PAGE->requires->jquery();
+    $PAGE->requires->js('/mod/reactforum/form_script.js');
+    $PAGE->requires->strings_for_js(
+        array(
+            'reactionstype_change_confirmation',
+            'reactions_add',
+            'reactions_changeimage',
+            'reactions_selectfile',
+            'reactions_cancel',
+            'reactions_delete',
+            'reactions_delete_confirmation',
+            'reactions_reupload')
+        , 'reactforum');
+}
+
+/**
+ * Move uploaded file from draft area to safetemp area
+ * @param file_storage $fs
+ * @param string $drafturl
+ * @return bool|stored_file
+ */
+function reactforum_move_uploaded_draft_to_temp($fs, $drafturl)
+{
+    global $USER;
+
+    $filepath_exploded_temp = explode('draftfile.php/', $drafturl);
+    $filepath_exploded = explode('/', $filepath_exploded_temp[1]);
+
+    $draftinfo = array(
+        'contextid' => $filepath_exploded[0],
+        'component' => $filepath_exploded[1],
+        'filearea' => $filepath_exploded[2],
+        'itemid' => $filepath_exploded[3],
+        'filename' => urldecode($filepath_exploded[4])
+    );
+
+    $draftfile = $fs->get_file($draftinfo['contextid'], $draftinfo['component'], $draftinfo['filearea'], $draftinfo['itemid'], '/', $draftinfo['filename']);
+    if(!$draftfile)
+    {
+        throw new moodle_exception('draftnotfound');
+    }
+
+    $tempfileinfo = array(
+        'contextid' => 7,
+        'component' => 'user',
+        'filearea' => 'mod_reactforum_temp',
+        'itemid' => time(),
+        'filepath' => '/' . $USER->id . '/',
+        'filename' => $draftinfo['filename']
+    );
+
+    while($fs->file_exists(0, 'mod_reactforum', 'safetemp', $tempfileinfo['itemid'], '/', $tempfileinfo['filename']))
+    {
+        $tempfileinfo['itemid']++;
+    }
+
+    return $fs->create_file_from_storedfile($tempfileinfo, $draftfile);
+}
+
+/**
+ * Clear safetemp directory
+ * @param file_storage $fs
+ */
+function reactforum_clear_temp($fs)
+{
+    global $USER;
+
+    $files = $fs->get_area_files(7, 'user', 'mod_reactforum_temp');
+
+    foreach($files as $file)
+    {
+        if($file->get_filepath() == '/' . $USER->id . '/')
+        {
+            $file->delete();
+        }
+    }
+}
+
+/**
+ * Save temp file to reaction file
+ * @param file_storage $fs
+ * @param int $contextid
+ * @param stored_file $tempfile
+ * @param int $reactionid
+ * @return stored_file|bool
+ */
+function reactforum_save_temp($fs, $contextid, $tempfile, $reactionid)
+{
+    $files = $fs->get_area_files($contextid, 'mod_reactforum', 'reactions', $reactionid);
+    foreach ($files as $file)
+    {
+        $file->delete();
+    }
+
+    $fileinfo = array(
+        'contextid' => $contextid,
+        'component' => 'mod_reactforum',
+        'filearea' => 'reactions',
+        'itemid' => $reactionid,
+        'filepath' => '/',
+        'filename' => $tempfile->get_filename()
+    );
+
+    $reactionfile = $fs->create_file_from_storedfile($fileinfo, $tempfile);
+
+    $tempfile->delete();
+
+    return $reactionfile;
+}
+
+/**
+ * Get reactions objects from discussion object
+ * @param stdClass $discussion
+ * @return array
+ */
+function reactforum_get_reactions_from_discussion($discussion)
+{
+    global $DB;
+    $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
+    $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
+
+    if(count($reactions) > 0)
+    {
+        return $reactions;
+    }
+
+    return $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
 }

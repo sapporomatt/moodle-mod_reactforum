@@ -30,7 +30,9 @@ require_once ($CFG->dirroot.'/course/moodleform_mod.php');
 class mod_reactforum_mod_form extends moodleform_mod {
 
     function definition() {
-        global $CFG, $COURSE, $DB;
+        global $CFG, $COURSE, $DB, $PAGE;
+
+        reactforum_include_styles();
 
         $mform    =& $this->_form;
 
@@ -53,6 +55,46 @@ class mod_reactforum_mod_form extends moodleform_mod {
         $mform->addElement('select', 'type', get_string('reactforumtype', 'reactforum'), $reactforumtypes);
         $mform->addHelpButton('type', 'reactforumtype', 'reactforum');
         $mform->setDefault('type', 'general');
+
+        $radioarray = array();
+        array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_text', 'reactforum'), 'text'));
+        array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_image', 'reactforum'), 'image'));
+        array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_discussion', 'reactforum'), 'discussion'));
+        array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_none', 'reactforum'), 'none'));
+        $mform->addGroup($radioarray, 'reactiontype', get_string('reactionstype', 'reactforum'), array('<br>'), false);
+
+        $mform->addGroup(array(), 'reactions', get_string('reactions', 'reactforum'), array('<br>'), false);
+
+        $mform->addElement('filepicker', 'reactionimage', '', null, array('maxbytes' => 0, 'accepted_types' => array('image')));
+
+        $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
+        $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
+
+        if(isset($_GET['update']))
+        {
+            $cmid = $_GET['update'];
+            $cm = get_coursemodule_from_id('reactforum', $cmid);
+            $rid = $cm->instance;
+
+            $reactforum = $DB->get_record('reactforum', array('id' => $rid));
+            $reactions_values = array();
+            $reactions = $DB->get_records("reactforum_reactions", array("reactforum_id" => $rid));
+
+            foreach($reactions as $reactionObj)
+            {
+                array_push($reactions_values, array("id" => $reactionObj->id, "value" => $reactionObj->reaction));
+            }
+
+            $reactions_js = json_encode(array(
+                "type" => $reactforum->reactiontype,
+                "reactions" => $reactions_values,
+                'level' => 'reactforum'
+            ));
+
+            $PAGE->requires->js_init_code("reactions_oldvalues = {$reactions_js};", false);
+        }
+
+        reactforum_form_call_js($PAGE);
 
         // Attachments and word count.
         $mform->addElement('header', 'attachmentswordcounthdr', get_string('attachmentswordcount', 'reactforum'));
