@@ -50,6 +50,8 @@ require_course_login($course, true, $cm);
 // move this down fix for MDL-6926
 require_once($CFG->dirroot.'/mod/reactforum/lib.php');
 
+reactforum_include_styles();
+
 $modcontext = context_module::instance($cm->id);
 require_capability('mod/reactforum:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'reactforum');
 
@@ -399,5 +401,6 @@ echo $neighbourlinks;
 
 // Add the subscription toggle JS.
 $PAGE->requires->yui_module('moodle-mod_reactforum-subscriptiontoggle', 'Y.M.mod_reactforum.subscriptiontoggle.init');
+$PAGE->requires->js(new moodle_url("/mod/reactforum/script.js"));
 
 echo $OUTPUT->footer();

@@ -320,3 +320,9 @@ span.unread {
 #page-mod-reactforum-view img.timedpost {
     margin-right: 5px;
 }
+
+img.reaction-img
+{
+    width: auto;
+    height: 40px;
+}

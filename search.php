@@ -67,6 +67,8 @@ if ($timetorestrict) {
     $dateto = optional_param('dateto', 0, PARAM_INT);      // Ending date
 }
 
+reactforum_include_styles();
+
 $PAGE->set_pagelayout('standard');
 $PAGE->set_url($FULLME); //TODO: this is very sloppy --skodak
 

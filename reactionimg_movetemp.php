@@ -13,17 +13,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * Version information
+ * Render reaction image
  *
- * @package   mod_reactforum
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_reactforum
+ * @copyright  2017 (C) VERSION2, INC.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2017110100;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2016112900;       // Requires this Moodle version
-$plugin->component = 'mod_reactforum';      // Full name of the plugin (used for diagnostics)
+require_once(dirname(dirname(__DIR__)) . '/config.php');
+require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+if(!isset($_POST['url']))
+{
+    throw new invalid_parameter_exception();
+}
+$url = $_POST['url'];
+$fs = get_file_storage();
+$temp = reactforum_move_uploaded_draft_to_temp($fs, $url);
+echo $temp->get_id();
