@@ -37,7 +37,7 @@ require(['jquery'], function ($)
         {
             $maindiv = $('label[for=fgroup_id_reactions]').closest('div.form-group');
             $area = $maindiv.find('div.felement');
-            $filepicker = $maindiv.next().find('div[data-fieldtype=filepicker]');
+            $filepicker = $('input[name=reactionimage]').closest('div.form-group');
             $reactionallreplies = $('#id_reactionallreplies').closest('div.form-group');
         }
 

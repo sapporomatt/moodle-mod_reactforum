@@ -714,6 +714,8 @@ if ($mform_post->is_cancelled()) {
     }
 } else if ($fromform = $mform_post->get_data()) {
 
+    $fs = get_file_storage();
+
     if (empty($SESSION->fromurl)) {
         $errordestination = "$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id";
     } else {
@@ -1127,6 +1129,9 @@ if ($mform_post->is_cancelled()) {
                 \core\output\notification::NOTIFY_SUCCESS
             );
     }
+
+    // Clear temp files
+    reactforum_clear_temp($fs);
 }
 
 
