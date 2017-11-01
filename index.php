@@ -17,11 +17,11 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
 require_once($CFG->libdir . '/rsslib.php');
@@ -29,7 +29,7 @@ require_once($CFG->libdir . '/rsslib.php');
 $id = optional_param('id', 0, PARAM_INT);                   // Course id
 $subscribe = optional_param('subscribe', null, PARAM_INT);  // Subscribe/Unsubscribe all reactforums
 
-$url = new moodle_url('/mod/reactforum/index.php', array('id'=>$id));
+$url = new moodle_url('/mod/reactforum/index.php', array('id' => $id));
 if ($subscribe !== null) {
     require_sesskey();
     $url->param('subscribe', $subscribe);
@@ -37,7 +37,7 @@ if ($subscribe !== null) {
 $PAGE->set_url($url);
 
 if ($id) {
-    if (! $course = $DB->get_record('course', array('id' => $id))) {
+    if (!$course = $DB->get_record('course', array('id' => $id))) {
         print_error('invalidcourseid');
     }
 } else {
@@ -47,7 +47,6 @@ if ($id) {
 require_course_login($course);
 $PAGE->set_pagelayout('incourse');
 $coursecontext = context_course::instance($course->id);
-
 
 unset($SESSION->fromdiscussion);
 
@@ -77,8 +76,7 @@ $stremaildigest  = get_string('emaildigest');
 
 $searchform = reactforum_search_form($course);
 
-// Start of the table for General ReactForums
-
+// Start of the table for General ReactForums.
 $generaltable = new html_table();
 $generaltable->head  = array ($strreactforum, $strdescription, $strdiscussions);
 $generaltable->align = array ('left', 'left', 'center');
@@ -95,34 +93,6 @@ if ($usetracking = reactforum_tp_can_track_reactforums()) {
 
 // Fill the subscription cache for this course and user combination.
 \mod_reactforum\subscriptions::fill_subscription_cache_for_course($course->id, $USER->id);
-
-$can_subscribe = is_enrolled($coursecontext);
-if ($can_subscribe) {
-    $generaltable->head[] = $strsubscribed;
-    $generaltable->align[] = 'center';
-
-    $generaltable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_reactforum');
-    $generaltable->align[] = 'center';
-
-    // Retrieve the list of reactforum digest options for later.
-    $digestoptions = reactforum_get_user_digest_options();
-    $digestoptions_selector = new single_select(new moodle_url('/mod/reactforum/maildigest.php',
-        array(
-            'backtoindex' => 1,
-        )),
-        'maildigest',
-        $digestoptions,
-        null,
-        '');
-    $digestoptions_selector->method = 'post';
-}
-
-if ($show_rss = (($can_subscribe || $course->id == SITEID) &&
-                 isset($CFG->enablerssfeeds) && isset($CFG->reactforum_enablerssfeeds) &&
-                 $CFG->enablerssfeeds && $CFG->reactforum_enablerssfeeds)) {
-    $generaltable->head[] = $strrss;
-    $generaltable->align[] = 'center';
-}
 
 $usesections = course_format_uses_sections($course->format);
 
@@ -143,8 +113,9 @@ $reactforums = $DB->get_records_sql("
 $generalreactforums  = array();
 $learningreactforums = array();
 $modinfo = get_fast_modinfo($course);
+$showsubscriptioncolumns = false;
 
-foreach ($modinfo->get_instances_of('reactforum') as $reactforumid=>$cm) {
+foreach ($modinfo->get_instances_of('reactforum') as $reactforumid => $cm) {
     if (!$cm->uservisible or !isset($reactforums[$reactforumid])) {
         continue;
     }
@@ -152,14 +123,23 @@ foreach ($modinfo->get_instances_of('reactforum') as $reactforumid=>$cm) {
     $reactforum = $reactforums[$reactforumid];
 
     if (!$context = context_module::instance($cm->id, IGNORE_MISSING)) {
-        continue;   // Shouldn't happen
-    }
-
-    if (!has_capability('mod/reactforum:viewdiscussion', $context)) {
+        // Shouldn't happen.
         continue;
     }
 
-    // fill two type array - order in modinfo is the same as in course
+    if (!has_capability('mod/reactforum:viewdiscussion', $context)) {
+        // User can't view this one - skip it.
+        continue;
+    }
+
+    // Determine whether subscription options should be displayed.
+    $reactforum->cansubscribe = mod_reactforum\subscriptions::is_subscribable($reactforum);
+    $reactforum->cansubscribe = $reactforum->cansubscribe || has_capability('mod/reactforum:managesubscriptions', $context);
+    $reactforum->issubscribed = mod_reactforum\subscriptions::is_subscribed($USER->id, $reactforum, null, $cm);
+
+    $showsubscriptioncolumns = $showsubscriptioncolumns || $reactforum->issubscribed || $reactforum->cansubscribe;
+
+    // Fill two type array - order in modinfo is the same as in course.
     if ($reactforum->type == 'news' or $reactforum->type == 'social') {
         $generalreactforums[$reactforum->id] = $reactforum;
 
@@ -171,9 +151,27 @@ foreach ($modinfo->get_instances_of('reactforum') as $reactforumid=>$cm) {
     }
 }
 
+if ($showsubscriptioncolumns) {
+    // The user can subscribe to at least one reactforum.
+    $generaltable->head[] = $strsubscribed;
+    $generaltable->align[] = 'center';
+
+    $generaltable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_reactforum');
+    $generaltable->align[] = 'center';
+
+}
+
+if ($show_rss = (($showsubscriptioncolumns || $course->id == SITEID) &&
+                 isset($CFG->enablerssfeeds) && isset($CFG->reactforum_enablerssfeeds) &&
+                 $CFG->enablerssfeeds && $CFG->reactforum_enablerssfeeds)) {
+    $generaltable->head[] = $strrss;
+    $generaltable->align[] = 'center';
+}
+
+
 // Do course wide subscribe/unsubscribe if requested
 if (!is_null($subscribe)) {
-    if (isguestuser() or !$can_subscribe) {
+    if (isguestuser() or !$showsubscriptioncolumns) {
         // There should not be any links leading to this place, just redirect.
         redirect(
                 new moodle_url('/mod/reactforum/index.php', array('id' => $id)),
@@ -183,7 +181,7 @@ if (!is_null($subscribe)) {
             );
     }
     // Can proceed now, the user is not guest and is enrolled
-    foreach ($modinfo->get_instances_of('reactforum') as $reactforumid=>$cm) {
+    foreach ($modinfo->get_instances_of('reactforum') as $reactforumid => $cm) {
         $reactforum = $reactforums[$reactforumid];
         $modcontext = context_module::instance($cm->id);
         $cansub = false;
@@ -225,9 +223,8 @@ if (!is_null($subscribe)) {
     }
 }
 
-/// First, let's process the general reactforums and build up a display
-
 if ($generalreactforums) {
+    // Process general reactforums.
     foreach ($generalreactforums as $reactforum) {
         $cm      = $modinfo->instances['reactforum'][$reactforum->id];
         $context = context_module::instance($cm->id);
@@ -243,9 +240,10 @@ if ($generalreactforums) {
                 if (isset($untracked[$reactforum->id])) {
                         $unreadlink  = '-';
                 } else if ($unread = reactforum_tp_count_reactforum_unread_posts($cm, $course)) {
-                        $unreadlink = '<span class="unread"><a href="view.php?f='.$reactforum->id.'">'.$unread.'</a>';
+                    $unreadlink = '<span class="unread"><a href="view.php?f='.$reactforum->id.'">'.$unread.'</a>';
+                    $icon = $OUTPUT->pix_icon('t/markasread', $strmarkallread);
                     $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                   $reactforum->id.'&amp;mark=read&amp;sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                   $reactforum->id.'&amp;mark=read&amp;sesskey=' . sesskey() . '">' . $icon . '</a></span>';
                 } else {
                     $unreadlink = '<span class="read">0</span>';
                 }
@@ -260,9 +258,9 @@ if ($generalreactforums) {
                             'sesskey' => sesskey(),
                         ));
                     if (!isset($untracked[$reactforum->id])) {
-                        $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackreactforum));
+                        $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title' => $strnotrackreactforum));
                     } else {
-                        $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackreactforum));
+                        $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title' => $strtrackreactforum));
                     }
                 }
             }
@@ -285,21 +283,14 @@ if ($generalreactforums) {
             $row[] = $trackedlink;    // Tracking.
         }
 
-        if ($can_subscribe) {
+        if ($showsubscriptioncolumns) {
             $row[] = reactforum_get_subscribe_link($reactforum, $context, array('subscribed' => $stryes,
-                    'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
-                    'cantsubscribe' => '-'), false, false, true);
-
-            $digestoptions_selector->url->param('id', $reactforum->id);
-            if ($reactforum->maildigest === null) {
-                $digestoptions_selector->selected = -1;
-            } else {
-                $digestoptions_selector->selected = $reactforum->maildigest;
-            }
-            $row[] = $OUTPUT->render($digestoptions_selector);
+                'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
+                'cantsubscribe' => '-'), false, false, true);
+            $row[] = reactforum_index_get_reactforum_subscription_selector($reactforum);
         }
 
-        //If this reactforum has RSS activated, calculate it
+        // If this reactforum has RSS activated, calculate it.
         if ($show_rss) {
             if ($reactforum->rsstype and $reactforum->rssarticles) {
                 //Calculate the tooltip text
@@ -339,7 +330,7 @@ if ($usetracking) {
     $learningtable->align[] = 'center';
 }
 
-if ($can_subscribe) {
+if ($showsubscriptioncolumns) {
     $learningtable->head[] = $strsubscribed;
     $learningtable->align[] = 'center';
 
@@ -347,15 +338,14 @@ if ($can_subscribe) {
     $learningtable->align[] = 'center';
 }
 
-if ($show_rss = (($can_subscribe || $course->id == SITEID) &&
+if ($show_rss = (($showsubscriptioncolumns || $course->id == SITEID) &&
                  isset($CFG->enablerssfeeds) && isset($CFG->reactforum_enablerssfeeds) &&
                  $CFG->enablerssfeeds && $CFG->reactforum_enablerssfeeds)) {
     $learningtable->head[] = $strrss;
     $learningtable->align[] = 'center';
 }
 
-/// Now let's process the learning reactforums
-
+// Now let's process the learning reactforums.
 if ($course->id != SITEID) {    // Only real courses have learning reactforums
     // 'format_.'$course->format only applicable when not SITEID (format_site is not a format)
     $strsectionname  = get_string('sectionname', 'format_'.$course->format);
@@ -382,8 +372,9 @@ if ($course->id != SITEID) {    // Only real courses have learning reactforums
                         $unreadlink  = '-';
                     } else if ($unread = reactforum_tp_count_reactforum_unread_posts($cm, $course)) {
                         $unreadlink = '<span class="unread"><a href="view.php?f='.$reactforum->id.'">'.$unread.'</a>';
+                        $icon = $OUTPUT->pix_icon('t/markasread', $strmarkallread);
                         $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                       $reactforum->id.'&amp;mark=read&sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                       $reactforum->id.'&amp;mark=read&sesskey=' . sesskey() . '">' . $icon . '</a></span>';
                     } else {
                         $unreadlink = '<span class="read">0</span>';
                     }
@@ -393,11 +384,11 @@ if ($course->id != SITEID) {    // Only real courses have learning reactforums
                     } else if ($reactforum->trackingtype === REACTFORUM_TRACKING_OFF || ($USER->trackreactforums == 0)) {
                         $trackedlink = '-';
                     } else {
-                        $aurl = new moodle_url('/mod/reactforum/settracking.php', array('id'=>$reactforum->id));
+                        $aurl = new moodle_url('/mod/reactforum/settracking.php', array('id' => $reactforum->id));
                         if (!isset($untracked[$reactforum->id])) {
-                            $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackreactforum));
+                            $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title' => $strnotrackreactforum));
                         } else {
-                            $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackreactforum));
+                            $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title' => $strtrackreactforum));
                         }
                     }
                 }
@@ -431,18 +422,11 @@ if ($course->id != SITEID) {    // Only real courses have learning reactforums
                 $row[] = $trackedlink;    // Tracking.
             }
 
-            if ($can_subscribe) {
+            if ($showsubscriptioncolumns) {
                 $row[] = reactforum_get_subscribe_link($reactforum, $context, array('subscribed' => $stryes,
                     'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
                     'cantsubscribe' => '-'), false, false, true);
-
-                $digestoptions_selector->url->param('id', $reactforum->id);
-                if ($reactforum->maildigest === null) {
-                    $digestoptions_selector->selected = -1;
-                } else {
-                    $digestoptions_selector->selected = $reactforum->maildigest;
-                }
-                $row[] = $OUTPUT->render($digestoptions_selector);
+                $row[] = reactforum_index_get_reactforum_subscription_selector($reactforum);
             }
 
             //If this reactforum has RSS activated, calculate it
@@ -466,25 +450,34 @@ if ($course->id != SITEID) {    // Only real courses have learning reactforums
     }
 }
 
-
-/// Output the page
+// Output the page.
 $PAGE->navbar->add($strreactforums);
 $PAGE->set_title("$course->shortname: $strreactforums");
 $PAGE->set_heading($course->fullname);
 $PAGE->set_button($searchform);
 echo $OUTPUT->header();
 
-// Show the subscribe all options only to non-guest, enrolled users
-if (!isguestuser() && isloggedin() && $can_subscribe) {
+if (!isguestuser() && isloggedin() && $showsubscriptioncolumns) {
+    // Show the subscribe all options only to non-guest, enrolled users.
     echo $OUTPUT->box_start('subscription');
-    echo html_writer::tag('div',
-        html_writer::link(new moodle_url('/mod/reactforum/index.php', array('id'=>$course->id, 'subscribe'=>1, 'sesskey'=>sesskey())),
-            get_string('allsubscribe', 'reactforum')),
-        array('class'=>'helplink'));
-    echo html_writer::tag('div',
-        html_writer::link(new moodle_url('/mod/reactforum/index.php', array('id'=>$course->id, 'subscribe'=>0, 'sesskey'=>sesskey())),
-            get_string('allunsubscribe', 'reactforum')),
-        array('class'=>'helplink'));
+
+    $subscriptionlink = new moodle_url('/mod/reactforum/index.php', [
+        'id'        => $course->id,
+        'sesskey'   => sesskey(),
+    ]);
+
+    // Subscribe all.
+    $subscriptionlink->param('subscribe', 1);
+    echo html_writer::tag('div', html_writer::link($subscriptionlink, get_string('allsubscribe', 'reactforum')), [
+            'class' => 'helplink',
+        ]);
+
+    // Unsubscribe all.
+    $subscriptionlink->param('subscribe', 0);
+    echo html_writer::tag('div', html_writer::link($subscriptionlink, get_string('allunsubscribe', 'reactforum')), [
+            'class' => 'helplink',
+        ]);
+
     echo $OUTPUT->box_end();
     echo $OUTPUT->box('&nbsp;', 'clearer');
 }
@@ -501,3 +494,24 @@ if ($learningreactforums) {
 
 echo $OUTPUT->footer();
 
+/**
+ * Get the content of the reactforum subscription options for this reactforum.
+ *
+ * @param   stdClass    $reactforum      The reactforum to return options for
+ * @return  string
+ */
+function reactforum_index_get_reactforum_subscription_selector($reactforum) {
+    global $OUTPUT, $PAGE;
+
+    if ($reactforum->cansubscribe || $reactforum->issubscribed) {
+        if ($reactforum->maildigest === null) {
+            $reactforum->maildigest = -1;
+        }
+
+        $renderer = $PAGE->get_renderer('mod_reactforum');
+        return $OUTPUT->render($renderer->render_digest_options($reactforum, $reactforum->maildigest));
+    } else {
+        // This user can subscribe to some reactforums. Add the empty fields.
+        return '';
+    }
+};

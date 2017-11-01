@@ -1,0 +1,14 @@
+<div class="reactforumsearch">
+    <form action="{{actionurl}}" style="display: inline;">
+        <fieldset class="invisiblefieldset">
+            {{#helpicon}}
+                {{>core/help_icon}}
+            {{/helpicon}}
+            <input type="hidden" name="id" value="{{courseid}}">
+            <label class="accesshide" for="search">{{#str}}search, reactforum{{/str}}</label>
+            <input id="search" name="search" type="text" size="18" value="{{query}}">
+            <label class="accesshide" for="searchreactforums">{{#str}}searchreactforums, reactforum{{/str}}</label>
+            <input id="searchreactforums" type="submit" value={{#quote}}{{#str}}searchreactforums, reactforum{{/str}}{{/quote}}>
+        </fieldset>
+    </form>
+</div>

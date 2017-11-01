@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/reactforum/db" VERSION="2017071216" COMMENT="XMLDB file for Moodle mod/reactforum"
+<XMLDB PATH="mod/reactforum/db" VERSION="20160912" COMMENT="XMLDB file for Moodle mod/reactforum"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -30,7 +30,7 @@
         <FIELD NAME="completionreplies" TYPE="int" LENGTH="9" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Nonzero if a certain number of replies are required to mark this reactforum complete for a user."/>
         <FIELD NAME="completionposts" TYPE="int" LENGTH="9" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Nonzero if a certain number of posts or replies (total) are required to mark this reactforum complete for a user."/>
         <FIELD NAME="displaywordcount" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="reactiontype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" DEFAULT="none"/>
+        <FIELD NAME="lockdiscussionafter" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -54,7 +54,6 @@
         <FIELD NAME="timestart" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timeend" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="pinned" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="reactiontype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" DEFAULT="none"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -93,48 +92,6 @@
         <INDEX NAME="mailed" UNIQUE="false" FIELDS="mailed"/>
       </INDEXES>
     </TABLE>
-
-    <!--REACTION TABLES: START-->
-
-    <TABLE NAME="reactforum_reactions" COMMENT="All reactions in each discussion">
-      <FIELDS>
-        <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="reactforum_id" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="discussion_id" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="reaction" SEQUENCE="false" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="reactforum_id" TYPE="foreign" FIELDS="reactforum_id" REFTABLE="reactforum" REFFIELDS="id"/>
-        <KEY NAME="discussion_id" TYPE="foreign" FIELDS="discussion_id" REFTABLE="reactforum_discussions" REFFIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="reactforum_id" UNIQUE="false" FIELDS="reactforum_id"/>
-        <INDEX NAME="discussion_id" UNIQUE="false" FIELDS="discussion_id"/>
-      </INDEXES>
-    </TABLE>
-    <TABLE NAME="reactforum_user_reactions" COMMENT="All reacted records from each user in every posts">
-      <FIELDS>
-        <FIELD NAME="id" SEQUENCE="true" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="user_id" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="post_id" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="reaction_id" SEQUENCE="false" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="post_id" TYPE="foreign" FIELDS="post_id" REFTABLE="reactforum_posts" REFFIELDS="id"/>
-        <KEY NAME="reaction_id" TYPE="foreign" FIELDS="reaction_id" REFTABLE="reactforum_reactions" REFFIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="user_id" UNIQUE="false" FIELDS="user_id"/>
-        <INDEX NAME="post_id" UNIQUE="false" FIELDS="post_id"/>
-        <INDEX NAME="reaction_id" UNIQUE="false" FIELDS="reaction_id"/>
-      </INDEXES>s
-    </TABLE>
-
-    <!--REACTION TABLES: END-->
-
-
     <TABLE NAME="reactforum_queue" COMMENT="For keeping track of posts that will be mailed in digest form">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

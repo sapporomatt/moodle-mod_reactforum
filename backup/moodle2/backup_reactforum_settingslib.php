@@ -18,7 +18,7 @@
 /**
  * @package    mod_reactforum
  * @subpackage backup-moodle2
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

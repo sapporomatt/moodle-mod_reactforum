@@ -18,7 +18,7 @@
 /**
  * @package    mod_reactforum
  * @subpackage backup-moodle2
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,36 +29,31 @@
 /**
  * Structure step to restore one reactforum activity
  */
-class restore_reactforum_activity_structure_step extends restore_activity_structure_step
-{
+class restore_reactforum_activity_structure_step extends restore_activity_structure_step {
 
-    protected function define_structure()
-    {
+    protected function define_structure() {
+
         $paths = array();
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('reactforum', '/activity/reactforum');
-        if ($userinfo)
-        {
+        if ($userinfo) {
             $paths[] = new restore_path_element('reactforum_discussion', '/activity/reactforum/discussions/discussion');
             $paths[] = new restore_path_element('reactforum_post', '/activity/reactforum/discussions/discussion/posts/post');
+            $paths[] = new restore_path_element('reactforum_tag', '/activity/reactforum/poststags/tag');
             $paths[] = new restore_path_element('reactforum_discussion_sub', '/activity/reactforum/discussions/discussion/discussion_subs/discussion_sub');
             $paths[] = new restore_path_element('reactforum_rating', '/activity/reactforum/discussions/discussion/posts/post/ratings/rating');
             $paths[] = new restore_path_element('reactforum_subscription', '/activity/reactforum/subscriptions/subscription');
             $paths[] = new restore_path_element('reactforum_digest', '/activity/reactforum/digests/digest');
             $paths[] = new restore_path_element('reactforum_read', '/activity/reactforum/readposts/read');
             $paths[] = new restore_path_element('reactforum_track', '/activity/reactforum/trackedprefs/track');
-
-            $paths[] = new restore_path_element('reactforum_reactions', '/activity/reactforum/reactions/reaction');
-            $paths[] = new restore_path_element('reactforum_user_reactions', '/activity/reactforum/reactions/reaction/user_reactions/user_reaction');
         }
 
         // Return the paths wrapped into standard activity structure
         return $this->prepare_activity_structure($paths);
     }
 
-    protected function process_reactforum($data)
-    {
+    protected function process_reactforum($data) {
         global $DB;
 
         $data = (object)$data;
@@ -67,18 +62,20 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
 
         $data->assesstimestart = $this->apply_date_offset($data->assesstimestart);
         $data->assesstimefinish = $this->apply_date_offset($data->assesstimefinish);
-        if ($data->scale < 0)
-        { // scale found, get mapping
+        if ($data->scale < 0) { // scale found, get mapping
             $data->scale = -($this->get_mappingid('scale', abs($data->scale)));
         }
 
         $newitemid = $DB->insert_record('reactforum', $data);
         $this->apply_activity_instance($newitemid);
-        $this->set_mapping('reactforum', $oldid, $newitemid);
+
+        // Add current enrolled user subscriptions if necessary.
+        $data->id = $newitemid;
+        $ctx = context_module::instance($this->task->get_moduleid());
+        reactforum_instance_created($ctx, $data);
     }
 
-    protected function process_reactforum_discussion($data)
-    {
+    protected function process_reactforum_discussion($data) {
         global $DB;
 
         $data = (object)$data;
@@ -97,8 +94,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $this->set_mapping('reactforum_discussion', $oldid, $newitemid);
     }
 
-    protected function process_reactforum_post($data)
-    {
+    protected function process_reactforum_post($data) {
         global $DB;
 
         $data = (object)$data;
@@ -109,8 +105,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->modified = $this->apply_date_offset($data->modified);
         $data->userid = $this->get_mappingid('user', $data->userid);
         // If post has parent, map it (it has been already restored)
-        if (!empty($data->parent))
-        {
+        if (!empty($data->parent)) {
             $data->parent = $this->get_mappingid('reactforum_post', $data->parent);
         }
 
@@ -118,23 +113,37 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $this->set_mapping('reactforum_post', $oldid, $newitemid, true);
 
         // If !post->parent, it's the 1st post. Set it in discussion
-        if (empty($data->parent))
-        {
+        if (empty($data->parent)) {
             $DB->set_field('reactforum_discussions', 'firstpost', $newitemid, array('id' => $data->discussion));
         }
     }
 
-    protected function process_reactforum_rating($data)
-    {
+    protected function process_reactforum_tag($data) {
+        $data = (object)$data;
+
+        if (!core_tag_tag::is_enabled('mod_reactforum', 'reactforum_posts')) { // Tags disabled in server, nothing to process.
+            return;
+        }
+
+        $tag = $data->rawname;
+        if (!$itemid = $this->get_mappingid('reactforum_post', $data->itemid)) {
+            // Some orphaned tag, we could not find the restored post for it - ignore.
+            return;
+        }
+
+        $context = context_module::instance($this->task->get_moduleid());
+        core_tag_tag::add_item_tag('mod_reactforum', 'reactforum_posts', $itemid, $context, $tag);
+    }
+
+    protected function process_reactforum_rating($data) {
         global $DB;
 
         $data = (object)$data;
 
         // Cannot use ratings API, cause, it's missing the ability to specify times (modified/created)
         $data->contextid = $this->task->get_contextid();
-        $data->itemid = $this->get_new_parentid('reactforum_post');
-        if ($data->scaleid < 0)
-        { // scale found, get mapping
+        $data->itemid    = $this->get_new_parentid('reactforum_post');
+        if ($data->scaleid < 0) { // scale found, get mapping
             $data->scaleid = -($this->get_mappingid('scale', abs($data->scaleid)));
         }
         $data->rating = $data->value;
@@ -143,20 +152,17 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         // We need to check that component and ratingarea are both set here.
-        if (empty($data->component))
-        {
+        if (empty($data->component)) {
             $data->component = 'mod_reactforum';
         }
-        if (empty($data->ratingarea))
-        {
+        if (empty($data->ratingarea)) {
             $data->ratingarea = 'post';
         }
 
         $newitemid = $DB->insert_record('rating', $data);
     }
 
-    protected function process_reactforum_subscription($data)
-    {
+    protected function process_reactforum_subscription($data) {
         global $DB;
 
         $data = (object)$data;
@@ -170,8 +176,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
 
     }
 
-    protected function process_reactforum_discussion_sub($data)
-    {
+    protected function process_reactforum_discussion_sub($data) {
         global $DB;
 
         $data = (object)$data;
@@ -185,8 +190,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $this->set_mapping('reactforum_discussion_sub', $oldid, $newitemid, true);
     }
 
-    protected function process_reactforum_digest($data)
-    {
+    protected function process_reactforum_digest($data) {
         global $DB;
 
         $data = (object)$data;
@@ -198,8 +202,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('reactforum_digests', $data);
     }
 
-    protected function process_reactforum_read($data)
-    {
+    protected function process_reactforum_read($data) {
         global $DB;
 
         $data = (object)$data;
@@ -213,8 +216,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('reactforum_read', $data);
     }
 
-    protected function process_reactforum_track($data)
-    {
+    protected function process_reactforum_track($data) {
         global $DB;
 
         $data = (object)$data;
@@ -226,56 +228,16 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('reactforum_track_prefs', $data);
     }
 
-    protected function process_reactforum_reactions($data)
-    {
-        global $DB;
-
-        $data = (object)$data;
-        $oldID = $data->id;
-
-        if($data->reactforum_id > 0)
-        {
-            $data->reactforum_id = $this->get_new_parentid('reactforum');
-        }
-
-        if($data->discussion_id > 0)
-        {
-            $data->discussion_id = $this->get_mappingid('reactforum_discussion', $data->discussion_id);
-        }
-
-        $newItemID = $DB->insert_record("reactforum_reactions", $data);
-
-        $this->set_mapping("reactforum_reactions", $oldID, $newItemID, true);
-    }
-
-    protected function process_reactforum_user_reactions($data)
-    {
-        global $DB;
-
-        $data = (object)$data;
-        $oldID = $data->id;
-
-        $data->reaction_id = $this->get_new_parentid('reactforum_reactions');
-        $data->post_id = $this->get_mappingid('reactforum_post', $data->post_id);
-        $data->user_id = $this->get_mappingid('user', $data->user_id);
-
-        $newItemID = $DB->insert_record("reactforum_user_reactions", $data);
-    }
-
-    protected function after_execute()
-    {
+    protected function after_execute() {
         // Add reactforum related files, no need to match by itemname (just internally handled context)
         $this->add_related_files('mod_reactforum', 'intro', null);
 
         // Add post related files, matching by itemname = 'reactforum_post'
         $this->add_related_files('mod_reactforum', 'post', 'reactforum_post');
         $this->add_related_files('mod_reactforum', 'attachment', 'reactforum_post');
-
-        $this->add_related_files('mod_reactforum', 'reactions', 'reactforum_reactions');
     }
 
-    protected function after_restore()
-    {
+    protected function after_restore() {
         global $DB;
 
         // If the reactforum is of type 'single' and no discussion has been ignited
@@ -283,29 +245,27 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         // information as base for the initial post.
         $reactforumid = $this->task->get_activityid();
         $reactforumrec = $DB->get_record('reactforum', array('id' => $reactforumid));
-        if ($reactforumrec->type == 'single' && !$DB->record_exists('reactforum_discussions', array('reactforum' => $reactforumid)))
-        {
+        if ($reactforumrec->type == 'single' && !$DB->record_exists('reactforum_discussions', array('reactforum' => $reactforumid))) {
             // Create single discussion/lead post from reactforum data
             $sd = new stdClass();
-            $sd->course = $reactforumrec->course;
-            $sd->reactforum = $reactforumrec->id;
-            $sd->name = $reactforumrec->name;
+            $sd->course   = $reactforumrec->course;
+            $sd->reactforum    = $reactforumrec->id;
+            $sd->name     = $reactforumrec->name;
             $sd->assessed = $reactforumrec->assessed;
-            $sd->message = $reactforumrec->intro;
+            $sd->message  = $reactforumrec->intro;
             $sd->messageformat = $reactforumrec->introformat;
-            $sd->messagetrust = true;
-            $sd->mailnow = false;
+            $sd->messagetrust  = true;
+            $sd->mailnow  = false;
             $sdid = reactforum_add_discussion($sd, null, null, $this->task->get_userid());
             // Mark the post as mailed
-            $DB->set_field('reactforum_posts', 'mailed', '1', array('discussion' => $sdid));
+            $DB->set_field ('reactforum_posts','mailed', '1', array('discussion' => $sdid));
             // Copy all the files from mod_foum/intro to mod_reactforum/post
             $fs = get_file_storage();
             $files = $fs->get_area_files($this->task->get_contextid(), 'mod_reactforum', 'intro');
-            foreach ($files as $file)
-            {
+            foreach ($files as $file) {
                 $newfilerecord = new stdClass();
                 $newfilerecord->filearea = 'post';
-                $newfilerecord->itemid = $DB->get_field('reactforum_discussions', 'firstpost', array('id' => $sdid));
+                $newfilerecord->itemid   = $DB->get_field('reactforum_discussions', 'firstpost', array('id' => $sdid));
                 $fs->create_file_from_storedfile($newfilerecord, $file);
             }
         }

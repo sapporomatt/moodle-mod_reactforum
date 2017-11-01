@@ -17,7 +17,7 @@
  * The mod_reactforum discussion unpinned event.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Charles Fulton <fultonc@lafayette.edu>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
  * The mod_reactforum discussion unpinned event.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Charles Fulton <fultonc@lafayette.edu>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class discussion_unpinned extends \core\event\base {

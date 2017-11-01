@@ -18,7 +18,7 @@
  * The mod_reactforum subscription created event.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -37,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @package    mod_reactforum
  * @since      Moodle 2.7
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class subscription_created extends \core\event\base {

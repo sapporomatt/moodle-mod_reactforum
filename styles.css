@@ -25,99 +25,231 @@
  *             div.footer
  */
 
-.reactforumpost {display: block;position:relative;margin:0 0 1em 0;padding:0;border:1px solid #000;max-width:100%;}
-.reactforumpost .row {width:100%;position:relative;}
-.reactforumpost .row .left {float:left;width: 43px;overflow:hidden;}
-.reactforumpost .row .left .grouppictures a {text-align:center;display:block;margin:6px 2px 0 2px;}
-.reactforumpost .row .left .grouppicture {width:20px;height:20px;}
+.reactforumpost {
+    display: block;
+    position: relative;
+    margin: 0 0 1em 0;
+    padding: 0;
+    border: 1px solid #000;
+    max-width: 100%;
+}
+
+.reactforumpost .row {
+    width: 100%;
+    position: relative;
+}
+
+.reactforumpost .row .left {
+    float: left;
+    width: 43px;
+    overflow: hidden;
+}
+
+.reactforumpost .row .left .grouppictures a {
+    text-align: center;
+    display: block;
+    margin: 6px 2px 0 2px;
+}
+
+.reactforumpost .row .left .grouppicture {
+    width: 20px;
+    height: 20px;
+}
+
 .reactforumpost .row .topic,
 .reactforumpost .row .content-mask,
-.reactforumpost .row .options {margin-left:43px;}
-.reactforumpost .picture img {margin:4px;}
+.reactforumpost .row .options {
+    margin-left: 43px;
+}
+
+.reactforumpost .picture img {
+    margin: 4px;
+}
+
 .reactforumpost .options .commands,
 .reactforumpost .content .attachments,
 .reactforumpost .options .footer,
-.reactforumpost .options .link {text-align:right;}
-.reactforumpost .options .reactforum-post-rating {float:left;}
-.reactforumpost .content .posting {overflow:auto;max-width:100%;}
-.reactforumpost .content .attachedimages img {max-width:100%;}
-.reactforumpost .post-word-count { font-size: .85em; font-style: italic; }
-.reactforumpost .shortenedpost .post-word-count { display: inline; padding: 0 .3em; }
+.reactforumpost .options .link {
+    text-align: right;
+}
 
-.dir-rtl .reactforumpost .row .topic,
-.dir-rtl .reactforumpost .row .content-mask,
-.dir-rtl .reactforumpost .row .options {margin-right:43px;margin-left:0;}
-.dir-rtl .reactforumpost .row .left {float:right;}
-.dir-rtl.path-mod-reactforum .indent {
-    margin-right: 3%;
-    margin-left: 0;
+.reactforumpost .options .reactforum-post-rating {
+    float: left;
+}
+
+.reactforumpost .content .posting {
+    overflow: auto;
+    max-width: 100%;
+}
+
+.reactforumpost .content .attachedimages img {
+    max-width: 100%;
+}
+
+.reactforumpost .post-word-count {
+    font-size: .85em;
+    font-style: italic;
+}
+
+.reactforumpost .shortenedpost .post-word-count {
+    display: inline;
+    padding: 0 .3em;
 }
 
 .path-mod-reactforum .reactforumolddiscuss,
-#page-mod-reactforum-search .c0 {text-align:right;}
+#page-mod-reactforum-search .c0 {
+    text-align: right;
+}
+
 .path-mod-reactforum .indent {
     margin-left: 3%;
 }
-.path-mod-reactforum .reactforumheaderlist {width: 100%;border-width:1px;border-style:solid;border-collapse:separate;margin-top: 10px;}
-.path-mod-reactforum .reactforumheaderlist td {border-width:1px 0px 0px 1px;border-style:solid;}
-.path-mod-reactforum .reactforumheaderlist th.header.replies .iconsmall { margin: 0 .3em;}
-.path-mod-reactforum .reactforumheaderlist .picture {width: 35px;}
-.path-mod-reactforum .reactforumheaderlist .discussion .starter {vertical-align: middle;}
-.path-mod-reactforum .reactforumheaderlist .discussion .pinned img {padding: 5px;}
-.path-mod-reactforum .reactforumheaderlist .discussion .lastpost {white-space: nowrap;text-align: right;}
+
+.path-mod-reactforum .reactforumheaderlist {
+    width: 100%;
+    border-width: 1px;
+    border-style: solid;
+    border-collapse: separate;
+    margin-top: 10px;
+}
+
+.path-mod-reactforum .reactforumheaderlist td {
+    border-width: 1px 0 0 1px;
+    border-style: solid;
+}
+
+.path-mod-reactforum .reactforumheaderlist th.header.replies .iconsmall {
+    margin: 0 .3em;
+}
+
+.path-mod-reactforum .reactforumheaderlist .picture {
+    width: 35px;
+}
+
+.path-mod-reactforum .reactforumheaderlist .discussion .starter {
+    vertical-align: middle;
+}
+
+.path-mod-reactforum .reactforumheaderlist .discussion .pinned img {
+    padding: 5px;
+}
+
+.path-mod-reactforum .reactforumheaderlist .discussion .lastpost {
+    white-space: nowrap;
+    text-align: right;
+}
+
 .path-mod-reactforum .reactforumheaderlist .replies,
-.path-mod-reactforum .reactforumheaderlist .discussion .author {white-space: nowrap;}
+.path-mod-reactforum .reactforumheaderlist .discussion .author {
+    white-space: nowrap;
+}
+
 .path-mod-reactforum .reactforumheaderlist thead .discussionsubscription {
     text-align: center;
 }
 
 /** Styles for subscribers.php */
 #page-mod-reactforum-subscribers .subscriberdiv,
-#page-mod-reactforum-subscribers .subscribertable {width:100%;vertical-align:top;}
-#page-mod-reactforum-subscribers .subscribertable tr td {vertical-align:top;}
-#page-mod-reactforum-subscribers .subscribertable tr td.actions {width:16%;padding-top:3em;}
-#page-mod-reactforum-subscribers .subscribertable tr td.actions .actionbutton {margin:0.3em 0;padding:0.5em 0;width:100%;}
+#page-mod-reactforum-subscribers .subscribertable {
+    width: 100%;
+    vertical-align: top;
+}
+
+#page-mod-reactforum-subscribers .subscribertable tr td {
+    vertical-align: top;
+}
+
+#page-mod-reactforum-subscribers .subscribertable tr td.actions {
+    width: 16%;
+    padding-top: 3em;
+}
+
+#page-mod-reactforum-subscribers .subscribertable tr td.actions .actionbutton {
+    margin: 0.3em 0;
+    padding: 0.5em 0;
+    width: 100%;
+}
+
 #page-mod-reactforum-subscribers .subscribertable tr td.existing,
-#page-mod-reactforum-subscribers .subscribertable tr td.potential {width:42%;}
+#page-mod-reactforum-subscribers .subscribertable tr td.potential {
+    width: 42%;
+}
 
 /** Styles for discuss.php **/
-#page-mod-reactforum-discuss .discussioncontrols {width:100%;margin:5px;}
-#page-mod-reactforum-discuss .discussioncontrols .controlscontainer {width:100%;float:right;}
-#page-mod-reactforum-discuss .discussioncontrols .discussioncontrol {float:left;}
-#page-mod-reactforum-discuss .discussioncontrol.exporttoportfolio {text-align:left;}
-#page-mod-reactforum-discuss .discussioncontrol.displaymode {padding-right:10px;}
-#page-mod-reactforum-discuss .discussioncontrol.movediscussion {padding-right:10px;}
-#page-mod-reactforum-discuss .discussioncontrol.movediscussion .movediscussionoption {}
+#page-mod-reactforum-discuss .discussioncontrols {
+    width: 100%;
+    margin: 5px;
+}
+
+#page-mod-reactforum-discuss .discussioncontrols .controlscontainer {
+    width: 100%;
+    float: right;
+}
+
+#page-mod-reactforum-discuss .discussioncontrols .discussioncontrol {
+    float: left;
+}
+
+#page-mod-reactforum-discuss .discussioncontrol.exporttoportfolio {
+    text-align: left;
+}
+
+#page-mod-reactforum-discuss .discussioncontrol.displaymode {
+    padding-right: 10px;
+}
+
+#page-mod-reactforum-discuss .discussioncontrol.movediscussion {
+    padding-right: 10px;
+}
 
 /** Styles for view.php **/
-#page-mod-reactforum-view .reactforumaddnew {margin-bottom: 20px;}
-#page-mod-reactforum-view .groupmenu {float: left;text-align:left;white-space: nowrap;}
+#page-mod-reactforum-view .reactforumaddnew {
+    margin-bottom: 20px;
+}
+
+#page-mod-reactforum-view .groupmenu {
+    float: left;
+    text-align: left;
+    white-space: nowrap;
+}
+
 #page-mod-reactforum-index .subscription,
-#page-mod-reactforum-view .subscription {float: right;text-align:right;white-space: nowrap;margin: 5px 0;}
+#page-mod-reactforum-view .subscription {
+    float: right;
+    text-align: right;
+    white-space: nowrap;
+    margin: 5px 0;
+}
 
 /** Styles for search.php */
-#page-mod-reactforum-search .introcontent {padding: 15px;font-weight:bold;}
+#page-mod-reactforum-search .introcontent {
+    padding: 15px;
+    font-weight: bold;
+}
 
-#page-mod-reactforum-index .unread a:first-child,
-#page-mod-reactforum-view .unread a:first-child {padding-right: 10px;}
-#page-mod-reactforum-index .unread img,
-#page-mod-reactforum-view .unread img {margin-left: 5px;}
-#page-mod-reactforum-view .unread img {margin-left: 5px;}
-.dir-rtl#page-mod-reactforum-view .unread img {margin-right: 5px; margin-left: 0; }
+.path-mod-reactforum span.unread a:first-child {
+    padding-right: 10px;
+}
+
+.path-mod-reactforum span.unread img {
+    margin-left: 5px;
+}
 
 /** Unknown Styles ??? */
-#email .unsubscribelink {margin-top:20px;}
+#email .unsubscribelink {
+    margin-top: 20px;
+}
 
 /* ReactForumpost unread
 -------------------------*/
-#page-mod-reactforum-view .unread,
 .reactforumpost.unread .row.header,
 .path-course-view .unread,
 span.unread {
-    background-color: #FFD;
+    background-color: #ffd;
 }
+
 .reactforumpost.unread .row.header {
-    border-bottom: 1px solid #DDD;
+    border-bottom: 1px solid #ddd;
 }
 
 /* ReactForumpost hash anchor target */
@@ -136,23 +268,32 @@ span.unread {
 .path-mod-reactforum .discussion-nav {
     margin: .5em 0;
 }
+
 .path-mod-reactforum .discussion-nav ul {
     margin: 0;
     list-style: none;
 }
-.dir-rtl.path-mod-reactforum .discussion-nav .next-discussion:after,
+
 .path-mod-reactforum .discussion-nav .prev-discussion:before {
+    /*rtl:raw:
+    content: ' ► ';
+    */
+    /*rtl:remove*/
     content: ' ◄ ';
 }
-.dir-rtl.path-mod-reactforum .discussion-nav .prev-discussion:before,
+
 .path-mod-reactforum .discussion-nav .next-discussion:after {
+    /*rtl:raw:
+    content: ' ◄ ';
+    */
+    /*rtl:remove*/
     content: ' ► ';
 }
-.dir-rtl.path-mod-reactforum .discussion-nav .prev-discussion,
+
 .path-mod-reactforum .discussion-nav .next-discussion {
     float: right;
 }
-.dir-rtl.path-mod-reactforum .discussion-nav .next-discussion,
+
 .path-mod-reactforum .discussion-nav .prev-discussion {
     float: left;
 }
@@ -176,274 +317,6 @@ span.unread {
     padding: 0 4px;
 }
 
-.dir-rtl .path-mod-reactforum .discussionsubscription {
-    text-align: left;
-}
-
 #page-mod-reactforum-view img.timedpost {
     margin-right: 5px;
-}
-
-.dir-rtl#page-mod-reactforum-view img.timedpost {
-    margin: 3px 0 0 5px;
-    float: right;
-}
-
-
-
-/*!!!!!!!!!*/
-
-
-
-
-#site-news-reactforum h2
-{
-    margin-bottom: 9px
-}
-
-.reactforumpost .row {
-    margin-left: 0 !important
-}
-
-.reactforumpost .row:before, .reactforumpost .row:after {
-    content: none
-}
-
-.block_search_reactforums #searchform_search {
-    width: auto;
-    max-width: 92%
-}
-
-.form-item .form-setting, .form-item .form-description, .mform .fitem .felement, #page-mod-reactforum-search .c1 {
-    *display: inline-block;
-    *padding-left: 20px;
-    margin-left: 200px;
-    *margin-left: 0
-}
-
-.form-item .form-setting:first-child, .form-item .form-description:first-child, .mform .fitem .felement:first-child, #page-mod-reactforum-search .c1:first-child {
-    *padding-left: 200px
-}
-
-.path-mod-reactforum .reactforumsearch input, .path-mod-reactforum .reactforumsearch .helptooltip {
-    margin: 0 3px
-}
-
-.path-mod-reactforum .reactforumheaderlist, .path-mod-reactforum .reactforumheaderlist td {
-    border: none
-}
-
-.path-mod-reactforum .reactforumheaderlist thead .header, .path-mod-reactforum .reactforumheaderlist tbody .discussion td {
-    white-space: normal;
-    vertical-align: top;
-    padding-left: .5em;
-    padding-right: .5em
-}
-
-.path-mod-reactforum .reactforumheaderlist thead .header {
-    white-space: normal;
-    vertical-align: top
-}
-
-.path-mod-reactforum .reactforumheaderlist thead .header.replies {
-    text-align: center
-}
-
-.path-mod-reactforum .reactforumheaderlist thead .header.lastpost {
-    text-align: right
-}
-
-.path-mod-reactforum .reactforumheaderlist thead .header th.discussionsubscription, .path-mod-reactforum .reactforumheaderlist tbody .discussion td.discussionsubscription {
-    width: 16px;
-    padding-left: .5em;
-    padding-right: .5em
-}
-
-.path-mod-reactforum .reactforumheaderlist .discussion .author, .path-mod-reactforum .reactforumheaderlist .discussion .replies, .path-mod-reactforum .reactforumheaderlist .discussion .lastpost {
-    white-space: normal
-}
-
-.path-mod-reactforum .reactforumheaderlist .discussion .discussionsubscription, .path-mod-reactforum .reactforumheaderlist .discussion .replies {
-    text-align: center
-}
-
-.path-mod-reactforum .reactforumheaderlist .discussion .topic, .path-mod-reactforum .reactforumheaderlist .discussion .discussionsubscription, .path-mod-reactforum .reactforumheaderlist .discussion .topic.starter, .path-mod-reactforum .reactforumheaderlist .discussion .picture, .path-mod-reactforum .reactforumheaderlist .discussion .author, .path-mod-reactforum .reactforumheaderlist .discussion .replies, .path-mod-reactforum .reactforumheaderlist .discussion .lastpost {
-    vertical-align: top
-}
-
-.reactforumpost {
-    min-height: 20px;
-    padding: 19px;
-    margin-bottom: 20px;
-    background-color: #f5f5f5;
-    border: 1px solid #e3e3e3;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-    border-color: #e3e3e3;
-    padding: 6px
-}
-
-.reactforumpost blockquote {
-    border-color: #ddd;
-    border-color: rgba(0, 0, 0, 0.15)
-}
-
-.reactforumpost .header {
-    margin-bottom: 3px
-}
-
-.reactforumpost .picture img {
-    margin: 3px
-}
-
-.reactforumpost .picture img.userpicture {
-    margin-left: 3px;
-    margin-right: 10px
-}
-
-.reactforumpost .content .posting.fullpost {
-    margin-top: 8px
-}
-
-.reactforumpost .row .topic, .reactforumpost .row .content-mask, .reactforumpost .row .options {
-    margin-left: 48px
-}
-
-.reactforumpost .row.side {
-    clear: both
-}
-
-.dir-rtl .reactforumpost .picture img.userpicture {
-    margin-left: 10px;
-    margin-right: 3px
-}
-
-.dir-rtl .reactforumpost .row .topic, .dir-rtl .reactforumpost .row .content-mask, .dir-rtl .reactforumpost .row .options {
-    margin-left: 0;
-    margin-right: 48px
-}
-
-.reactforumpost .row .left {
-    width: 48px
-}
-
-.reactforumpost .options .commands {
-    margin-left: 0
-}
-
-.reactforumpost .subject {
-    font-weight: bold
-}
-
-.reactforumsearch input[type=text] {
-    margin-bottom: 0 !important
-}
-
-#page-mod-reactforum-discuss .discussioncontrols {
-    width: auto;
-    margin: 0
-}
-
-
-@media (min-width: 980px) and (max-width: 1199px) {
-    .form-item .form-label, .mform .fitem div.fitemtitle, .userprofile dl.list dt, .form-horizontal .control-label {
-        width: 200px
-    }
-
-    .form-item .form-setting, .form-item .form-description, .mform .fitem .felement, #page-mod-reactforum-search .c1, .mform .fdescription.required, .userprofile dl.list dd, .form-horizontal .controls {
-        margin-left: 220px
-    }
-
-    .dir-rtl .form-item .form-setting, .dir-rtl .form-item .form-description, .dir-rtl .mform .fitem .felement, .dir-rtl .mform .fdescription.required, .dir-rtl .userprofile dl.list dd, .dir-rtl .form-horizontal .controls {
-        margin-right: 220px
-    }
-
-    #page-mod-reactforum-search.dir-lrt .c1 {
-        margin-right: 220px
-    }
-
-    .path-admin .buttons, .form-buttons {
-        padding-left: 220px
-    }
-}
-
-@media (min-width: 1200px) {
-
-    #page-mod-reactforum-search .c1
-    {
-        margin-left: 265px
-    }
-
-    .dir-rtl #page-mod-reactforum-search .c1 {
-        margin-right: 265px
-    }
-}
-
-@media (max-width: 480px) {
-
-    .path-mod-reactforum .reactforumsearch #search {
-        width: 120px
-    }
-
-    .path-mod-reactforum .reactforumheaderlist .picture {
-        display: none
-    }
-}
-
-@media (max-width: 979px) {
-
-    .path-mod-reactforum .reactforumheaderlist thead .header {
-        font-weight: normal;
-        font-size: 12px
-    }
-
-    .path-mod-reactforum .reactforumheaderlist .discussion .author, .path-mod-reactforum .reactforumheaderlist .discussion .replies, .path-mod-reactforum .reactforumheaderlist .discussion .lastpost {
-        font-size: 12px
-    }
-
-    .path-mod-reactforum .reactforumheaderlist .discussion .replies .unread a {
-        padding: 0
-    }
-}
-
-@media (max-width: 1199px) {
-
-    #page-mod-reactforum-discuss .discussioncontrols {
-        text-align: right
-    }
-
-    #page-mod-reactforum-discuss .discussioncontrols .discussioncontrol {
-        float: none;
-        width: auto;
-        display: inline-block;
-        margin: 0 3px .5em
-    }
-
-    #page-mod-reactforum-discuss .discussioncontrols .discussioncontrol select, #page-mod-reactforum-discuss .discussioncontrols .discussioncontrol input {
-        margin-bottom: 0
-    }
-
-    #page-mod-reactforum-discuss .discussioncontrols .discussioncontrol.movediscussion {
-        margin-right: 0;
-        padding-right: 0
-    }
-
-    #page-mod-reactforum-discuss.dir-rtl .discussioncontrols {
-        text-align: left
-    }
-}
-
-.reactforumheaderlist tbody tr:hover > td, .reactforumheaderlist tbody tr:hover > th
-{
-    background-color: #f5f5f5
-}
-
-img.reaction-img
-{
-    width: auto;
-    height: 40px;
 }

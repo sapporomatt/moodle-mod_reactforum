@@ -18,7 +18,7 @@ Feature: Students can edit or delete their reactforum posts within a set time li
       | activity   | name                   | intro                   | course  | idnumber  |
       | reactforum      | Test reactforum name        | Test reactforum description  | C1      | reactforum     |
     And I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I add a new discussion to "Test reactforum name" reactforum with:
       | Subject | ReactForum post subject |
       | Message | This is the body |
@@ -44,21 +44,18 @@ Feature: Students can edit or delete their reactforum posts within a set time li
   Scenario: Time limit expires
     Given I log out
     And I log in as "admin"
-    And I expand "Site administration" node
-    And I expand "Security" node
-    And I follow "Site policies"
+    And I navigate to "Security > Site policies" in site administration
     And I set the field "Maximum time to edit posts" to "1 minutes"
     And I press "Save changes"
-    And I am on site homepage
-    And I follow "Course 1"
-    And I turn editing mode on
+    And I am on "Course 1" course homepage with editing mode on
+    And I add the "Recent activity" block
     And I add a "ReactForum" to section "1" and I fill the form with:
       | ReactForum name | Test reactforum name |
       | ReactForum type | Standard reactforum for general use |
       | Description | Test reactforum description |
     And I log out
     And I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     When I wait "61" seconds
     And I follow "ReactForum post subject"
     Then I should not see "Edit" in the "region-main" "region"

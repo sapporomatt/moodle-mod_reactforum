@@ -17,7 +17,7 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2008 Petr Skoda (http://skodak.org)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

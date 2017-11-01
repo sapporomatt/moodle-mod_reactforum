@@ -17,7 +17,7 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -38,6 +38,7 @@ $phrase  = trim(optional_param('phrase', '', PARAM_NOTAGS));  // Phrase
 $words   = trim(optional_param('words', '', PARAM_NOTAGS));   // Words
 $fullwords = trim(optional_param('fullwords', '', PARAM_NOTAGS)); // Whole words
 $notwords = trim(optional_param('notwords', '', PARAM_NOTAGS));   // Words we don't want
+$tags = optional_param_array('tags', [], PARAM_TEXT);
 
 $timefromrestrict = optional_param('timefromrestrict', 0, PARAM_INT); // Use starting date
 $fromday = optional_param('fromday', 0, PARAM_INT);      // Starting date
@@ -100,6 +101,9 @@ if (empty($search)) {   // Check the other parameters instead
     }
     if (!empty($dateto)) {
         $search .= ' dateto:'.$dateto;
+    }
+    if (!empty($tags)) {
+        $search .= ' tags:' . implode(',', $tags);
     }
     $individualparams = true;
 } else {
@@ -184,22 +188,29 @@ $rm = new rating_manager();
 $PAGE->set_title($strsearchresults);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_button($searchform);
-$PAGE->requires->js(new moodle_url("/mod/reactforum/script.js"));
 echo $OUTPUT->header();
 echo '<div class="reportlink">';
-echo '<a href="search.php?id='.$course->id.
-                         '&amp;user='.urlencode($user).
-                         '&amp;userid='.$userid.
-                         '&amp;reactforumid='.$reactforumid.
-                         '&amp;subject='.urlencode($subject).
-                         '&amp;phrase='.urlencode($phrase).
-                         '&amp;words='.urlencode($words).
-                         '&amp;fullwords='.urlencode($fullwords).
-                         '&amp;notwords='.urlencode($notwords).
-                         '&amp;dateto='.$dateto.
-                         '&amp;datefrom='.$datefrom.
-                         '&amp;showform=1'.
-                         '">'.get_string('advancedsearch','reactforum').'...</a>';
+
+$params = [
+    'id'        => $course->id,
+    'user'      => $user,
+    'userid'    => $userid,
+    'reactforumid'   => $reactforumid,
+    'subject'   => $subject,
+    'phrase'    => $phrase,
+    'words'     => $words,
+    'fullwords' => $fullwords,
+    'notwords'  => $notwords,
+    'dateto'    => $dateto,
+    'datefrom'  => $datefrom,
+    'showform'  => 1
+];
+$url    = new moodle_url("/mod/reactforum/search.php", $params);
+foreach ($tags as $tag) {
+    $url .= "&tags[]=$tag";
+}
+echo html_writer::link($url, get_string('advancedsearch', 'reactforum').'...');
+
 echo '</div>';
 
 echo $OUTPUT->heading($strreactforums, 2);
@@ -319,122 +330,22 @@ echo $OUTPUT->footer();
   * @return void The function prints the form.
   */
 function reactforum_print_big_search_form($course) {
-    global $CFG, $DB, $words, $subject, $phrase, $user, $userid, $fullwords, $notwords, $datefrom, $dateto, $PAGE, $OUTPUT;
+    global $PAGE, $words, $subject, $phrase, $user, $fullwords, $notwords, $datefrom, $dateto, $reactforumid, $tags;
 
-    echo $OUTPUT->box(get_string('searchreactforumintro', 'reactforum'), 'searchbox boxaligncenter', 'intro');
+    $renderable = new \mod_reactforum\output\big_search_form($course, $user);
+    $renderable->set_words($words);
+    $renderable->set_phrase($phrase);
+    $renderable->set_notwords($notwords);
+    $renderable->set_fullwords($fullwords);
+    $renderable->set_datefrom($datefrom);
+    $renderable->set_dateto($dateto);
+    $renderable->set_subject($subject);
+    $renderable->set_user($user);
+    $renderable->set_reactforumid($reactforumid);
+    $renderable->set_tags($tags);
 
-    echo $OUTPUT->box_start('generalbox boxaligncenter');
-
-    echo html_writer::script('', $CFG->wwwroot.'/mod/reactforum/reactforum.js');
-
-    echo '<form id="searchform" action="search.php" method="get">';
-    echo '<table cellpadding="10" class="searchbox" id="form">';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="words">'.get_string('searchwords', 'reactforum').'</label>';
-    echo '<input type="hidden" value="'.$course->id.'" name="id" alt="" /></td>';
-    echo '<td class="c1"><input type="text" size="35" name="words" id="words"value="'.s($words, true).'" alt="" /></td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="phrase">'.get_string('searchphrase', 'reactforum').'</label></td>';
-    echo '<td class="c1"><input type="text" size="35" name="phrase" id="phrase" value="'.s($phrase, true).'" alt="" /></td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="notwords">'.get_string('searchnotwords', 'reactforum').'</label></td>';
-    echo '<td class="c1"><input type="text" size="35" name="notwords" id="notwords" value="'.s($notwords, true).'" alt="" /></td>';
-    echo '</tr>';
-
-    if ($DB->get_dbfamily() == 'mysql' || $DB->get_dbfamily() == 'postgres') {
-        echo '<tr>';
-        echo '<td class="c0"><label for="fullwords">'.get_string('searchfullwords', 'reactforum').'</label></td>';
-        echo '<td class="c1"><input type="text" size="35" name="fullwords" id="fullwords" value="'.s($fullwords, true).'" alt="" /></td>';
-        echo '</tr>';
-    }
-
-    echo '<tr>';
-    echo '<td class="c0">'.get_string('searchdatefrom', 'reactforum').'</td>';
-    echo '<td class="c1">';
-    if (empty($datefrom)) {
-        $datefromchecked = '';
-        $datefrom = make_timestamp(2000, 1, 1, 0, 0, 0);
-    }else{
-        $datefromchecked = 'checked="checked"';
-    }
-
-    echo '<input name="timefromrestrict" type="checkbox" value="1" alt="'.get_string('searchdatefrom', 'reactforum').'" onclick="return lockoptions(\'searchform\', \'timefromrestrict\', timefromitems)" '.  $datefromchecked . ' /> ';
-    $selectors = html_writer::select_time('days', 'fromday', $datefrom)
-               . html_writer::select_time('months', 'frommonth', $datefrom)
-               . html_writer::select_time('years', 'fromyear', $datefrom)
-               . html_writer::select_time('hours', 'fromhour', $datefrom)
-               . html_writer::select_time('minutes', 'fromminute', $datefrom);
-    echo $selectors;
-    echo '<input type="hidden" name="hfromday" value="0" />';
-    echo '<input type="hidden" name="hfrommonth" value="0" />';
-    echo '<input type="hidden" name="hfromyear" value="0" />';
-    echo '<input type="hidden" name="hfromhour" value="0" />';
-    echo '<input type="hidden" name="hfromminute" value="0" />';
-
-    echo '</td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0">'.get_string('searchdateto', 'reactforum').'</td>';
-    echo '<td class="c1">';
-    if (empty($dateto)) {
-        $datetochecked = '';
-        $dateto = time()+3600;
-    }else{
-        $datetochecked = 'checked="checked"';
-    }
-
-    echo '<input name="timetorestrict" type="checkbox" value="1" alt="'.get_string('searchdateto', 'reactforum').'" onclick="return lockoptions(\'searchform\', \'timetorestrict\', timetoitems)" ' .$datetochecked. ' /> ';
-    $selectors = html_writer::select_time('days', 'today', $dateto)
-               . html_writer::select_time('months', 'tomonth', $dateto)
-               . html_writer::select_time('years', 'toyear', $dateto)
-               . html_writer::select_time('hours', 'tohour', $dateto)
-               . html_writer::select_time('minutes', 'tominute', $dateto);
-    echo $selectors;
-
-    echo '<input type="hidden" name="htoday" value="0" />';
-    echo '<input type="hidden" name="htomonth" value="0" />';
-    echo '<input type="hidden" name="htoyear" value="0" />';
-    echo '<input type="hidden" name="htohour" value="0" />';
-    echo '<input type="hidden" name="htominute" value="0" />';
-
-    echo '</td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="menureactforumid">'.get_string('searchwhichreactforums', 'reactforum').'</label></td>';
-    echo '<td class="c1">';
-    echo html_writer::select(reactforum_menu_list($course), 'reactforumid', '', array(''=>get_string('allreactforums', 'reactforum')));
-    echo '</td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="subject">'.get_string('searchsubject', 'reactforum').'</label></td>';
-    echo '<td class="c1"><input type="text" size="35" name="subject" id="subject" value="'.s($subject, true).'" alt="" /></td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="c0"><label for="user">'.get_string('searchuser', 'reactforum').'</label></td>';
-    echo '<td class="c1"><input type="text" size="35" name="user" id="user" value="'.s($user, true).'" alt="" /></td>';
-    echo '</tr>';
-
-    echo '<tr>';
-    echo '<td class="submit" colspan="2" align="center">';
-    echo '<input type="submit" value="'.get_string('searchreactforums', 'reactforum').'" alt="" /></td>';
-    echo '</tr>';
-
-    echo '</table>';
-    echo '</form>';
-
-    echo html_writer::script(js_writer::function_call('lockoptions_timetoitems'));
-    echo html_writer::script(js_writer::function_call('lockoptions_timefromitems'));
-
-    echo $OUTPUT->box_end();
+    $output = $PAGE->get_renderer('mod_reactforum');
+    echo $output->render($renderable);
 }
 
 /**

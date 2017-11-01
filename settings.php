@@ -17,7 +17,7 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2009 Petr Skoda (http://skodak.org)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,9 +28,6 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configselect('reactforum_displaymode', get_string('displaymode', 'reactforum'),
                        get_string('configdisplaymode', 'reactforum'), REACTFORUM_MODE_NESTED, reactforum_get_layout_modes()));
-
-    $settings->add(new admin_setting_configcheckbox('reactforum_replytouser', get_string('replytouser', 'reactforum'),
-                       get_string('configreplytouser', 'reactforum'), 1));
 
     // Less non-HTML characters than this is short
     $settings->add(new admin_setting_configtext('reactforum_shortpost', get_string('shortpost', 'reactforum'),

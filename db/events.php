@@ -19,7 +19,7 @@
  *
  * @package mod_reactforum
  * @category event
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2010 Petr Skoda  {@link http://skodak.org}
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -39,5 +39,15 @@ $observers = array(
     array(
         'eventname' => '\core\event\course_module_created',
         'callback'  => 'mod_reactforum_observer::course_module_created',
+    ),
+
+    array(
+        'eventname' => '\core\event\course_created',
+        'callback'  => 'mod_reactforum_observer::course_created',
+    ),
+
+    array(
+        'eventname' => '\core\event\course_updated',
+        'callback'  => 'mod_reactforum_observer::course_updated',
     ),
 );

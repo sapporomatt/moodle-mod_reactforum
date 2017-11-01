@@ -31,7 +31,7 @@ Feature: ReactForums in 'No groups' mode allow posting to All participants for a
 
   Scenario: Teacher can post
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Standard reactforum name"
     And I should not see "Group A"
     And I should not see "Group B"
@@ -47,7 +47,7 @@ Feature: ReactForums in 'No groups' mode allow posting to All participants for a
 
   Scenario: Student can post
     Given I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Standard reactforum name"
     And I should not see "Group A"
     And I should not see "Group B"

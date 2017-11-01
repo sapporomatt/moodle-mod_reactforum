@@ -19,7 +19,7 @@
  * This file is used to display and organise reactforum subscribers
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -104,12 +104,16 @@ if (has_capability('mod/reactforum:managesubscriptions', $context) && \mod_react
     if ($edit != -1) {
         $USER->subscriptionsediting = $edit;
     }
-    $PAGE->set_button(reactforum_update_subscriptions_button($course->id, $id));
+    $updatesubscriptionsbutton = reactforum_update_subscriptions_button($course->id, $id);
 } else {
+    $updatesubscriptionsbutton = '';
     unset($USER->subscriptionsediting);
 }
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('reactforum', 'reactforum').' '.$strsubscribers);
+if (!empty($updatesubscriptionsbutton)) {
+    echo \html_writer::div($updatesubscriptionsbutton, 'pull-right');
+}
 if (empty($USER->subscriptionsediting)) {
     $subscribers = \mod_reactforum\subscriptions::fetch_subscribed_users($reactforum, $currentgroup, $context);
     if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
@@ -118,6 +122,9 @@ if (empty($USER->subscriptionsediting)) {
     echo $reactforumoutput->subscriber_overview($subscribers, $reactforum, $course);
 } else {
     echo $reactforumoutput->subscriber_selection_form($existingselector, $subscriberselector);
+}
+if (!empty($updatesubscriptionsbutton)) {
+    echo $updatesubscriptionsbutton;
 }
 echo $OUTPUT->footer();
 

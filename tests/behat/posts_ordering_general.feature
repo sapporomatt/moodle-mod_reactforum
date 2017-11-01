@@ -17,8 +17,7 @@ Feature: New discussions and discussions with recently added replies are display
       | teacher1  | C1        | editingteacher  |
       | student1  | C1        | student         |
     And I log in as "teacher1"
-    And I follow "Course 1"
-    And I turn editing mode on
+    And I am on "Course 1" course homepage with editing mode on
     And I add a "ReactForum" to section "1" and I fill the form with:
       | ReactForum name  | Course general reactforum                |
       | Description | Single discussion reactforum description |
@@ -33,7 +32,7 @@ Feature: New discussions and discussions with recently added replies are display
   @javascript
   Scenario: Replying to a reactforum post or editing it puts the discussion to the front
     Given I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Course general reactforum"
     #
     # Add three posts into the reactforum.
@@ -61,7 +60,7 @@ Feature: New discussions and discussions with recently added replies are display
     # Reply to another reactforum post.
     #
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Course general reactforum"
     And I follow "ReactForum post 1"
     And I click on "Reply" "link" in the "//div[@aria-label='ReactForum post 1 by Student 1']" "xpath_element"
@@ -69,8 +68,7 @@ Feature: New discussions and discussions with recently added replies are display
       | Message | Reply to the first post |
     And I press "Post to reactforum"
     And I wait to be redirected
-    And I am on site homepage
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Course general reactforum"
     #
     # Make sure the order of the reactforum posts is as expected (most recently participated first).

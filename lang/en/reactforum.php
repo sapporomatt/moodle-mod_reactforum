@@ -19,7 +19,7 @@
  * Strings for component 'reactforum', language 'en', branch 'MOODLE_20_STABLE'
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -61,7 +61,7 @@ $string['cannotdeletepost'] = 'You can\'t delete this post!';
 $string['cannoteditposts'] = 'You can\'t edit other people\'s posts!';
 $string['cannotfinddiscussion'] = 'Could not find the discussion in this reactforum';
 $string['cannotfindfirstpost'] = 'Could not find the first post in this reactforum';
-$string['cannotfindorcreatereactforum'] = 'Could not find or create a main news reactforum for the site';
+$string['cannotfindorcreatereactforum'] = 'Could not find or create a main announcements reactforum for the site';
 $string['cannotfindparentpost'] = 'Could not find top parent of post {$a}';
 $string['cannotmovefromsinglereactforum'] = 'Cannot move discussion from a simple single discussion reactforum';
 $string['cannotmovenotvisible'] = 'ReactForum not visible';
@@ -82,12 +82,15 @@ $string['cleanreadtime'] = 'Mark old posts as read hour';
 $string['clicktounsubscribe'] = 'You are subscribed to this discussion. Click to unsubscribe.';
 $string['clicktosubscribe'] = 'You are not subscribed to this discussion. Click to subscribe.';
 $string['completiondiscussions'] = 'Student must create discussions:';
+$string['completiondiscussionsdesc'] = 'Student must create at least {$a} discussion(s)';
 $string['completiondiscussionsgroup'] = 'Require discussions';
 $string['completiondiscussionshelp'] = 'requiring discussions to complete';
 $string['completionposts'] = 'Student must post discussions or replies:';
+$string['completionpostsdesc'] = 'Student must post at least {$a} discussion(s) or reply/replies';
 $string['completionpostsgroup'] = 'Require posts';
 $string['completionpostshelp'] = 'requiring discussions or replies to complete';
 $string['completionreplies'] = 'Student must post replies:';
+$string['completionrepliesdesc'] = 'Student must post at least {$a} reply/replies';
 $string['completionrepliesgroup'] = 'Require replies';
 $string['completionreplieshelp'] = 'requiring replies to complete';
 $string['configcleanreadtime'] = 'The hour of the day to clean old posts from the \'read\' table.';
@@ -133,6 +136,9 @@ $string['disallowsubscription'] = 'Subscription';
 $string['disallowsubscription_help'] = 'This reactforum has been configured so that you cannot subscribe to discussions.';
 $string['disallowsubscribeteacher'] = 'Subscriptions not allowed (except for teachers)';
 $string['discussion'] = 'Discussion';
+$string['discussionlocked'] = 'This discussion has been locked so you can no longer reply to it.';
+$string['discussionlockingheader'] = 'Discussion locking';
+$string['discussionlockingdisabled'] = 'Do not lock discussions';
 $string['discussionmoved'] = 'This discussion has been moved to \'{$a}\'.';
 $string['discussionmovedpost'] = 'This discussion has been moved to <a href="{$a->discusshref}">here</a> in the reactforum <a href="{$a->reactforumhref}">{$a->reactforumname}</a>';
 $string['discussionname'] = 'Discussion name';
@@ -195,11 +201,6 @@ $string['emaildigesttype_help'] = 'The type of notification that you will receiv
 * Digest - complete posts - you will receive one digest e-mail per day containing the complete contents of each reactforum post;
 * Digest - subjects only - you will receive one digest e-mail per day containing just the subject of each reactforum post.
 ';
-$string['emaildigestupdated'] = 'The e-mail digest option was changed to \'{$a->maildigesttitle}\' for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}';
-$string['emaildigestupdated_default'] = 'Your default profile setting of \'{$a->maildigesttitle}\' was used for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}.';
-$string['emaildigest_0'] = 'You will receive one e-mail per reactforum post.';
-$string['emaildigest_1'] = 'You will receive one digest e-mail per day containing the complete contents of each reactforum post.';
-$string['emaildigest_2'] = 'You will receive one digest e-mail per day containing the subject of each reactforum post.';
 $string['emptymessage'] = 'Something was wrong with your post. Perhaps you left it blank, or the attachment was too big. Your changes have NOT been saved.';
 $string['erroremptymessage'] = 'Post message cannot be empty';
 $string['erroremptysubject'] = 'Post subject cannot be empty.';
@@ -218,9 +219,10 @@ $string['forcesubscribed_help'] = 'This reactforum has been configured so that y
 $string['forcesubscribed'] = 'This reactforum forces everyone to be subscribed';
 $string['reactforum'] = 'ReactForum';
 $string['reactforum:addinstance'] = 'Add a new reactforum';
-$string['reactforum:addnews'] = 'Add news';
+$string['reactforum:addnews'] = 'Add announcements';
 $string['reactforum:addquestion'] = 'Add question';
 $string['reactforum:allowforcesubscribe'] = 'Allow force subscribe';
+$string['reactforum:canoverridediscussionlock'] = 'Reply to locked discussions';
 $string['reactforumauthorhidden'] = 'Author (hidden)';
 $string['reactforumblockingalmosttoomanyposts'] = 'You are approaching the posting threshold. You have posted {$a->numposts} times in the last {$a->blockperiod} and the limit is {$a->blockafter} posts.';
 $string['reactforumbodyhidden'] = 'This post cannot be viewed by you, probably because you have not posted in the discussion, the maximum editing time hasn\'t passed yet, the discussion has not started or the discussion has expired.';
@@ -240,7 +242,7 @@ $string['reactforum:postwithoutthrottling'] = 'Exempt from post threshold';
 $string['reactforumname'] = 'ReactForum name';
 $string['reactforumposts'] = 'ReactForum posts';
 $string['reactforum:rate'] = 'Rate posts';
-$string['reactforum:replynews'] = 'Reply to news';
+$string['reactforum:replynews'] = 'Reply to announcements';
 $string['reactforum:replypost'] = 'Reply to posts';
 $string['reactforums'] = 'ReactForums';
 $string['reactforum:splitdiscussions'] = 'Split discussions';
@@ -280,11 +282,21 @@ $string['invalidparentpostid'] = 'Parent post ID was incorrect';
 $string['invalidpostid'] = 'Invalid post ID - {$a}';
 $string['lastpost'] = 'Last post';
 $string['learningreactforums'] = 'Learning reactforums';
+$string['lockdiscussionafter'] = 'Lock discussions after period of inactivity';
+$string['lockdiscussionafter_help'] = 'Discussions may be automatically locked after a specified time has elapsed since the last reply.
+
+Users with the capability to reply to locked discussions can unlock a discussion by replying to it.';
 $string['longpost'] = 'Long post';
 $string['mailnow'] = 'Send reactforum post notifications with no editing-time delay';
 $string['manydiscussions'] = 'Discussions per page';
+$string['managesubscriptionsoff'] = 'Finish managing subscriptions';
+$string['managesubscriptionson'] = 'Manage subscriptions';
 $string['markalldread'] = 'Mark all posts in this discussion read.';
 $string['markallread'] = 'Mark all posts in this reactforum read.';
+$string['markasreadonnotification'] = 'When sending reactforum post notifications';
+$string['markasreadonnotificationno'] = 'Do not mark the post as read';
+$string['markasreadonnotificationyes'] = 'Mark the post as read';
+$string['markasreadonnotification_help'] = 'When you are notified of a reactforum post, you can choose whether this should mark the post as read for the purpose of reactforum tracking.';
 $string['markread'] = 'Mark read';
 $string['markreadbutton'] = 'Mark<br />read';
 $string['markunread'] = 'Mark unread';
@@ -350,7 +362,7 @@ $string['noguestpost'] = 'Sorry, guests are not allowed to post.';
 $string['noguestsubscribe'] = 'Sorry, guests are not allowed to subscribe.';
 $string['noguesttracking'] = 'Sorry, guests are not allowed to set tracking options.';
 $string['nomorepostscontaining'] = 'No more posts containing \'{$a}\' were found';
-$string['nonews'] = 'No news has been posted yet';
+$string['nonews'] = 'No announcements have been posted yet.';
 $string['noonecansubscribenow'] = 'Subscriptions are now disallowed';
 $string['nopermissiontosubscribe'] = 'You do not have the permission to view reactforum subscribers';
 $string['nopermissiontoview'] = 'You do not have permissions to view this post';
@@ -390,7 +402,7 @@ $string['posttomygroups'] = 'Post a copy to all groups';
 $string['posttomygroups_help'] = 'Posts a copy of this message to all groups you have access to. Participants in groups you do not have access to will not see this post';
 $string['prevdiscussiona'] = 'Previous discussion: {$a}';
 $string['pluginadministration'] = 'ReactForum administration';
-$string['pluginname'] = 'Reactable Forum';
+$string['pluginname'] = 'ReactForum';
 $string['postadded'] = '<p>Your post was successfully added.</p> <p>You have {$a} to edit it if you want to make any changes.</p>';
 $string['postaddedsuccess'] = 'Your post was successfully added.';
 $string['postaddedtimeleft'] = 'You have {$a} to edit it if you want to make any changes.';
@@ -421,6 +433,7 @@ $string['qandareactforum'] = 'Q and A reactforum';
 $string['qandanotify'] = 'This is a question and answer reactforum. In order to see other responses to these questions, you must first post your answer';
 $string['re'] = 'Re:';
 $string['readtherest'] = 'Read the rest of this topic';
+$string['removeallreactforumtags'] = 'Remove all reactforum tags';
 $string['replies'] = 'Replies';
 $string['repliesmany'] = '{$a} replies so far';
 $string['repliesone'] = '{$a} reply so far';
@@ -455,6 +468,7 @@ $string['searcholderposts'] = 'Search older posts...';
 $string['searchphrase'] = 'This exact phrase must appear in the post';
 $string['searchresults'] = 'Search results';
 $string['searchsubject'] = 'These words should be in the subject';
+$string['searchtags'] = 'Is tagged with';
 $string['searchuser'] = 'This name should match the author';
 $string['searchuserid'] = 'The Moodle ID of the author';
 $string['searchwhichreactforums'] = 'Choose which reactforums to search';
@@ -494,12 +508,16 @@ $string['subscriptionforced'] = 'Forced subscription';
 $string['subscriptionauto'] = 'Auto subscription';
 $string['subscriptiondisabled'] = 'Subscription disabled';
 $string['subscriptions'] = 'Subscriptions';
+$string['tagarea_reactforum_posts'] = 'ReactForum posts';
+$string['tagsdeleted'] = 'ReactForum tags have been deleted';
+$string['tagtitle'] = 'See the "{$a}" tag';
 $string['thisreactforumisthrottled'] = 'This reactforum has a limit to the number of reactforum postings you can make in a given time period - this is currently set at {$a->blockafter} posting(s) in {$a->blockperiod}';
 $string['timedhidden'] = 'Timed status: Hidden from students';
 $string['timedposts'] = 'Timed posts';
 $string['timedvisible'] = 'Timed status: Visible to all users';
 $string['timestartenderror'] = 'Display end date cannot be earlier than the start date';
 $string['trackreactforum'] = 'Track unread posts';
+$string['trackreadposts_header'] = 'ReactForum tracking';
 $string['tracking'] = 'Track';
 $string['trackingoff'] = 'Off';
 $string['trackingon'] = 'Forced';
@@ -528,6 +546,7 @@ $string['unsubscribed'] = 'Unsubscribed';
 $string['unsubscribeshort'] = 'Unsubscribe';
 $string['usermarksread'] = 'Manual message read marking';
 $string['viewalldiscussions'] = 'View all discussions';
+$string['viewthediscussion'] = 'View the discussion';
 $string['warnafter'] = 'Post threshold for warning';
 $string['warnafter_help'] = 'Students can be warned as they approach the maximum number of posts allowed in a given period. This setting specifies after how many posts they are warned. Users with the capability mod/reactforum:postwithoutthrottling are exempt from post limits.';
 $string['warnformorepost'] = 'Warning! There is more than one discussion in this reactforum - using the most recent';
@@ -542,24 +561,8 @@ $string['subscribersto'] = 'Subscribers to "{$a->name}"';
 $string['postmailinfo'] = 'This is a copy of a message posted on the {$a} website.
 
 To reply click on this link:';
-
-
-/** REACTIONS */
-
-$string['reactionstype'] = 'Reaction Buttons Type';
-$string['reactionstype_text'] = 'Text';
-$string['reactionstype_image'] = 'Image';
-$string['reactionstype_discussion'] = 'Decided by discussion owner';
-$string['reactionstype_none'] = 'None';
-$string['reactionstype_change_confirmation'] = 'All current reaction buttons will be removed. Are you sure that you want to change reaction type?';
-
-$string['reactions'] = 'Reaction Buttons';
-$string['reactions_add'] = 'Add';
-$string['reactions_changeimage'] = 'Change Image';
-$string['reactions_selectfile'] = 'Please select new reaction image file';
-$string['reactions_cancel'] = 'Cancel';
-$string['reactions_delete'] = 'Delete';
-$string['reactions_delete_confirmation'] = 'Are you sure that you want to delete this reaction? All its data will be removed. (You can undo this action by not saving discussion edit)';
-$string['reactions_reupload'] = 'Reupload';
-
-$string['error'] = 'Unexpected Error';
+$string['emaildigestupdated'] = 'The e-mail digest option was changed to \'{$a->maildigesttitle}\' for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}';
+$string['emaildigestupdated_default'] = 'Your default profile setting of \'{$a->maildigesttitle}\' was used for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}.';
+$string['emaildigest_0'] = 'You will receive one e-mail per reactforum post.';
+$string['emaildigest_1'] = 'You will receive one digest e-mail per day containing the complete contents of each reactforum post.';
+$string['emaildigest_2'] = 'You will receive one digest e-mail per day containing the subject of each reactforum post.';

@@ -18,7 +18,7 @@
  * A type of reactforum.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Robert Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@ require_once($CFG->dirroot.'/user/selector/lib.php');
 /**
  * User selector control for removing subscribed users
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_existing_subscriber_selector extends mod_reactforum_subscriber_selector_base {

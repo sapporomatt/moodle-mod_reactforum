@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_generator extends testing_module_generator {
@@ -202,9 +202,9 @@ class mod_reactforum_generator extends testing_module_generator {
         // Add the discussion.
         $record->id = reactforum_add_discussion($record, null, null, $record->userid);
 
-        if (isset($timemodified) || isset($mailed)) {
-            $post = $DB->get_record('reactforum_posts', array('discussion' => $record->id));
+        $post = $DB->get_record('reactforum_posts', array('discussion' => $record->id));
 
+        if (isset($timemodified) || isset($mailed)) {
             if (isset($mailed)) {
                 $post->mailed = $mailed;
             }
@@ -218,6 +218,14 @@ class mod_reactforum_generator extends testing_module_generator {
             }
 
             $DB->update_record('reactforum_posts', $post);
+        }
+
+        if (property_exists($record, 'tags')) {
+            $cm = get_coursemodule_from_instance('reactforum', $record->reactforum);
+            $tags = is_array($record->tags) ? $record->tags : preg_split('/,/', $record->tags);
+
+            core_tag_tag::set_item_tags('mod_reactforum', 'reactforum_posts', $post->id,
+                context_module::instance($cm->id), $tags);
         }
 
         return $record;
@@ -296,6 +304,15 @@ class mod_reactforum_generator extends testing_module_generator {
 
         // Add the post.
         $record->id = $DB->insert_record('reactforum_posts', $record);
+
+        if (property_exists($record, 'tags')) {
+            $discussion = $DB->get_record('reactforum_discussions', ['id' => $record->discussion]);
+            $cm = get_coursemodule_from_instance('reactforum', $discussion->reactforum);
+            $tags = is_array($record->tags) ? $record->tags : preg_split('/,/', $record->tags);
+
+            core_tag_tag::set_item_tags('mod_reactforum', 'reactforum_posts', $record->id,
+                context_module::instance($cm->id), $tags);
+        }
 
         // Update the last post.
         reactforum_discussion_update_last_post($record->discussion);

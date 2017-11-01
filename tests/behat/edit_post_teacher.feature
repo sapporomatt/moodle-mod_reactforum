@@ -17,8 +17,7 @@ Feature: Teachers can edit or delete any reactforum post
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
     And I log in as "teacher1"
-    And I follow "Course 1"
-    And I turn editing mode on
+    And I am on "Course 1" course homepage with editing mode on
     And I add a "ReactForum" to section "1" and I fill the form with:
       | ReactForum name | Test reactforum name |
       | Description | Test reactforum description |
@@ -27,7 +26,7 @@ Feature: Teachers can edit or delete any reactforum post
       | Message | Teacher post message |
     And I log out
     And I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I reply "Teacher post subject" post from "Test reactforum name" reactforum with:
       | Subject | Student post subject |
       | Message | Student post message |
@@ -35,7 +34,7 @@ Feature: Teachers can edit or delete any reactforum post
   Scenario: A teacher can delete another user's posts
     Given I log out
     And I log in as "teacher1"
-    When I follow "Course 1"
+    When I am on "Course 1" course homepage
     And I follow "Test reactforum name"
     And I follow "Teacher post subject"
     And I click on "Delete" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' reactforumpost ')][contains(., 'Student post subject')]" "xpath_element"
@@ -46,7 +45,7 @@ Feature: Teachers can edit or delete any reactforum post
   Scenario: A teacher can edit another user's posts
     Given I log out
     And I log in as "teacher1"
-    When I follow "Course 1"
+    When I am on "Course 1" course homepage
     And I follow "Test reactforum name"
     And I follow "Teacher post subject"
     And I click on "Edit" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' reactforumpost ')][contains(., 'Student post subject')]" "xpath_element"
