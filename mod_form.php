@@ -65,6 +65,9 @@ class mod_reactforum_mod_form extends moodleform_mod {
 
         $mform->addElement('filepicker', 'reactionimage', '', null, array('maxbytes' => 0, 'accepted_types' => array('image')));
 
+        $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
+        $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
+
         if(isset($_GET['update']))
         {
             $cmid = $_GET['update'];
