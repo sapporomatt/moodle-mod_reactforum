@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @subpackage core_message
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +34,7 @@ require_once($CFG->libdir . '/completionlib.php');
 /**
  * A Handler to process replies to reactforum posts.
  *
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class reply_handler extends \core\message\inbound\handler {
@@ -173,8 +173,7 @@ class reply_handler extends \core\message\inbound\handler {
         // Add attachments to the post.
         if (!empty($messagedata->attachments['attachment']) && count($messagedata->attachments['attachment'])) {
             $attachmentcount = count($messagedata->attachments['attachment']);
-            if (empty($reactforum->maxattachments) || $reactforum->maxbytes == 1 ||
-                    !has_capability('mod/reactforum:createattachment', $modcontext)) {
+            if (!reactforum_can_create_attachment($reactforum, $modcontext)) {
                 // Attachments are not allowed.
                 mtrace("--> User does not have permission to attach files in this reactforum. Rejecting e-mail.");
 

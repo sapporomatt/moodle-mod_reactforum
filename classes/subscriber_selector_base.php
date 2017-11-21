@@ -18,7 +18,7 @@
  * A type of reactforum.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Robert Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@ require_once($CFG->dirroot.'/user/selector/lib.php');
 /**
  * Abstract class used by reactforum subscriber selection controls
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class mod_reactforum_subscriber_selector_base extends user_selector_base {

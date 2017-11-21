@@ -20,7 +20,7 @@
  *
  * @package    mod_reactforum
  * @category   external
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2013 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -229,7 +229,7 @@ class mod_reactforum_maildigest_testcase extends advanced_testcase {
         $this->assertFalse($currentsetting);
 
         // Try with an invalid value.
-        $this->setExpectedException('moodle_exception');
+        $this->expectException('moodle_exception');
         reactforum_set_user_maildigest($reactforum1, 42, $user);
     }
 

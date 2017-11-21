@@ -17,7 +17,7 @@
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,6 +31,8 @@ class mod_reactforum_mod_form extends moodleform_mod {
 
     function definition() {
         global $CFG, $COURSE, $DB, $PAGE;
+
+        reactforum_include_styles();
 
         $mform    =& $this->_form;
 
@@ -61,9 +63,12 @@ class mod_reactforum_mod_form extends moodleform_mod {
         array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_none', 'reactforum'), 'none'));
         $mform->addGroup($radioarray, 'reactiontype', get_string('reactionstype', 'reactforum'), array('<br>'), false);
 
-        $mform->addGroup(null, 'reactions', get_string('reactions', 'reactforum'), array('<br>'), false);
+        $mform->addGroup(array(), 'reactions', get_string('reactions', 'reactforum'), array('<br>'), false);
 
         $mform->addElement('filepicker', 'reactionimage', '', null, array('maxbytes' => 0, 'accepted_types' => array('image')));
+
+        $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
+        $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
 
         if(isset($_GET['update']))
         {
@@ -184,6 +189,22 @@ class mod_reactforum_mod_form extends moodleform_mod {
             }
         }
 
+        $mform->addElement('header', 'discussionlocking', get_string('discussionlockingheader', 'reactforum'));
+        $options = [
+            0               => get_string('discussionlockingdisabled', 'reactforum'),
+            1   * DAYSECS   => get_string('numday', 'core', 1),
+            1   * WEEKSECS  => get_string('numweek', 'core', 1),
+            2   * WEEKSECS  => get_string('numweeks', 'core', 2),
+            30  * DAYSECS   => get_string('nummonth', 'core', 1),
+            60  * DAYSECS   => get_string('nummonths', 'core', 2),
+            90  * DAYSECS   => get_string('nummonths', 'core', 3),
+            180 * DAYSECS   => get_string('nummonths', 'core', 6),
+            1   * YEARSECS  => get_string('numyear', 'core', 1),
+        ];
+        $mform->addElement('select', 'lockdiscussionafter', get_string('lockdiscussionafter', 'reactforum'), $options);
+        $mform->addHelpButton('lockdiscussionafter', 'lockdiscussionafter', 'reactforum');
+        $mform->disabledIf('lockdiscussionafter', 'type', 'eq', 'single');
+
 //-------------------------------------------------------------------------------
         $mform->addElement('header', 'blockafterheader', get_string('blockafter', 'reactforum'));
         $options = array();
@@ -223,6 +244,7 @@ class mod_reactforum_mod_form extends moodleform_mod {
 //-------------------------------------------------------------------------------
 // buttons
         $this->add_action_buttons();
+
     }
 
     function definition_after_data() {
@@ -263,14 +285,23 @@ class mod_reactforum_mod_form extends moodleform_mod {
         if (empty($default_values['completionreplies'])) {
             $default_values['completionreplies']=1;
         }
-        $default_values['completionpostsenabled']=
-            !empty($default_values['completionposts']) ? 1 : 0;
+        // Tick by default if Add mode or if completion posts settings is set to 1 or more.
+        if (empty($this->_instance) || !empty($default_values['completionposts'])) {
+            $default_values['completionpostsenabled'] = 1;
+        } else {
+            $default_values['completionpostsenabled'] = 0;
+        }
         if (empty($default_values['completionposts'])) {
             $default_values['completionposts']=1;
         }
     }
 
-      function add_completion_rules() {
+    /**
+     * Add custom completion rules.
+     *
+     * @return array Array of string IDs of added items, empty array if none
+     */
+    public function add_completion_rules() {
         $mform =& $this->_form;
 
         $group=array();
@@ -303,11 +334,16 @@ class mod_reactforum_mod_form extends moodleform_mod {
             (!empty($data['completionpostsenabled']) && $data['completionposts']!=0);
     }
 
-    function get_data() {
-        $data = parent::get_data();
-        if (!$data) {
-            return false;
-        }
+    /**
+     * Allows module to modify the data returned by form get_data().
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param stdClass $data the form data to be modified.
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
         // Turn off completion settings if the checkboxes aren't ticked
         if (!empty($data->completionunlocked)) {
             $autocompletion = !empty($data->completion) && $data->completion==COMPLETION_TRACKING_AUTOMATIC;
@@ -321,7 +357,6 @@ class mod_reactforum_mod_form extends moodleform_mod {
                 $data->completionposts = 0;
             }
         }
-        return $data;
     }
 }
 

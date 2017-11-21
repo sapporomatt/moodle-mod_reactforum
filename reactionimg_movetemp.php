@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
  * Render reaction image
  *
@@ -21,18 +20,13 @@
  * @copyright  2017 (C) VERSION2, INC.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 require_once(dirname(dirname(__DIR__)) . '/config.php');
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
-
 if(!isset($_POST['url']))
 {
     throw new invalid_parameter_exception();
 }
-
 $url = $_POST['url'];
-
 $fs = get_file_storage();
 $temp = reactforum_move_uploaded_draft_to_temp($fs, $url);
-
 echo $temp->get_id();

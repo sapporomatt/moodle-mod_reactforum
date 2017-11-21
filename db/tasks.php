@@ -19,7 +19,7 @@
  *
  * @package   mod_reactforum
  * @category  task
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2014 Dan Poltawski <dan@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

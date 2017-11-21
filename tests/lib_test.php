@@ -18,7 +18,7 @@
  * The module reactforums tests
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2013 Frédéric Massart
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+require_once($CFG->dirroot . '/mod/reactforum/locallib.php');
 require_once($CFG->dirroot . '/rating/lib.php');
 
 class mod_reactforum_lib_testcase extends advanced_testcase {
@@ -1422,7 +1423,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertEmpty($neighbours['next']);
 
         // Querying the neighbours of a discussion passing the wrong CM.
-        $this->setExpectedException('coding_exception');
+        $this->expectException('coding_exception');
         reactforum_get_discussion_neighbours($cm2, $disc11, $reactforum2);
     }
 
@@ -1622,7 +1623,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertEmpty($neighbours['next']);
 
         // Querying the neighbours of a discussion passing the wrong CM.
-        $this->setExpectedException('coding_exception');
+        $this->expectException('coding_exception');
         reactforum_get_discussion_neighbours($cm2, $disc11, $reactforum2);
     }
 
@@ -2023,9 +2024,9 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
 
         // Create groups.
-        $group1 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
-        $group2 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
-        $group3 = self::getDataGenerator()->create_group(array('courseid' => $course->id));
+        $group1 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group1'));
+        $group2 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group2'));
+        $group3 = self::getDataGenerator()->create_group(array('courseid' => $course->id, 'name' => 'group3'));
 
         // Add the user1 to g1 and g2 groups.
         groups_add_member($group1->id, $user1->id);
@@ -2055,6 +2056,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $discussiong3u3 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
 
         self::setUser($user1);
+
         // Test retrieve discussions not passing the groupid parameter. We will receive only first group discussions.
         $discussions = reactforum_get_discussions($cm);
         self::assertCount(2, $discussions);
@@ -2448,6 +2450,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         }
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         // There should be one entry for course1, and no others.
         $this->assertCount(1, $results);
@@ -2499,6 +2502,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->setUser($viewer1->id);
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         // There should be one entry for course1.
         $this->assertCount(1, $results);
@@ -2510,6 +2514,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->setUser($viewer2->id);
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         // There should be one entry for course1.
         $this->assertCount(0, $results);
@@ -2555,6 +2560,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->setUser($viewer->id);
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         if ($hasresult) {
             // There should be one entry for course1.
@@ -2620,6 +2626,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->setUser($viewer1->id);
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         if ($hasresult) {
             // There should be one entry for course1.
@@ -2636,6 +2643,7 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->setUser($viewer2->id);
         $results = array();
         reactforum_print_overview($courses, $results);
+        $this->assertDebuggingCalledCount(2);
 
         // There should be one entry for course1.
         $this->assertCount(0, $results);
@@ -3012,6 +3020,41 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
         $this->assertCount($expectedreplycount, $unmailed);
     }
 
+    /**
+     * Test for reactforum_is_author_hidden.
+     */
+    public function test_reactforum_is_author_hidden() {
+        // First post, different reactforum type.
+        $post = (object) ['parent' => 0];
+        $reactforum = (object) ['type' => 'standard'];
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // Child post, different reactforum type.
+        $post->parent = 1;
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // First post, single simple discussion reactforum type.
+        $post->parent = 0;
+        $reactforum->type = 'single';
+        $this->assertTrue(reactforum_is_author_hidden($post, $reactforum));
+
+        // Child post, single simple discussion reactforum type.
+        $post->parent = 1;
+        $this->assertFalse(reactforum_is_author_hidden($post, $reactforum));
+
+        // Incorrect parameters: $post.
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('$post->parent must be set.');
+        unset($post->parent);
+        reactforum_is_author_hidden($post, $reactforum);
+
+        // Incorrect parameters: $reactforum.
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('$reactforum->type must be set.');
+        unset($reactforum->type);
+        reactforum_is_author_hidden($post, $reactforum);
+    }
+
     public function reactforum_get_unmailed_posts_provider() {
         return [
             'Untimed discussion; Single post; maxeditingtime not expired' => [
@@ -3167,5 +3210,364 @@ class mod_reactforum_lib_testcase extends advanced_testcase {
                 'replycount'        => 0,
             ],
         ];
+    }
+
+    /**
+     * Test the reactforum_discussion_is_locked function.
+     *
+     * @dataProvider reactforum_discussion_is_locked_provider
+     * @param   stdClass    $reactforum
+     * @param   stdClass    $discussion
+     * @param   bool        $expect
+     */
+    public function test_reactforum_discussion_is_locked($reactforum, $discussion, $expect) {
+        $this->assertEquals($expect, reactforum_discussion_is_locked($reactforum, $discussion));
+    }
+
+    /**
+     * Dataprovider for reactforum_discussion_is_locked tests.
+     *
+     * @return  array
+     */
+    public function reactforum_discussion_is_locked_provider() {
+        return [
+            'Unlocked: lockdiscussionafter is unset' => [
+                (object) [],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is false' => [
+                (object) ['lockdiscussionafter' => false],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is null' => [
+                (object) ['lockdiscussionafter' => null],
+                (object) [],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type single; post is recent' => [
+                (object) ['lockdiscussionafter' => DAYSECS, 'type' => 'single'],
+                (object) ['timemodified' => time()],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type single; post is old' => [
+                (object) ['lockdiscussionafter' => MINSECS, 'type' => 'single'],
+                (object) ['timemodified' => time() - DAYSECS],
+                false
+            ],
+            'Unlocked: lockdiscussionafter is set; reactforum is of type eachuser; post is recent' => [
+                (object) ['lockdiscussionafter' => DAYSECS, 'type' => 'eachuser'],
+                (object) ['timemodified' => time()],
+                false
+            ],
+            'Locked: lockdiscussionafter is set; reactforum is of type eachuser; post is old' => [
+                (object) ['lockdiscussionafter' => MINSECS, 'type' => 'eachuser'],
+                (object) ['timemodified' => time() - DAYSECS],
+                true
+            ],
+        ];
+    }
+
+    /**
+     * Test that {@link reactforum_update_post()} keeps correct reactforum_discussions usermodified.
+     */
+    public function test_reactforum_update_post_keeps_discussions_usermodified() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Let there be light.
+        $teacher = self::getDataGenerator()->create_user();
+        $student = self::getDataGenerator()->create_user();
+        $course = self::getDataGenerator()->create_course();
+
+        $reactforum = self::getDataGenerator()->create_module('reactforum', (object)[
+            'course' => $course->id,
+        ]);
+
+        $generator = self::getDataGenerator()->get_plugin_generator('mod_reactforum');
+
+        // Let the teacher start a discussion.
+        $discussion = $generator->create_discussion((object)[
+            'course' => $course->id,
+            'userid' => $teacher->id,
+            'reactforum' => $reactforum->id,
+        ]);
+
+        // On this freshly created discussion, the teacher is the author of the last post.
+        $this->assertEquals($teacher->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
+
+        // Let the student reply to the teacher's post.
+        $reply = $generator->create_post((object)[
+            'course' => $course->id,
+            'userid' => $student->id,
+            'reactforum' => $reactforum->id,
+            'discussion' => $discussion->id,
+            'parent' => $discussion->firstpost,
+        ]);
+
+        // The student should now be the last post's author.
+        $this->assertEquals($student->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
+
+        // Let the teacher edit the student's reply.
+        $this->setUser($teacher->id);
+        $newpost = (object)[
+            'id' => $reply->id,
+            'itemid' => 0,
+            'subject' => 'Amended subject',
+        ];
+        reactforum_update_post($newpost, null);
+
+        // The student should be still the last post's author.
+        $this->assertEquals($student->id, $DB->get_field('reactforum_discussions', 'usermodified', ['id' => $discussion->id]));
+    }
+
+    public function test_reactforum_core_calendar_provide_event_action() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create the activity.
+        $course = $this->getDataGenerator()->create_course();
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', array('course' => $course->id,
+            'completionreplies' => 5, 'completiondiscussions' => 2));
+
+        // Create a calendar event.
+        $event = $this->create_action_event($course->id, $reactforum->id,
+            \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED);
+
+        // Create an action factory.
+        $factory = new \core_calendar\action_factory();
+
+        // Decorate action event.
+        $actionevent = mod_reactforum_core_calendar_provide_event_action($event, $factory);
+
+        // Confirm the event was decorated.
+        $this->assertInstanceOf('\core_calendar\local\event\value_objects\action', $actionevent);
+        $this->assertEquals(get_string('view'), $actionevent->get_name());
+        $this->assertInstanceOf('moodle_url', $actionevent->get_url());
+        $this->assertEquals(7, $actionevent->get_item_count());
+        $this->assertTrue($actionevent->is_actionable());
+    }
+
+    public function test_reactforum_core_calendar_provide_event_action_as_non_user() {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create the activity.
+        $course = $this->getDataGenerator()->create_course();
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', array('course' => $course->id));
+
+        // Create a calendar event.
+        $event = $this->create_action_event($course->id, $reactforum->id,
+            \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED);
+
+        // Log out the user and set force login to true.
+        \core\session\manager::init_empty_session();
+        $CFG->forcelogin = true;
+
+        // Create an action factory.
+        $factory = new \core_calendar\action_factory();
+
+        // Decorate action event.
+        $actionevent = mod_reactforum_core_calendar_provide_event_action($event, $factory);
+
+        // Ensure result was null.
+        $this->assertNull($actionevent);
+    }
+
+    public function test_reactforum_core_calendar_provide_event_action_already_completed() {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $CFG->enablecompletion = 1;
+
+        // Create the activity.
+        $course = $this->getDataGenerator()->create_course(array('enablecompletion' => 1));
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', array('course' => $course->id),
+            array('completion' => 2, 'completionview' => 1, 'completionexpected' => time() + DAYSECS));
+
+        // Get some additional data.
+        $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
+
+        // Create a calendar event.
+        $event = $this->create_action_event($course->id, $reactforum->id,
+            \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED);
+
+        // Mark the activity as completed.
+        $completion = new completion_info($course);
+        $completion->set_module_viewed($cm);
+
+        // Create an action factory.
+        $factory = new \core_calendar\action_factory();
+
+        // Decorate action event.
+        $actionevent = mod_reactforum_core_calendar_provide_event_action($event, $factory);
+
+        // Ensure result was null.
+        $this->assertNull($actionevent);
+    }
+
+    public function test_mod_reactforum_get_tagged_posts() {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Setup test data.
+        $reactforumgenerator = $this->getDataGenerator()->get_plugin_generator('mod_reactforum');
+        $course3 = $this->getDataGenerator()->create_course();
+        $course2 = $this->getDataGenerator()->create_course();
+        $course1 = $this->getDataGenerator()->create_course();
+        $reactforum1 = $this->getDataGenerator()->create_module('reactforum', array('course' => $course1->id));
+        $reactforum2 = $this->getDataGenerator()->create_module('reactforum', array('course' => $course2->id));
+        $reactforum3 = $this->getDataGenerator()->create_module('reactforum', array('course' => $course3->id));
+        $post11 = $reactforumgenerator->create_content($reactforum1, array('tags' => array('Cats', 'Dogs')));
+        $post12 = $reactforumgenerator->create_content($reactforum1, array('tags' => array('Cats', 'mice')));
+        $post13 = $reactforumgenerator->create_content($reactforum1, array('tags' => array('Cats')));
+        $post14 = $reactforumgenerator->create_content($reactforum1);
+        $post15 = $reactforumgenerator->create_content($reactforum1, array('tags' => array('Cats')));
+        $post16 = $reactforumgenerator->create_content($reactforum1, array('tags' => array('Cats'), 'hidden' => true));
+        $post21 = $reactforumgenerator->create_content($reactforum2, array('tags' => array('Cats')));
+        $post22 = $reactforumgenerator->create_content($reactforum2, array('tags' => array('Cats', 'Dogs')));
+        $post23 = $reactforumgenerator->create_content($reactforum2, array('tags' => array('mice', 'Cats')));
+        $post31 = $reactforumgenerator->create_content($reactforum3, array('tags' => array('mice', 'Cats')));
+
+        $tag = core_tag_tag::get_by_name(0, 'Cats');
+
+        // Admin can see everything.
+        $res = mod_reactforum_get_tagged_posts($tag, /*$exclusivemode = */false,
+            /*$fromctx = */0, /*$ctx = */0, /*$rec = */1, /*$post = */0);
+        $this->assertRegExp('/'.$post11->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post12->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post13->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post14->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post15->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post16->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post21->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post22->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post23->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post31->subject.'</', $res->content);
+        $this->assertEmpty($res->prevpageurl);
+        $this->assertNotEmpty($res->nextpageurl);
+        $res = mod_reactforum_get_tagged_posts($tag, /*$exclusivemode = */false,
+            /*$fromctx = */0, /*$ctx = */0, /*$rec = */1, /*$post = */1);
+        $this->assertNotRegExp('/'.$post11->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post12->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post13->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post14->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post15->subject.'</', $res->content);
+        $this->assertNotRegExp('/'.$post16->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post21->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post22->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post23->subject.'</', $res->content);
+        $this->assertRegExp('/'.$post31->subject.'</', $res->content);
+        $this->assertNotEmpty($res->prevpageurl);
+        $this->assertEmpty($res->nextpageurl);
+
+        // Create and enrol a user.
+        $student = self::getDataGenerator()->create_user();
+        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+        $this->getDataGenerator()->enrol_user($student->id, $course1->id, $studentrole->id, 'manual');
+        $this->getDataGenerator()->enrol_user($student->id, $course2->id, $studentrole->id, 'manual');
+        $this->setUser($student);
+        core_tag_index_builder::reset_caches();
+
+        // User can not see posts in course 3 because he is not enrolled.
+        $res = mod_reactforum_get_tagged_posts($tag, /*$exclusivemode = */false,
+            /*$fromctx = */0, /*$ctx = */0, /*$rec = */1, /*$post = */1);
+        $this->assertRegExp('/'.$post22->subject.'/', $res->content);
+        $this->assertRegExp('/'.$post23->subject.'/', $res->content);
+        $this->assertNotRegExp('/'.$post31->subject.'/', $res->content);
+
+        // User can search reactforum posts inside a course.
+        $coursecontext = context_course::instance($course1->id);
+        $res = mod_reactforum_get_tagged_posts($tag, /*$exclusivemode = */false,
+            /*$fromctx = */0, /*$ctx = */$coursecontext->id, /*$rec = */1, /*$post = */0);
+        $this->assertRegExp('/'.$post11->subject.'/', $res->content);
+        $this->assertRegExp('/'.$post12->subject.'/', $res->content);
+        $this->assertRegExp('/'.$post13->subject.'/', $res->content);
+        $this->assertNotRegExp('/'.$post14->subject.'/', $res->content);
+        $this->assertRegExp('/'.$post15->subject.'/', $res->content);
+        $this->assertRegExp('/'.$post16->subject.'/', $res->content);
+        $this->assertNotRegExp('/'.$post21->subject.'/', $res->content);
+        $this->assertNotRegExp('/'.$post22->subject.'/', $res->content);
+        $this->assertNotRegExp('/'.$post23->subject.'/', $res->content);
+        $this->assertEmpty($res->nextpageurl);
+    }
+
+    /**
+     * Creates an action event.
+     *
+     * @param int $courseid The course id.
+     * @param int $instanceid The instance id.
+     * @param string $eventtype The event type.
+     * @return bool|calendar_event
+     */
+    private function create_action_event($courseid, $instanceid, $eventtype) {
+        $event = new stdClass();
+        $event->name = 'Calendar event';
+        $event->modulename  = 'reactforum';
+        $event->courseid = $courseid;
+        $event->instance = $instanceid;
+        $event->type = CALENDAR_EVENT_TYPE_ACTION;
+        $event->eventtype = $eventtype;
+        $event->timestart = time();
+
+        return calendar_event::create($event);
+    }
+
+    /**
+     * Test the callback responsible for returning the completion rule descriptions.
+     * This function should work given either an instance of the module (cm_info), such as when checking the active rules,
+     * or if passed a stdClass of similar structure, such as when checking the the default completion settings for a mod type.
+     */
+    public function test_mod_reactforum_completion_get_active_rule_descriptions() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Two activities, both with automatic completion. One has the 'completionsubmit' rule, one doesn't.
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 2]);
+        $reactforum1 = $this->getDataGenerator()->create_module('reactforum', [
+            'course' => $course->id,
+            'completion' => 2,
+            'completiondiscussions' => 3,
+            'completionreplies' => 3,
+            'completionposts' => 3
+        ]);
+        $reactforum2 = $this->getDataGenerator()->create_module('reactforum', [
+            'course' => $course->id,
+            'completion' => 2,
+            'completiondiscussions' => 0,
+            'completionreplies' => 0,
+            'completionposts' => 0
+        ]);
+        $cm1 = cm_info::create(get_coursemodule_from_instance('reactforum', $reactforum1->id));
+        $cm2 = cm_info::create(get_coursemodule_from_instance('reactforum', $reactforum2->id));
+
+        // Data for the stdClass input type.
+        // This type of input would occur when checking the default completion rules for an activity type, where we don't have
+        // any access to cm_info, rather the input is a stdClass containing completion and customdata attributes, just like cm_info.
+        $moddefaults = new stdClass();
+        $moddefaults->customdata = ['customcompletionrules' => [
+            'completiondiscussions' => 3,
+            'completionreplies' => 3,
+            'completionposts' => 3
+        ]];
+        $moddefaults->completion = 2;
+
+        $activeruledescriptions = [
+            get_string('completiondiscussionsdesc', 'reactforum', 3),
+            get_string('completionrepliesdesc', 'reactforum', 3),
+            get_string('completionpostsdesc', 'reactforum', 3)
+        ];
+        $this->assertEquals(mod_reactforum_get_completion_active_rule_descriptions($cm1), $activeruledescriptions);
+        $this->assertEquals(mod_reactforum_get_completion_active_rule_descriptions($cm2), []);
+        $this->assertEquals(mod_reactforum_get_completion_active_rule_descriptions($moddefaults), $activeruledescriptions);
+        $this->assertEquals(mod_reactforum_get_completion_active_rule_descriptions(new stdClass()), []);
     }
 }

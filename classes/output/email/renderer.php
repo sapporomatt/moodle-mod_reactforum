@@ -18,7 +18,7 @@
  * ReactForum post renderable.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -33,7 +33,7 @@ require_once(__DIR__ . '/../../../renderer.php');
  *
  * @since      Moodle 3.0
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class renderer extends \mod_reactforum_renderer {
@@ -55,11 +55,13 @@ class renderer extends \mod_reactforum_renderer {
      * @return string
      */
     public function format_message_text($cm, $post) {
+        $context = \context_module::instance($cm->id);
         $message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php',
-            \context_module::instance($cm->id)->id,
+            $context->id,
             'mod_reactforum', 'post', $post->id);
         $options = new \stdClass();
         $options->para = true;
+        $options->context = $context;
         return format_text($message, $post->messageformat, $options);
     }
 

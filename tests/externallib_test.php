@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @category   external
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,6 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 require_once($CFG->dirroot . '/webservice/tests/helpers.php');
+require_once($CFG->dirroot . '/mod/reactforum/lib.php');
 
 class mod_reactforum_external_testcase extends externallib_advanced_testcase {
 
@@ -59,7 +60,7 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $this->resetAfterTest(true);
 
         // Create a user.
-        $user = self::getDataGenerator()->create_user();
+        $user = self::getDataGenerator()->create_user(array('trackreactforums' => 1));
 
         // Set to the user.
         self::setUser($user);
@@ -72,13 +73,16 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $record = new stdClass();
         $record->introformat = FORMAT_HTML;
         $record->course = $course1->id;
+        $record->trackingtype = REACTFORUM_TRACKING_FORCED;
         $reactforum1 = self::getDataGenerator()->create_module('reactforum', $record);
 
         // Second reactforum.
         $record = new stdClass();
         $record->introformat = FORMAT_HTML;
         $record->course = $course2->id;
+        $record->trackingtype = REACTFORUM_TRACKING_OFF;
         $reactforum2 = self::getDataGenerator()->create_module('reactforum', $record);
+        $reactforum2->introfiles = [];
 
         // Add discussions to the reactforums.
         $record = new stdClass();
@@ -89,6 +93,9 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         // Expect one discussion.
         $reactforum1->numdiscussions = 1;
         $reactforum1->cancreatediscussions = true;
+        $reactforum1->istracked = true;
+        $reactforum1->unreadpostscount = 0;
+        $reactforum1->introfiles = [];
 
         $record = new stdClass();
         $record->course = $course2->id;
@@ -100,6 +107,7 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $reactforum2->numdiscussions = 2;
         // Default limited role, no create discussion capability enabled.
         $reactforum2->cancreatediscussions = false;
+        $reactforum2->istracked = false;
 
         // Check the reactforum was correctly created.
         $this->assertEquals(2, $DB->count_records_select('reactforum', 'id = :reactforum1 OR id = :reactforum2',
@@ -204,6 +212,13 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $reactforum1 = self::getDataGenerator()->create_module('reactforum', $record);
         $reactforum1context = context_module::instance($reactforum1->cmid);
 
+        // ReactForum with tracking enabled.
+        $record = new stdClass();
+        $record->course = $course1->id;
+        $reactforum2 = self::getDataGenerator()->create_module('reactforum', $record);
+        $reactforum2cm = get_coursemodule_from_id('reactforum', $reactforum2->cmid);
+        $reactforum2context = context_module::instance($reactforum2->cmid);
+
         // Add discussions to the reactforums.
         $record = new stdClass();
         $record->course = $course1->id;
@@ -217,12 +232,31 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $record->reactforum = $reactforum1->id;
         $discussion2 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
 
+        $record = new stdClass();
+        $record->course = $course1->id;
+        $record->userid = $user2->id;
+        $record->reactforum = $reactforum2->id;
+        $discussion3 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
+
         // Add 2 replies to the discussion 1 from different users.
         $record = new stdClass();
         $record->discussion = $discussion1->id;
         $record->parent = $discussion1->firstpost;
         $record->userid = $user2->id;
         $discussion1reply1 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_post($record);
+        $filename = 'shouldbeanimage.jpg';
+        // Add a fake inline image to the post.
+        $filerecordinline = array(
+            'contextid' => $reactforum1context->id,
+            'component' => 'mod_reactforum',
+            'filearea'  => 'post',
+            'itemid'    => $discussion1reply1->id,
+            'filepath'  => '/',
+            'filename'  => $filename,
+        );
+        $fs = get_file_storage();
+        $timepost = time();
+        $fs->create_file_from_string($filerecordinline, 'image contents (not really)');
 
         $record->parent = $discussion1reply1->id;
         $record->userid = $user3->id;
@@ -282,6 +316,18 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
             'messageformat' => 1,   // This value is usually changed by external_format_text() function.
             'messagetrust' => $discussion1reply1->messagetrust,
             'attachment' => $discussion1reply1->attachment,
+            'messageinlinefiles' => array(
+                array(
+                    'filename' => $filename,
+                    'filepath' => '/',
+                    'filesize' => '27',
+                    'fileurl' => moodle_url::make_webservice_pluginfile_url($reactforum1context->id, 'mod_reactforum', 'post',
+                                    $discussion1reply1->id, '/', $filename),
+                    'timemodified' => $timepost,
+                    'mimetype' => 'image/jpeg',
+                    'isexternalfile' => false,
+                )
+            ),
             'totalscore' => $discussion1reply1->totalscore,
             'mailnow' => $discussion1reply1->mailnow,
             'children' => array($discussion1reply2->id),
@@ -309,11 +355,56 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         array_pop($posts['posts']);
         $this->assertEquals($expectedposts, $posts);
 
+        // Check we receive the unread count correctly on tracked reactforum.
+        reactforum_tp_count_reactforum_unread_posts($reactforum2cm, $course1, true);    // Reset static cache.
+        $result = mod_reactforum_external::get_reactforums_by_courses(array($course1->id));
+        $result = external_api::clean_returnvalue(mod_reactforum_external::get_reactforums_by_courses_returns(), $result);
+        foreach ($result as $f) {
+            if ($f['id'] == $reactforum2->id) {
+                $this->assertEquals(1, $f['unreadpostscount']);
+            }
+        }
+
         // Test discussion without additional posts. There should be only one post (the one created by the discussion).
         $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion2->id, 'modified', 'DESC');
         $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
         $this->assertEquals(1, count($posts['posts']));
 
+        // Test discussion tracking on not tracked reactforum.
+        $result = mod_reactforum_external::view_reactforum_discussion($discussion1->id);
+        $result = external_api::clean_returnvalue(mod_reactforum_external::view_reactforum_discussion_returns(), $result);
+        $this->assertTrue($result['status']);
+        $this->assertEmpty($result['warnings']);
+
+        // Test posts have not been marked as read.
+        $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion1->id, 'modified', 'DESC');
+        $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
+        foreach ($posts['posts'] as $post) {
+            $this->assertFalse($post['postread']);
+        }
+
+        // Test discussion tracking on tracked reactforum.
+        $result = mod_reactforum_external::view_reactforum_discussion($discussion3->id);
+        $result = external_api::clean_returnvalue(mod_reactforum_external::view_reactforum_discussion_returns(), $result);
+        $this->assertTrue($result['status']);
+        $this->assertEmpty($result['warnings']);
+
+        // Test posts have been marked as read.
+        $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion3->id, 'modified', 'DESC');
+        $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
+        foreach ($posts['posts'] as $post) {
+            $this->assertTrue($post['postread']);
+        }
+
+        // Check we receive 0 unread posts.
+        reactforum_tp_count_reactforum_unread_posts($reactforum2cm, $course1, true);    // Reset static cache.
+        $result = mod_reactforum_external::get_reactforums_by_courses(array($course1->id));
+        $result = external_api::clean_returnvalue(mod_reactforum_external::get_reactforums_by_courses_returns(), $result);
+        foreach ($result as $f) {
+            if ($f['id'] == $reactforum2->id) {
+                $this->assertEquals(0, $f['unreadpostscount']);
+            }
+        }
     }
 
     /**
@@ -489,7 +580,9 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
                 'usermodifiedpictureurl' => '',
                 'numreplies' => 3,
                 'numunread' => 0,
-                'pinned' => REACTFORUM_DISCUSSION_UNPINNED
+                'pinned' => REACTFORUM_DISCUSSION_UNPINNED,
+                'locked' => false,
+                'canreply' => false,
             );
 
         // Call the external function passing reactforum id.
@@ -931,7 +1024,7 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
      * Test can_add_discussion. A basic test since all the API functions are already covered by unit tests.
      */
     public function test_can_add_discussion() {
-
+        global $DB;
         $this->resetAfterTest(true);
 
         // Create courses to add the modules.
@@ -952,11 +1045,24 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         $result = mod_reactforum_external::can_add_discussion($reactforum->id);
         $result = external_api::clean_returnvalue(mod_reactforum_external::can_add_discussion_returns(), $result);
         $this->assertFalse($result['status']);
+        $this->assertFalse($result['canpindiscussions']);
+        $this->assertTrue($result['cancreateattachment']);
+
+        // Disable attachments.
+        $DB->set_field('reactforum', 'maxattachments', 0, array('id' => $reactforum->id));
+        $result = mod_reactforum_external::can_add_discussion($reactforum->id);
+        $result = external_api::clean_returnvalue(mod_reactforum_external::can_add_discussion_returns(), $result);
+        $this->assertFalse($result['status']);
+        $this->assertFalse($result['canpindiscussions']);
+        $this->assertFalse($result['cancreateattachment']);
+        $DB->set_field('reactforum', 'maxattachments', 1, array('id' => $reactforum->id));    // Enable attachments again.
 
         self::setAdminUser();
         $result = mod_reactforum_external::can_add_discussion($reactforum->id);
         $result = external_api::clean_returnvalue(mod_reactforum_external::can_add_discussion_returns(), $result);
         $this->assertTrue($result['status']);
+        $this->assertTrue($result['canpindiscussions']);
+        $this->assertTrue($result['cancreateattachment']);
 
     }
 

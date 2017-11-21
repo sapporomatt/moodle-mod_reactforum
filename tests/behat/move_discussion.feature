@@ -23,14 +23,14 @@ Feature: A teacher can move discussions between reactforums
       | reactforum      | Test reactforum 1           | Test reactforum 2      | C1     | reactforum        | 0         |
       | reactforum      | Test reactforum 2           | Test reactforum 1      | C1     | reactforum        | 0         |
     And I log in as "student1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test reactforum 1"
     And I add a new discussion to "Test reactforum 1" reactforum with:
       | Subject | Discussion 1 |
       | Message | Test post message |
     And I log out
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test reactforum 1"
     And I follow "Discussion 1"
     When I set the field "jump" to "Test reactforum 2"

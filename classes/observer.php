@@ -18,7 +18,7 @@
  * Event observers used in reactforum.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2013 Rajesh Taneja <rajesh@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -46,21 +46,6 @@ class mod_reactforum_observer {
             }
             list($reactforumselect, $params) = $DB->get_in_or_equal(array_keys($reactforums), SQL_PARAMS_NAMED);
             $params['userid'] = $cp->userid;
-
-            // Delete reactions data
-            foreach ($reactforums as $reactforum)
-            {
-                $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id), '', 'id');
-                foreach ($discussions as $discussion)
-                {
-                    $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id), '', 'id');
-
-                    foreach ($reactions as $reaction)
-                    {
-                        $DB->delete_records("reactforum_user_reactions", array("reaction_id" => $reaction->id, "user_id" => $cp->userid));
-                    }
-                }
-            }
 
             $DB->delete_records_select('reactforum_digests', 'userid = :userid AND reactforum '.$reactforumselect, $params);
             $DB->delete_records_select('reactforum_subscriptions', 'userid = :userid AND reactforum '.$reactforumselect, $params);
@@ -126,6 +111,42 @@ class mod_reactforum_observer {
 
             $reactforum = $event->get_record_snapshot('reactforum', $event->other['instanceid']);
             reactforum_instance_created($event->get_context(), $reactforum);
+        }
+    }
+
+    /**
+     * Observer for \core\event\course_created event.
+     *
+     * @param \core\event\course_created $event
+     * @return void
+     */
+    public static function course_created(\core\event\course_created $event) {
+        global $CFG;
+
+        $course = $event->get_record_snapshot('course', $event->objectid);
+        $format = course_get_format($course);
+        if ($format->supports_news() && !empty($course->newsitems)) {
+            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+            // Auto create the announcements reactforum.
+            reactforum_get_course_reactforum($event->objectid, 'news');
+        }
+    }
+
+    /**
+     * Observer for \core\event\course_updated event.
+     *
+     * @param \core\event\course_updated $event
+     * @return void
+     */
+    public static function course_updated(\core\event\course_updated $event) {
+        global $CFG;
+
+        $course = $event->get_record_snapshot('course', $event->objectid);
+        $format = course_get_format($course);
+        if ($format->supports_news() && !empty($course->newsitems)) {
+            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+            // Auto create the announcements reactforum.
+            reactforum_get_course_reactforum($event->objectid, 'news');
         }
     }
 }

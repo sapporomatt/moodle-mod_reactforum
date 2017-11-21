@@ -17,9 +17,7 @@ Feature: Users can choose to set start and end time for display of their discuss
     And I log in as "admin"
     And the following config values are set as admin:
       | reactforum_enabletimedposts | 1 |
-    And I am on site homepage
-    And I follow "Course 1"
-    And I turn editing mode on
+    And I am on "Course 1" course homepage with editing mode on
     And I add a "ReactForum" to section "1" and I fill the form with:
       | ReactForum name | Test reactforum name |
       | Description | Test reactforum description |
@@ -35,15 +33,14 @@ Feature: Users can choose to set start and end time for display of their discuss
       | Subject            | Discussion 3 timed visible now       |
       | Message            | Discussion contents 3, first message |
       | timestart[enabled] | 1 |
-    And I am on site homepage
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test reactforum name"
     And I should see "Discussion 2 timed"
     And I should see "Discussion 3 timed"
     And ".timedpost" "css_element" should exist
     And I log out
     And I log in as "student1"
-    When I follow "Course 1"
+    When I am on "Course 1" course homepage
     And I follow "Test reactforum name"
     Then I should see "Discussion 1"
     And I should not see "Discussion 2 timed"

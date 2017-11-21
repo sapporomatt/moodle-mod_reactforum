@@ -1,2 +1,7 @@
 subscribersto,mod_reactforum
 postmailinfo,mod_reactforum
+emaildigestupdated,mod_reactforum
+emaildigestupdated_default,mod_reactforum
+emaildigest_0,mod_reactforum
+emaildigest_1,mod_reactforum
+emaildigest_2,mod_reactforum

@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @category   phpunit
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @package    mod_reactforum
  * @category   phpunit
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_generator_testcase extends advanced_testcase {
@@ -117,6 +117,11 @@ class mod_reactforum_generator_testcase extends advanced_testcase {
         // Check the discussions were correctly created.
         $this->assertEquals(3, $DB->count_records_select('reactforum_discussions', 'reactforum = :reactforum',
             array('reactforum' => $reactforum->id)));
+
+        $record['tags'] = array('Cats', 'mice');
+        $record = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
+        $this->assertEquals(array('Cats', 'mice'),
+            array_values(core_tag_tag::get_item_tags_array('mod_reactforum', 'reactforum_posts', $record->firstpost)));
     }
 
     /**
@@ -160,6 +165,11 @@ class mod_reactforum_generator_testcase extends advanced_testcase {
         // is generated as well, so we should have 4 posts, not 3.
         $this->assertEquals(4, $DB->count_records_select('reactforum_posts', 'discussion = :discussion',
             array('discussion' => $discussion->id)));
+
+        $record->tags = array('Cats', 'mice');
+        $record = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_post($record);
+        $this->assertEquals(array('Cats', 'mice'),
+            array_values(core_tag_tag::get_item_tags_array('mod_reactforum', 'reactforum_posts', $record->id)));
     }
 
     public function test_create_content() {
@@ -187,16 +197,21 @@ class mod_reactforum_generator_testcase extends advanced_testcase {
         $post3 = $generator->create_content($reactforum, array('discussion' => $post1->discussion));
         // This should create posts answering another post.
         $post4 = $generator->create_content($reactforum, array('parent' => $post2->id));
+        // This should create post with tags.
+        $post5 = $generator->create_content($reactforum, array('parent' => $post2->id, 'tags' => array('Cats', 'mice')));
 
         $discussionrecords = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id));
         $postrecords = $DB->get_records('reactforum_posts');
         $postrecords2 = $DB->get_records('reactforum_posts', array('discussion' => $post1->discussion));
         $this->assertEquals(1, count($discussionrecords));
-        $this->assertEquals(4, count($postrecords));
-        $this->assertEquals(4, count($postrecords2));
+        $this->assertEquals(5, count($postrecords));
+        $this->assertEquals(5, count($postrecords2));
         $this->assertEquals($post1->id, $discussionrecords[$post1->discussion]->firstpost);
         $this->assertEquals($post1->id, $postrecords[$post2->id]->parent);
         $this->assertEquals($post1->id, $postrecords[$post3->id]->parent);
         $this->assertEquals($post2->id, $postrecords[$post4->id]->parent);
+
+        $this->assertEquals(array('Cats', 'mice'),
+            array_values(core_tag_tag::get_item_tags_array('mod_reactforum', 'reactforum_posts', $post5->id)));
     }
 }

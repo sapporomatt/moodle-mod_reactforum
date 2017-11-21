@@ -18,7 +18,7 @@
 /**
  * @package    mod_reactforum
  * @subpackage backup-moodle2
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,11 +29,9 @@
 /**
  * Define the complete reactforum structure for backup, with file and id annotations
  */
-class backup_reactforum_activity_structure_step extends backup_activity_structure_step
-{
+class backup_reactforum_activity_structure_step extends backup_activity_structure_step {
 
-    protected function define_structure()
-    {
+    protected function define_structure() {
 
         // To know if we are including userinfo
         $userinfo = $this->get_setting_value('userinfo');
@@ -46,14 +44,14 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
             'rsstype', 'rssarticles', 'timemodified', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
-            'completionposts', 'displaywordcount', 'reactiontype'));
+            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies', 'lockdiscussionafter'));
 
         $discussions = new backup_nested_element('discussions');
 
         $discussion = new backup_nested_element('discussion', array('id'), array(
             'name', 'firstpost', 'userid', 'groupid',
             'assessed', 'timemodified', 'usermodified', 'timestart',
-            'timeend', 'pinned', 'reactiontype'));
+            'timeend', 'pinned', 'reactiontype', 'reactionallreplies'));
 
         $posts = new backup_nested_element('posts');
 
@@ -61,6 +59,9 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'parent', 'userid', 'created', 'modified',
             'mailed', 'subject', 'message', 'messageformat',
             'messagetrust', 'attachment', 'totalscore', 'mailnow'));
+
+        $tags = new backup_nested_element('poststags');
+        $tag = new backup_nested_element('tag', array('id'), array('itemid', 'rawname'));
 
         $ratings = new backup_nested_element('ratings');
 
@@ -118,6 +119,9 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $reactforum->add_child($trackedprefs);
         $trackedprefs->add_child($track);
 
+        $reactforum->add_child($tags);
+        $tags->add_child($tag);
+
         $discussion->add_child($posts);
         $posts->add_child($post);
 
@@ -138,8 +142,7 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $reactforum->set_source_table('reactforum', array('id' => backup::VAR_ACTIVITYID));
 
         // All these source definitions only happen if we are including user info
-        if ($userinfo)
-        {
+        if ($userinfo) {
             $discussion->set_source_sql('
                 SELECT *
                   FROM {reactforum_discussions}
@@ -157,14 +160,27 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
 
             $track->set_source_table('reactforum_track_prefs', array('reactforumid' => backup::VAR_PARENTID));
 
-            $rating->set_source_table('rating', array('contextid' => backup::VAR_CONTEXTID,
-                'component' => backup_helper::is_sqlparam('mod_reactforum'),
-                'ratingarea' => backup_helper::is_sqlparam('post'),
-                'itemid' => backup::VAR_PARENTID));
+            $rating->set_source_table('rating', array('contextid'  => backup::VAR_CONTEXTID,
+                                                      'component'  => backup_helper::is_sqlparam('mod_reactforum'),
+                                                      'ratingarea' => backup_helper::is_sqlparam('post'),
+                                                      'itemid'     => backup::VAR_PARENTID));
             $rating->set_source_alias('rating', 'value');
 
             $reaction->set_source_table('reactforum_reactions', array('reactforum_id' => backup::VAR_PARENTID));
             $userReaction->set_source_table('reactforum_user_reactions', array('reaction_id' => backup::VAR_PARENTID));
+
+            if (core_tag_tag::is_enabled('mod_reactforum', 'reactforum_posts')) {
+                // Backup all tags for all reactforum posts in this reactforum.
+                $tag->set_source_sql('SELECT t.id, ti.itemid, t.rawname
+                                        FROM {tag} t
+                                        JOIN {tag_instance} ti ON ti.tagid = t.id
+                                       WHERE ti.itemtype = ?
+                                         AND ti.component = ?
+                                         AND ti.contextid = ?', array(
+                    backup_helper::is_sqlparam('reactforum_posts'),
+                    backup_helper::is_sqlparam('mod_reactforum'),
+                    backup::VAR_CONTEXTID));
+            }
         }
 
         // Define id annotations
@@ -188,10 +204,6 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $read->annotate_ids('user', 'userid');
 
         $track->annotate_ids('user', 'userid');
-
-        $reaction->annotate_ids("reactforum_id", "reactforum_id");
-        $reaction->annotate_ids("discussion_id", "discussion_id");
-        $userReaction->annotate_ids("reaction_id", "reaction_id");
 
         // Define file annotations
 
