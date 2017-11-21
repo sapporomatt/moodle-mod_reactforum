@@ -19,7 +19,7 @@
  * This file contains a custom renderer class used by the reactforum module.
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,7 +28,7 @@
  * is used by the reactforum module.
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  **/
 class mod_reactforum_renderer extends plugin_renderer_base {
@@ -202,5 +202,48 @@ class mod_reactforum_renderer extends plugin_renderer_base {
      */
     public function reactforum_post_template() {
         return 'reactforum_post';
+    }
+
+    /**
+     * Create the inplace_editable used to select reactforum digest options.
+     *
+     * @param   stdClass    $reactforum  The reactforum to create the editable for.
+     * @param   int         $value  The current value for this user
+     * @return  inplace_editable
+     */
+    public function render_digest_options($reactforum, $value) {
+        $options = reactforum_get_user_digest_options();
+        $editable = new \core\output\inplace_editable(
+            'mod_reactforum',
+            'digestoptions',
+            $reactforum->id,
+            true,
+            $options[$value],
+            $value
+        );
+
+        $editable->set_type_select($options);
+
+        return $editable;
+    }
+
+    /**
+     * Render quick search form.
+     *
+     * @param \mod_reactforum\output\quick_search_form $form The renderable.
+     * @return string
+     */
+    public function render_quick_search_form(\mod_reactforum\output\quick_search_form $form) {
+        return $this->render_from_template('mod_reactforum/quick_search_form', $form->export_for_template($this));
+    }
+
+    /**
+     * Render big search form.
+     *
+     * @param \mod_reactforum\output\big_search_form $form The renderable.
+     * @return string
+     */
+    public function render_big_search_form(\mod_reactforum\output\big_search_form $form) {
+        return $this->render_from_template('mod_reactforum/big_search_form', $form->export_for_template($this));
     }
 }

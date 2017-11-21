@@ -24,7 +24,7 @@ require_once($CFG->libdir . '/portfolio/caller.php');
 
 /**
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class reactforum_portfolio_caller extends portfolio_module_caller_base {
@@ -397,7 +397,7 @@ class reactforum_portfolio_caller extends portfolio_module_caller_base {
  * Class representing the virtual node with all itemids in the file browser
  *
  * @category  files
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 2012 David Mudrak <david@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class reactforum_file_info_container extends file_info {

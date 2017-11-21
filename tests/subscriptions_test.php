@@ -18,7 +18,7 @@
  * The module reactforums tests
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2013 Frédéric Massart
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -105,6 +105,12 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         $options = array('course' => $course->id);
         $reactforum = $this->getDataGenerator()->create_module('reactforum', $options);
+
+        // Create a user enrolled in the course as a student.
+        list($user) = $this->helper_create_users($course, 1);
+
+        // Must be logged in as the current user.
+        $this->setUser($user);
 
         \mod_reactforum\subscriptions::set_subscription_mode($reactforum->id, REACTFORUM_FORCESUBSCRIBE);
         $reactforum = $DB->get_record('reactforum', array('id' => $reactforum->id));
@@ -220,11 +226,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently not subscribed to the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Check that the user is unsubscribed from the discussion too.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
 
@@ -253,36 +254,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Unsubscribing should remove the record from the reactforum subscriptions table, and not modify the reactforum
         // discussion subscriptions table.
         \mod_reactforum\subscriptions::unsubscribe_user($author->id, $reactforum);
-        $this->assertEquals(0, $DB->count_records('reactforum_subscriptions', array(
-            'userid'        => $author->id,
-            'reactforum'         => $reactforum->id,
-        )));
-        $this->assertEquals(0, $DB->count_records('reactforum_discussion_subs', array(
-            'userid'        => $author->id,
-            'discussion'    => $discussion->id,
-        )));
-
-        // The same thing should happen calling the deprecated versions of
-        // these functions.
-        // Subscribing to the reactforum should create a record in the subscriptions table, but not the reactforum discussion
-        // subscriptions table.
-        reactforum_subscribe($author->id, $reactforum->id);
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-        $this->assertEquals(1, $DB->count_records('reactforum_subscriptions', array(
-            'userid'        => $author->id,
-            'reactforum'         => $reactforum->id,
-        )));
-        $this->assertEquals(0, $DB->count_records('reactforum_discussion_subs', array(
-            'userid'        => $author->id,
-            'discussion'    => $discussion->id,
-        )));
-
-        // Unsubscribing should remove the record from the reactforum subscriptions table, and not modify the reactforum
-        // discussion subscriptions table.
-        reactforum_unsubscribe($author->id, $reactforum->id);
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
         $this->assertEquals(0, $DB->count_records('reactforum_subscriptions', array(
             'userid'        => $author->id,
             'reactforum'         => $reactforum->id,
@@ -439,11 +410,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently not subscribed to the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -476,11 +442,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -506,11 +467,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently not subscribed to the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -522,11 +478,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still unsubscribed from the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // But subscribed to the discussion.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -553,11 +504,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -566,11 +512,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // But unsubscribed from the discussion.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -599,11 +540,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -628,11 +564,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // An attempt to unsubscribe again should result in a falsey return to indicate that no change was made.
         $this->assertFalse(\mod_reactforum\subscriptions::unsubscribe_user_from_discussion($author->id, $discussion));
@@ -668,16 +599,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is still subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // And is subscribed to the discussion again.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
 
@@ -698,11 +619,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // But unsubscribed from the discussion.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -746,11 +662,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still subscribed to the reactforum.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // But unsubscribed from the discussion.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -806,11 +717,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is currently unsubscribed to the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // Post a discussion to the reactforum.
         list($discussion, $post) = $this->helper_post_to_reactforum($reactforum, $author);
 
@@ -825,11 +731,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still unsubscribed from the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // But subscribed to the discussion.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -846,11 +747,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is still unsubscribed from the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // And is unsubscribed from the discussion again.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
 
@@ -865,11 +761,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
 
         // Check that the user is still unsubscribed from the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
-
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
 
         // And is subscribed to the discussion again.
         $this->assertTrue(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
@@ -886,11 +777,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         // Check that the user is still unsubscribed from the reactforum.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum));
 
-        // Check the deprecated function too.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
         // But unsubscribed from the discussion.
         $this->assertFalse(\mod_reactforum\subscriptions::is_subscribed($author->id, $reactforum, $discussion->id));
 
@@ -899,46 +785,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
             'userid'        => $author->id,
             'discussion'    => $discussion->id,
         )));
-    }
-
-    /**
-     * Test that the deprecated reactforum_is_subscribed accepts numeric reactforum IDs.
-     */
-    public function test_reactforum_is_subscribed_numeric() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-
-        // Create a course, with a reactforum.
-        $course = $this->getDataGenerator()->create_course();
-
-        $options = array('course' => $course->id, 'forcesubscribe' => REACTFORUM_CHOOSESUBSCRIBE);
-        $reactforum = $this->getDataGenerator()->create_module('reactforum', $options);
-
-        // Create a user enrolled in the course as a students.
-        list($author) = $this->helper_create_users($course, 1);
-
-        // Check that the user is currently unsubscribed to the reactforum.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum->id));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
-        // It should match the result of when it's called with the reactforum object.
-        $this->assertFalse(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
-        // And when the user is subscribed, we should also get the correct result.
-        \mod_reactforum\subscriptions::subscribe_user($author->id, $reactforum);
-
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum->id));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
-
-        // It should match the result of when it's called with the reactforum object.
-        $this->assertTrue(reactforum_is_subscribed($author->id, $reactforum));
-        $this->assertEquals(1, count($this->getDebuggingMessages()));
-        $this->resetDebugging();
     }
 
     /**
@@ -1478,4 +1324,100 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         $this->assertGreaterThan($suppliedcmcount, $calculatedcmcount);
     }
 
+    public function is_subscribable_reactforums() {
+        return [
+            [
+                'forcesubscribe' => REACTFORUM_DISALLOWSUBSCRIBE,
+            ],
+            [
+                'forcesubscribe' => REACTFORUM_CHOOSESUBSCRIBE,
+            ],
+            [
+                'forcesubscribe' => REACTFORUM_INITIALSUBSCRIBE,
+            ],
+            [
+                'forcesubscribe' => REACTFORUM_FORCESUBSCRIBE,
+            ],
+        ];
+    }
+
+    public function is_subscribable_provider() {
+        $data = [];
+        foreach ($this->is_subscribable_reactforums() as $reactforum) {
+            $data[] = [$reactforum];
+        }
+
+        return $data;
+    }
+
+    /**
+     * @dataProvider is_subscribable_provider
+     */
+    public function test_is_subscribable_logged_out($options) {
+        $this->resetAfterTest(true);
+
+        // Create a course, with a reactforum.
+        $course = $this->getDataGenerator()->create_course();
+        $options['course'] = $course->id;
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', $options);
+
+        $this->assertFalse(\mod_reactforum\subscriptions::is_subscribable($reactforum));
+    }
+
+    /**
+     * @dataProvider is_subscribable_provider
+     */
+    public function test_is_subscribable_is_guest($options) {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $guest = $DB->get_record('user', array('username'=>'guest'));
+        $this->setUser($guest);
+
+        // Create a course, with a reactforum.
+        $course = $this->getDataGenerator()->create_course();
+        $options['course'] = $course->id;
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', $options);
+
+        $this->assertFalse(\mod_reactforum\subscriptions::is_subscribable($reactforum));
+    }
+
+    public function is_subscribable_loggedin_provider() {
+        return [
+            [
+                ['forcesubscribe' => REACTFORUM_DISALLOWSUBSCRIBE],
+                false,
+            ],
+            [
+                ['forcesubscribe' => REACTFORUM_CHOOSESUBSCRIBE],
+                true,
+            ],
+            [
+                ['forcesubscribe' => REACTFORUM_INITIALSUBSCRIBE],
+                true,
+            ],
+            [
+                ['forcesubscribe' => REACTFORUM_FORCESUBSCRIBE],
+                false,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider is_subscribable_loggedin_provider
+     */
+    public function test_is_subscribable_loggedin($options, $expect) {
+        $this->resetAfterTest(true);
+
+        // Create a course, with a reactforum.
+        $course = $this->getDataGenerator()->create_course();
+        $options['course'] = $course->id;
+        $reactforum = $this->getDataGenerator()->create_module('reactforum', $options);
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id);
+        $this->setUser($user);
+
+        $this->assertEquals($expect, \mod_reactforum\subscriptions::is_subscribable($reactforum));
+    }
 }

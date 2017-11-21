@@ -21,7 +21,7 @@ YUI.add('moodle-mod_reactforum-subscriptiontoggle', function (Y, NAME) {
  *
  * @module     moodle-core-subscriptiontoggle
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @main       moodle-mod_reactforum-subscriptiontoggle
  */

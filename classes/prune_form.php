@@ -18,7 +18,7 @@
  * This file provides form for splitting discussions
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2015 Martin Mastny <mastnym@vscht.cz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,7 +32,7 @@ require_once("$CFG->libdir/formslib.php");
  * Form which displays fields for splitting reactforum post to a separate threads.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2015 Martin Mastny <mastnym@vscht.cz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_prune_form extends moodleform {

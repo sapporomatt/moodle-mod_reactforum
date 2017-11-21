@@ -16,10 +16,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'reactforum', language 'ja', branch 'MOODLE_31_STABLE'
+ * Strings for component 'reactforum', language 'ja', branch 'MOODLE_32_STABLE'
  *
  * @package   reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -63,7 +63,7 @@ $string['cannotdeletepost'] = 'あなたはこの投稿を削除できません!
 $string['cannoteditposts'] = 'あなたは他のユーザの投稿を編集できません!';
 $string['cannotfinddiscussion'] = 'このReactフォーラムのディスカッションが見つかりませんでした。';
 $string['cannotfindfirstpost'] = 'このReactフォーラムの最初の投稿が見つかりませんでした。';
-$string['cannotfindorcreatereactforum'] = 'サイトのメインニュースReactフォーラムが見つからないか、作成できません。';
+$string['cannotfindorcreatereactforum'] = 'サイトの主アナウンスメントReactフォーラムが見つからないか作成できません。';
 $string['cannotfindparentpost'] = '投稿 {$a} の先頭親投稿が見つかりませんでした。';
 $string['cannotmovefromsinglereactforum'] = '「トピック1件のシンプルなディスカッション」Reactフォーラムからはディスカッションを移動できません。';
 $string['cannotmovenotvisible'] = 'Reactフォーラムは非表示です。';
@@ -102,7 +102,7 @@ $string['configmanydiscussions'] = 'Reactフォーラム1ページあたりに�
 $string['configmaxattachments'] = '投稿ごとに許可されるデフォルトの最大添付ファイル数です。';
 $string['configmaxbytes'] = 'すべてのReactフォーラムの添付ファイルに関するデフォルト最大サイズ (コース制限および他のローカル設定に従います)';
 $string['configoldpostdays'] = '古い投稿を既読とする日数です。';
-$string['configreplytouser'] = 'Reactフォーラムの投稿がメール送信される場合、受信者がReactフォーラムを介さず個人的に返信できるようメールにユーザのメールアドレスを表示しますか?　「Yes」に設定した場合でもユーザはプロファイルページでメールアドレスを隠すよう設定することができます。';
+$string['configreplytouser'] = 'Reactフォーラムの投稿がメール送信される場合、受信者がReactフォーラムを介さず個人的に返信できるようメールにユーザのメールアドレスを表示しますか? 「Yes」に設定した場合でもユーザはプロファイルページでメールアドレスを隠すよう設定することができます。';
 $string['configrssarticlesdefault'] = 'RSSフィードが有効にされた場合、デフォルト投稿数 (ディスカッションまたは投稿) を設定してください。';
 $string['configrsstypedefault'] = 'RSSフィードが有効にされた場合、デフォルト活動タイプを設定してください。';
 $string['configshortpost'] = 'この文字長以下の長さ (HTMLは含まない) は短いとみなされます (下記参照)。';
@@ -113,9 +113,9 @@ $string['confirmsubscribe'] = '本当にReactフォーラム「 {$a} 」を購�
 $string['confirmsubscribediscussion'] = '本当にReactフォーラム「 {$a->reactforum} 」内のディスカッション「 {$a->discussion} 」を購読してもよろしいですか?';
 $string['confirmunsubscribe'] = '本当にReactフォーラム「 {$a} 」から購読解除してもよろしいですか?';
 $string['confirmunsubscribediscussion'] = '本当にReactフォーラム「 {$a->reactforum} 」内のディスカッション「 {$a->discussion} 」から購読解除してもよろしいですか?';
-$string['couldnotadd'] = '不明なエラーのため、あなたの投稿を追加できませんでした。';
+$string['couldnotadd'] = '不明なエラーのためあなたの投稿を追加できませんでした。';
 $string['couldnotdeletereplies'] = '申し訳ございません、返信済みのため削除できませんでした。';
-$string['couldnotupdate'] = '不明なエラーのため、投稿を更新できませんでした。';
+$string['couldnotupdate'] = '不明なエラーのため投稿を更新できませんでした。';
 $string['crontask'] = 'Reactフォーラムメーリングおよびメンテナンスジョブ';
 $string['delete'] = '削除';
 $string['deleteddiscussion'] = 'ディスカッショントピックが削除されました。';
@@ -135,6 +135,9 @@ $string['disallowsubscribeteacher'] = '購読不可 (教師を除く)';
 $string['disallowsubscription'] = '購読';
 $string['disallowsubscription_help'] = 'あなたがディスカッションを購読できないようこのReactフォーラムが設定されました。';
 $string['discussion'] = 'ディスカッション';
+$string['discussionlocked'] = 'このディスカッションはロックされているため、あなたは返信することはできません。';
+$string['discussionlockingdisabled'] = 'ディスカッションをロックしない';
+$string['discussionlockingheader'] = 'ディスカッションロッキング';
 $string['discussionmoved'] = 'このディスカッションは 「 {$a} 」に移動されました。';
 $string['discussionmovedpost'] = 'このディスカッションはReactフォーラム「 <a href="{$a->reactforumhref}">{$a->reactforumname}</a> 」の<a href="{$a->discusshref}">ここ</a>に移動されました。';
 $string['discussionname'] = 'ディスカッション名';
@@ -221,12 +224,13 @@ $string['forcesubscribed'] = 'このReactフォーラムは購読が強制され
 $string['forcesubscribed_help'] = 'あなたがディスカッションの購読を解除できないようこのReactフォーラムが設定されました。';
 $string['reactforum'] = 'Reactフォーラム';
 $string['reactforum:addinstance'] = '新しいReactフォーラムを追加する';
-$string['reactforum:addnews'] = 'ニュースを追加する';
+$string['reactforum:addnews'] = 'アナウンスメントを追加する';
 $string['reactforum:addquestion'] = '質問を追加する';
 $string['reactforum:allowforcesubscribe'] = '強制購読を許可する';
 $string['reactforumauthorhidden'] = '投稿者 (非表示)';
 $string['reactforumblockingalmosttoomanyposts'] = 'あなたは投稿数の上限に近づきつつあります。あなたは直近の {$a->blockperiod} に {$a->numposts} 回投稿しています。投稿数の上限は {$a->blockafter} 回です。';
 $string['reactforumbodyhidden'] = 'あなたはこの投稿を閲覧できません。恐らく、あなたがまだディスカッションに投稿していない、最大編集時間を経過していない、ディスカッションが開始されていない、またはディスカッションの有効期限が切れています。';
+$string['reactforum:canoverridediscussionlock'] = 'ロックされたディスカッションに返信する';
 $string['reactforum:canposttomygroups'] = 'あなたがアクセスできるグループすべてに投稿できる';
 $string['reactforum:createattachment'] = '添付を作成する';
 $string['reactforum:deleteanypost'] = 'どの投稿でも削除する (いつでも)';
@@ -243,7 +247,7 @@ $string['reactforum:pindiscussions'] = 'ディスカッションをピン留め�
 $string['reactforumposts'] = 'Reactフォーラム投稿';
 $string['reactforum:postwithoutthrottling'] = '投稿閾値を適用しない';
 $string['reactforum:rate'] = '投稿を評価する';
-$string['reactforum:replynews'] = 'ニュースに返信する';
+$string['reactforum:replynews'] = 'アナウンスメントに返信する';
 $string['reactforum:replypost'] = '投稿に返信する';
 $string['reactforums'] = 'Reactフォーラム';
 $string['reactforum:splitdiscussions'] = 'ディスカッションを分割する';
@@ -259,7 +263,7 @@ $string['reactforumtype_help'] = 'Reactフォーラムには5つのタイプあ�
 * Q&AReactフォーラム - 学生は他の学生の投稿を読む前に自分の考え方を投稿する必要があります。
 * ブログフォーマットで表示される標準Reactフォーラム - 誰でも常に新しいトピックを開始できる開かれたReactフォーラムです。ディスカッショントピックは1つのページに「このトピックを読む」リンクとして表示されます。
 * 一般利用のための標準Reactフォーラム - 誰でも常に新しいトピックを開始できる開かれたReactフォーラムです。';
-$string['reactforum:viewallratings'] = '個々のユーザから与えられた実評価すべてを表示する';
+$string['reactforum:viewallratings'] = '個別のユーザから与えられた実評価すべてを表示する';
 $string['reactforum:viewanyrating'] = 'すべてのユーザが受けた評価合計を表示する';
 $string['reactforum:viewdiscussion'] = 'ディスカッションを表示する';
 $string['reactforum:viewhiddentimedposts'] = '非表示の時間制限投稿を表示する';
@@ -283,11 +287,19 @@ $string['invalidparentpostid'] = '親投稿IDが正しくありません。';
 $string['invalidpostid'] = '投稿ID ({$a}) が有効ではありません。';
 $string['lastpost'] = '最新の投稿';
 $string['learningreactforums'] = '学習Reactフォーラム';
+$string['lockdiscussionafter'] = '次の休眠期間後、ディスカッションをロックする';
+$string['lockdiscussionafter_help'] = '最後の返信以後 、指定された期間の経過後にディスカッションを自動でロックすることができます。
+
+ロックされたディスカッションに返信するケイパビリティのあるユーザはディスカッションに返信することによりロックを解除することができます。';
 $string['longpost'] = '長い投稿';
 $string['mailnow'] = '編集遅延時間なしにReactフォーラム投稿通知を送信する';
 $string['manydiscussions'] = '1ページあたりのディスカッション数';
 $string['markalldread'] = 'このディスカッションの投稿すべてを既読にします。';
 $string['markallread'] = 'このReactフォーラムの投稿すべてを既読にします。';
+$string['markasreadonnotification'] = 'Reactフォーラム投稿通知を送信する場合';
+$string['markasreadonnotification_help'] = 'Reactフォーラム投稿が通知される場合、あなたはReactフォーラム未読管理の目的として投稿を既読にするかどうか選択することができます。';
+$string['markasreadonnotificationno'] = '投稿を既読にしない';
+$string['markasreadonnotificationyes'] = '投稿を既読にする';
 $string['markread'] = '既読にする';
 $string['markreadbutton'] = '既読<br />にする';
 $string['markunread'] = '未読にする';
@@ -352,7 +364,7 @@ $string['noguestpost'] = '申し訳ございません、ゲストは投稿でき
 $string['noguestsubscribe'] = '申し訳ございません、ゲストは購読できません。';
 $string['noguesttracking'] = '申し訳ございません、ゲストは未読管理オプションを設定できません。';
 $string['nomorepostscontaining'] = 'これ以上「 {$a} 」 を含んだ投稿はありません。';
-$string['nonews'] = 'まだ新しいニュースはありません';
+$string['nonews'] = 'まだ新しいアナウンスメントは投稿されていません。';
 $string['noonecansubscribenow'] = '現在、購読は無効にされています。';
 $string['nopermissiontosubscribe'] = 'あなたには購読者を閲覧するパーミッションがありません。';
 $string['nopermissiontoview'] = 'あなたにはこの投稿を閲覧するパーミッションがありません。';
@@ -519,6 +531,7 @@ $string['trackingtype_help'] = '未読管理により新しい投稿がハイラ
 「任意」に設定された場合、参加者は管理ブロック内のリンクにより未読管理を有効または無効にすることができます (ユーザは自分のReactフォーラムプリファレンスでReactフォーラム未読管理を有効にする必要があります)。
 
 サイト管理者が「未読管理の強制を許可する」を有効にした場合、さらなるオプション「強制」を使用することができます。これはユーザのReactフォーラムプリファレンスに限らず常に未読管理が有効にされることを意味します。';
+$string['trackreadposts_header'] = '未読管理';
 $string['unread'] = '未読';
 $string['unreadposts'] = '未読の投稿';
 $string['unreadpostsnumber'] = '未読件数 {$a}';
@@ -537,6 +550,7 @@ $string['unsubscribelink'] = 'このReactフォーラムから購読解除する
 $string['unsubscribeshort'] = '購読解除';
 $string['usermarksread'] = '投稿を手動で既読にする';
 $string['viewalldiscussions'] = 'すべてのディスカッションを表示する';
+$string['viewthediscussion'] = 'このディスカッションを表示する';
 $string['warnafter'] = '警告までの投稿閾値';
 $string['warnafter_help'] = '指定された時間内に指定された投稿数以上を投稿した場合、学生に警告が表示されます。この設定では何件の投稿後に警告が表示されるか指定します。ケイパビリティ「mod/reactforum:postwithoutthrottling」が割り当てられたユーザは投稿制限から除外されます。';
 $string['warnformorepost'] = '警告! このReactフォーラムには2件以上のディスカッションがあります - 直近のディスカッションを使用します。';
@@ -554,6 +568,9 @@ $string['reactionstype_image'] = 'Image';
 $string['reactionstype_discussion'] = 'Decided by discussion owner';
 $string['reactionstype_none'] = 'None';
 $string['reactionstype_change_confirmation'] = 'All current reaction buttons will be removed. Are you sure that you want to change reaction type?';
+
+$string['reactions_allreplies'] = 'Apply reaction buttons on replies';
+$string['reactions_allreplies_help'] = 'If this option is checked, reaction buttons will appear on each topic and every reply as well. Otherwise, they appear on the discussion topic only.';
 
 $string['reactions'] = 'Reaction Buttons';
 $string['reactions_add'] = 'Add';

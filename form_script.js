@@ -29,6 +29,18 @@ require(['jquery'], function ($)
         var $area = $maindiv.find('fieldset');
 
         var $filepicker = $('div#fitem_id_reactionimage');
+        var $reactionallreplies = $('div#fitem_id_reactionallreplies');
+
+        var theme_boost = (M.cfg.theme === 'boost');
+
+        if(theme_boost)
+        {
+            $maindiv = $('label[for=fgroup_id_reactions]').closest('div.form-group');
+            $area = $maindiv.find('div.felement');
+            $filepicker = $('input[name=reactionimage]').closest('div.form-group');
+            $reactionallreplies = $('#id_reactionallreplies').closest('div.form-group');
+        }
+
         $filepicker.hide();
 
         var reaction_type = 'text';
@@ -113,9 +125,9 @@ require(['jquery'], function ($)
                         $newelement.find('input.reaction-text')
                             .attr('name', '')
                             .change(function()
-                        {
-                            $(this).attr('name', 'reactions[edit][' + $(this).attr('reaction-id') + ']');
-                        });
+                            {
+                                $(this).attr('name', 'reactions[edit][' + $(this).attr('reaction-id') + ']');
+                            });
                     }
 
                     $inputcontainer.append($newelement);
@@ -311,10 +323,12 @@ require(['jquery'], function ($)
             {
                 reactions = [];
                 $maindiv.hide();
+                $reactionallreplies.hide();
             }
             else
             {
                 $maindiv.show();
+                $reactionallreplies.show();
             }
         });
 
@@ -330,17 +344,20 @@ require(['jquery'], function ($)
                 $('input#id_reactiontype_text').prop('checked', true);
                 $.prepare_text_reactions();
                 $maindiv.show();
+                $reactionallreplies.show();
             }
             else if(reaction_type === 'image')
             {
                 $('input#id_reactiontype_image').prop('checked', true);
                 $.prepare_image_reactions();
                 $maindiv.show();
+                $reactionallreplies.show();
             }
         }
         else
         {
             $maindiv.hide();
+            $reactionallreplies.hide();
         }
     });
 });

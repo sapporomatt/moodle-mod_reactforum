@@ -18,12 +18,12 @@
  * Subscribe to or unsubscribe from a reactforum discussion.
  *
  * @package    mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2014 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 define('AJAX_SCRIPT', true);
-require_once(dirname(dirname(__DIR__)) . '/config.php');
+require(__DIR__.'/../../config.php');
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
 
 $reactforumid        = required_param('reactforumid', PARAM_INT);             // The reactforum to subscribe or unsubscribe.

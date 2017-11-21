@@ -19,7 +19,7 @@
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2016 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -37,7 +37,7 @@ require_once($CFG->dirroot . '/mod/reactforum/backup/moodle2/backup_reactforum_a
  *
  * @package    mod_reactforum
  * @category   test
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright  2016 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_reactforum_backup_reactforum_activity_task_testcase extends advanced_testcase {

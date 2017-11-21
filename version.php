@@ -18,12 +18,12 @@
  * Version information
  *
  * @package   mod_reactforum
- * @copyright  2017 (C) VERSION2, INC.
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017080200;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2016051900;       // Requires this Moodle version
+$plugin->version   = 2017110100;       // The current module version (Date: YYYYMMDDXX)
+$plugin->requires  = 2016112900;       // Requires this Moodle version
 $plugin->component = 'mod_reactforum';      // Full name of the plugin (used for diagnostics)
