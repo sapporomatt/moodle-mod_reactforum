@@ -115,24 +115,6 @@ class mod_reactforum_observer {
     }
 
     /**
-     * Observer for \core\event\course_created event.
-     *
-     * @param \core\event\course_created $event
-     * @return void
-     */
-    public static function course_created(\core\event\course_created $event) {
-        global $CFG;
-
-        $course = $event->get_record_snapshot('course', $event->objectid);
-        $format = course_get_format($course);
-        if ($format->supports_news() && !empty($course->newsitems)) {
-            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
-            // Auto create the announcements reactforum.
-            reactforum_get_course_reactforum($event->objectid, 'news');
-        }
-    }
-
-    /**
      * Observer for \core\event\course_updated event.
      *
      * @param \core\event\course_updated $event
