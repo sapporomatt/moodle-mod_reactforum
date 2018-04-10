@@ -50,7 +50,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
             $paths[] = new restore_path_element('reactforum_track', '/activity/reactforum/trackedprefs/track');
 
             $paths[] = new restore_path_element('reactforum_reactions', '/activity/reactforum/reactions/reaction');
-            $paths[] = new restore_path_element('reactforum_user_reactions', '/activity/reactforum/reactions/reaction/user_reactions/user_reaction');
+            $paths[] = new restore_path_element('reactforum_usreactionallreplieser_reactions', '/activity/reactforum/reactions/reaction/user_reactions/user_reaction');
         }
 
         // Return the paths wrapped into standard activity structure

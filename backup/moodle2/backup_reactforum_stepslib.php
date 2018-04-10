@@ -46,7 +46,7 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
             'rsstype', 'rssarticles', 'timemodified', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
-            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies'));
+            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies', 'delayedcounter'));
 
         $discussions = new backup_nested_element('discussions');
 

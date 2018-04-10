@@ -302,9 +302,12 @@ function reactforum_update_instance($reactforum, $mform)
         $DB->update_record('reactforum_discussions', $discussion);
     }
 
-    if(!$reactforum->reactionallreplies)
-    {
+    if (!$reactforum->reactionallreplies) {
         $reactforum->reactionallreplies = 0;
+    }
+
+    if (!$reactforum->delayedcounter) {
+        $reactforum->delayedcounter = 0;
     }
 
     $fs = get_file_storage();
@@ -3941,6 +3944,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     {
         $reactionData = array();
         $reactions = reactforum_get_reactions_from_discussion($discussion);
+        $postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
         foreach ($reactions as $reaction) {
             $countObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id), "COUNT(*) AS 'count'");
             $userCountObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id, "user_id" => $USER->id), "COUNT(*) AS 'count'");
@@ -3954,6 +3958,10 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
             if ($userCountObj->count == 1) {
                 $item['reacted'] = true;
+            }
+
+            if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {
+                $item['count'] = '';
             }
 
             array_push($reactionData, $item);

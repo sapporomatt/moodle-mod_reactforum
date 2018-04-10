@@ -104,6 +104,7 @@ $newObjArr = reactforum_get_reactions_from_discussion($discussion);
 
 $arrayResult = array();
 
+$postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
 foreach ($newObjArr as $obj)
 {
     $countObj = $DB->get_record("reactforum_user_reactions",
@@ -125,6 +126,10 @@ foreach ($newObjArr as $obj)
         "count" => $countObj->count,
         "reacted" => ($userCountObj->count == 1)
     );
+
+    if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {
+        $item['count'] = '';
+    }
 
     array_push($arrayResult, $item);
 }

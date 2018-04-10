@@ -162,5 +162,17 @@ function xmldb_reactforum_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2017102400, 'reactforum');
     }
 
+    if($oldversion < 2018041000)
+    {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('delayedcounter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
+        if(!$dbman->field_exists($table, $field))
+        {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2018041000, 'reactforum');
+    }
+
     return true;
 }
