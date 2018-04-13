@@ -3942,7 +3942,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     if($reactable)
     {
-        $reactionData = array();
+        $reaction_data = array();
         $reactions = reactforum_get_reactions_from_discussion($discussion);
         $postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
         foreach ($reactions as $reaction) {
@@ -3950,10 +3950,11 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             $userCountObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id, "user_id" => $USER->id), "COUNT(*) AS 'count'");
 
             $item = array(
-                "id" => $reaction->id,
-                "reaction" => $reaction->reaction,
-                "count" => $countObj->count,
-                "reacted" => false
+                'id' => $reaction->id,
+                'reaction' => $reaction->reaction,
+                'count' => $countObj->count,
+                'reacted' => false,
+                'enabled' => true
             );
 
             if ($userCountObj->count == 1) {
@@ -3964,7 +3965,11 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
                 $item['count'] = '';
             }
 
-            array_push($reactionData, $item);
+            if ($reactforum->delayedcounter && $postisreacted) {
+                $item['enabled'] = false;
+            }
+
+            array_push($reaction_data, $item);
         }
     }
 
@@ -4107,33 +4112,33 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     if($reactable)
     {
         $output .= html_writer::start_tag('div', array('style' => 'margin: 15px 0;'));
-        foreach ($reactionData as $reactionDatum) {
+        foreach ($reaction_data as $reaction) {
             $output .= html_writer::start_tag('div',
                 array(
                     'style' => 'display: inline; margin: 0 8px 0 0;',
                     'post-id' => $post->id,
-                    'reaction-id' => $reactionDatum['id'],
+                    'reaction-id' => $reaction['id'],
                     'class' => 'reaction-container'
                 )
             );
 
             $class = 'btn-default';
-            if ($reactionDatum['reacted']) {
+            if ($reaction['reacted']) {
                 $class = 'btn-primary';
             }
 
             $buttonAttributes = array('class' => "btn {$class} react-btn");
-            if ($post->userid == $USER->id) {
+            if ($post->userid == $USER->id || !$reaction['enabled']) {
                 $buttonAttributes['disabled'] = 'disabled';
             }
 
             $reactionhtml = '';
             if ($reactiontype == 'text') {
-                $reactionhtml = $reactionDatum['reaction'];
+                $reactionhtml = $reaction['reaction'];
             } else if ($reactiontype == 'image') {
                 $reactionhtml = html_writer::empty_tag('img',
                     array(
-                        'src' => 'reactionimg.php?id=' . $reactionDatum['id'] . '&sesskey=' . sesskey(),
+                        'src' => 'reactionimg.php?id=' . $reaction['id'] . '&sesskey=' . sesskey(),
                         'alt' => '',
                         'class' => 'reaction-img'
                     )
@@ -4141,7 +4146,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             }
 
             $output .= html_writer::tag('button', $reactionhtml, $buttonAttributes);
-            $output .= ' ' . html_writer::tag('span', "{$reactionDatum['count']}") . ' ';
+            $output .= ' ' . html_writer::tag('span', "{$reaction['count']}") . ' ';
 
             $output .= html_writer::end_tag('div');
         }

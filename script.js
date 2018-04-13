@@ -48,13 +48,20 @@ require(['jquery'], function ($)
                         {
                             $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] span').html(response.data[i].count);
 
-                            if (response.data[i].reacted)
-                            {
-                                $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button').addClass("btn-primary");
+                            var $button = $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button');
+
+                            if (response.data[i].reacted) {
+                                $button.addClass('btn-primary');
                             }
-                            else
-                            {
-                                $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button').addClass("btn-default");
+                            else {
+                                $button.addClass('btn-default');
+                            }
+
+                            if (response.data[i].enabled) {
+                                $button.prop('disabled', false);
+                            }
+                            else {
+                                $button.prop('disabled', true);
                             }
                         }
                     }

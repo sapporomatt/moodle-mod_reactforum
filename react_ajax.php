@@ -26,10 +26,10 @@ define('AJAX_SCRIPT', true);
 require_once(dirname(dirname(__DIR__)) . '/config.php');
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
 
-$postID = required_param('post', PARAM_INT);
-$reactionID = required_param('reaction', PARAM_INT);
+$post_id = required_param('post', PARAM_INT);
+$reaction_id = required_param('reaction', PARAM_INT);
 
-if (!$post = $DB->get_record('reactforum_posts', array('id' => $postID)))
+if (!$post = $DB->get_record('reactforum_posts', array('id' => $post_id)))
 {
     throw new moodle_exception('error', 'mod_reactforum');
 }
@@ -68,31 +68,30 @@ if($post->userid == $USER->id)
 $userReactionObj = $DB->get_record(
     "reactforum_user_reactions",
     array(
-        "post_id" => $postID,
+        "post_id" => $post_id,
         "user_id" => $USER->id
     ));
 
-if($userReactionObj == false)
+if ($userReactionObj == false)
 {   // New record
     $userReactionObj = new stdClass();
-    $userReactionObj->post_id = $postID;
+    $userReactionObj->post_id = $post_id;
     $userReactionObj->user_id = $USER->id;
-    $userReactionObj->reaction_id = $reactionID;
+    $userReactionObj->reaction_id = $reaction_id;
 
+    $DB->delete_records('reactforum_user_reactions', array('post_id' => $post_id, 'user_id' => $USER->id));
     $DB->insert_record("reactforum_user_reactions", $userReactionObj);
 }
-else if($userReactionObj->reaction_id == $reactionID)
-{   // Remove reaction
+else if (!$reactforum->delayedcounter && $userReactionObj->reaction_id == $reaction_id) {   // Remove reaction
     $DB->delete_records("reactforum_user_reactions",
         array(
-            "post_id" => $postID,
-            "reaction_id" => $reactionID,
+            "post_id" => $post_id,
+            "reaction_id" => $reaction_id,
             "user_id" => $USER->id
         ));
 }
-else
-{   // Update record
-    $userReactionObj->reaction_id = $reactionID;
+else if (!$reactforum->delayedcounter) {   // Update record
+    $userReactionObj->reaction_id = $reaction_id;
 
     $DB->update_record("reactforum_user_reactions", $userReactionObj);
 }
@@ -109,26 +108,31 @@ foreach ($newObjArr as $obj)
 {
     $countObj = $DB->get_record("reactforum_user_reactions",
         array(
-            "post_id" => $postID,
+            "post_id" => $post_id,
             "reaction_id" => $obj->id
         ), "COUNT(*) AS 'count'");
 
     $userCountObj = $DB->get_record("reactforum_user_reactions",
         array(
-            "post_id" => $postID,
+            "post_id" => $post_id,
             "reaction_id" => $obj->id,
             "user_id" => $USER->id
         ), "COUNT(*) AS 'count'");
 
     $item = array(
-        "post_id" => $postID,
-        "reaction_id" => $obj->id,
-        "count" => $countObj->count,
-        "reacted" => ($userCountObj->count == 1)
+        'post_id' => $post_id,
+        'reaction_id' => $obj->id,
+        'count' => $countObj->count,
+        'reacted' => ($userCountObj->count == 1),
+        'enabled' => true
     );
 
     if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {
         $item['count'] = '';
+    }
+
+    if ($reactforum->delayedcounter && $postisreacted) {
+        $item['enabled'] = false;
     }
 
     array_push($arrayResult, $item);
