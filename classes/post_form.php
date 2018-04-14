@@ -34,8 +34,7 @@ require_once($CFG->dirroot . '/repository/lib.php');
  * @copyright  2017 (C) VERSION2, INC.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_reactforum_post_form extends moodleform
-{
+class mod_reactforum_post_form extends moodleform {
 
     /**
      * Returns the options array to use in filemanager for reactforum attachments
@@ -43,8 +42,7 @@ class mod_reactforum_post_form extends moodleform
      * @param stdClass $reactforum
      * @return array
      */
-    public static function attachment_options($reactforum)
-    {
+    public static function attachment_options($reactforum) {
         global $COURSE, $PAGE, $CFG;
         $maxbytes = get_user_max_upload_file_size($PAGE->context, $CFG->maxbytes, $COURSE->maxbytes, $reactforum->maxbytes);
         return array(
@@ -63,8 +61,7 @@ class mod_reactforum_post_form extends moodleform
      * @param int $postid post id, use null when adding new post
      * @return array
      */
-    public static function editor_options(context_module $context, $postid)
-    {
+    public static function editor_options(context_module $context, $postid) {
         global $COURSE, $PAGE, $CFG;
         // TODO: add max files and max size support
         $maxbytes = get_user_max_upload_file_size($PAGE->context, $CFG->maxbytes, $COURSE->maxbytes);
@@ -82,8 +79,7 @@ class mod_reactforum_post_form extends moodleform
      *
      * @return void
      */
-    function definition()
-    {
+    function definition() {
         global $CFG, $OUTPUT;
 
         $mform =& $this->_form;
@@ -101,11 +97,9 @@ class mod_reactforum_post_form extends moodleform
         $mform->addElement('header', 'general', '');//fill in the data depending on page params later using set_data
 
         // If there is a warning message and we are not editing a post we need to handle the warning.
-        if (!empty($thresholdwarning) && !$edit)
-        {
+        if (!empty($thresholdwarning) && !$edit) {
             // Here we want to display a warning if they can still post but have reached the warning threshold.
-            if ($thresholdwarning->canpost)
-            {
+            if ($thresholdwarning->canpost) {
                 $message = get_string($thresholdwarning->errorcode, $thresholdwarning->module, $thresholdwarning->additional);
                 $mform->addElement('html', $OUTPUT->notification($message));
             }
@@ -122,48 +116,39 @@ class mod_reactforum_post_form extends moodleform
 
         $manageactivities = has_capability('moodle/course:manageactivities', $coursecontext);
 
-        if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum))
-        {
+        if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
             $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'reactforum'));
             $mform->freeze('discussionsubscribe');
             $mform->setDefaults('discussionsubscribe', 0);
             $mform->addHelpButton('discussionsubscribe', 'forcesubscribed', 'reactforum');
 
-        }
-        else if (\mod_reactforum\subscriptions::subscription_disabled($reactforum) && !$manageactivities)
-        {
+        } else if (\mod_reactforum\subscriptions::subscription_disabled($reactforum) && !$manageactivities) {
             $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'reactforum'));
             $mform->freeze('discussionsubscribe');
             $mform->setDefaults('discussionsubscribe', 0);
             $mform->addHelpButton('discussionsubscribe', 'disallowsubscription', 'reactforum');
 
-        }
-        else
-        {
+        } else {
             $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'reactforum'));
             $mform->addHelpButton('discussionsubscribe', 'discussionsubscription', 'reactforum');
         }
 
-        if (!empty($reactforum->maxattachments) && $reactforum->maxbytes != 1 && has_capability('mod/reactforum:createattachment', $modcontext))
-        {  //  1 = No attachments at all
+        if (!empty($reactforum->maxattachments) && $reactforum->maxbytes != 1 && has_capability('mod/reactforum:createattachment', $modcontext)) {  //  1 = No attachments at all
             $mform->addElement('filemanager', 'attachments', get_string('attachment', 'reactforum'), null, self::attachment_options($reactforum));
             $mform->addHelpButton('attachments', 'attachment', 'reactforum');
         }
 
-        if (!$post->parent && has_capability('mod/reactforum:pindiscussions', $modcontext))
-        {
+        if (!$post->parent && has_capability('mod/reactforum:pindiscussions', $modcontext)) {
             $mform->addElement('checkbox', 'pinned', get_string('discussionpinned', 'reactforum'));
             $mform->addHelpButton('pinned', 'discussionpinned', 'reactforum');
         }
 
-        if (empty($post->id) && $manageactivities)
-        {
+        if (empty($post->id) && $manageactivities) {
             $mform->addElement('checkbox', 'mailnow', get_string('mailnow', 'reactforum'));
         }
 
         // REACTIONS
-        if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
-        {
+        if($post->parent == 0 && $reactforum->reactiontype == 'discussion') {
             $radioarray = array();
             array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_text', 'reactforum'), 'text'));
             array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_image', 'reactforum'), 'image'));
@@ -178,22 +163,17 @@ class mod_reactforum_post_form extends moodleform
             $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
         }
 
-        if ($groupmode = groups_get_activity_groupmode($cm, $course))
-        {
+        if ($groupmode = groups_get_activity_groupmode($cm, $course)) {
             $groupdata = groups_get_activity_allowed_groups($cm);
 
             $groupinfo = array();
-            foreach ($groupdata as $groupid => $group)
-            {
+            foreach ($groupdata as $groupid => $group) {
                 // Check whether this user can post in this group.
                 // We must make this check because all groups are returned for a visible grouped activity.
-                if (reactforum_user_can_post_discussion($reactforum, $groupid, null, $cm, $modcontext))
-                {
+                if (reactforum_user_can_post_discussion($reactforum, $groupid, null, $cm, $modcontext)) {
                     // Build the data for the groupinfo select.
                     $groupinfo[$groupid] = $group->name;
-                }
-                else
-                {
+                } else {
                     unset($groupdata[$groupid]);
                 }
             }
@@ -211,8 +191,7 @@ class mod_reactforum_post_form extends moodleform
 
             // 3) You also need the canposttoowngroups capability.
             $canposttoowngroups = $canposttoowngroups && has_capability('mod/reactforum:canposttomygroups', $modcontext);
-            if ($canposttoowngroups)
-            {
+            if ($canposttoowngroups) {
                 // This user is in multiple groups, and can post to all of their own groups.
                 // Note: This is not the same as accessallgroups. This option will copy a post to all groups that a
                 // user is a member of.
@@ -224,8 +203,7 @@ class mod_reactforum_post_form extends moodleform
             // Check whether this user can post to all groups.
             // Posts to the 'All participants' group go to all groups, not to each group in a list.
             // It makes sense to allow this, even if there currently aren't any groups because there may be in the future.
-            if (reactforum_user_can_post_discussion($reactforum, -1, null, $cm, $modcontext))
-            {
+            if (reactforum_user_can_post_discussion($reactforum, -1, null, $cm, $modcontext)) {
                 // Note: We must reverse in this manner because array_unshift renumbers the array.
                 $groupinfo = array_reverse($groupinfo, true);
                 $groupinfo[-1] = get_string('allparticipants');
@@ -245,28 +223,21 @@ class mod_reactforum_post_form extends moodleform
             // Important: You can *only* change the group for a top level post. Never any reply.
             $canselectgroup = empty($post->parent) && ($canselectgroupfornew || $canselectgroupformove);
 
-            if ($canselectgroup)
-            {
+            if ($canselectgroup) {
                 $mform->addElement('select', 'groupinfo', get_string('group'), $groupinfo);
                 $mform->setDefault('groupinfo', $post->groupid);
                 $mform->setType('groupinfo', PARAM_INT);
-            }
-            else
-            {
-                if (empty($post->groupid))
-                {
+            } else {
+                if (empty($post->groupid)) {
                     $groupname = get_string('allparticipants');
-                }
-                else
-                {
+                } else {
                     $groupname = format_string($groupdata[$post->groupid]->name);
                 }
                 $mform->addElement('static', 'groupinfo', get_string('group'), $groupname);
             }
         }
 
-        if (!empty($CFG->reactforum_enabletimedposts) && !$post->parent && has_capability('mod/reactforum:viewhiddentimedposts', $coursecontext))
-        {
+        if (!empty($CFG->reactforum_enabletimedposts) && !$post->parent && has_capability('mod/reactforum:viewhiddentimedposts', $coursecontext)) {
             $mform->addElement('header', 'displayperiod', get_string('displayperiod', 'reactforum'));
 
             $mform->addElement('date_time_selector', 'timestart', get_string('displaystart', 'reactforum'), array('optional' => true));
@@ -275,9 +246,7 @@ class mod_reactforum_post_form extends moodleform
             $mform->addElement('date_time_selector', 'timeend', get_string('displayend', 'reactforum'), array('optional' => true));
             $mform->addHelpButton('timeend', 'displayend', 'reactforum');
 
-        }
-        else
-        {
+        } else {
             $mform->addElement('hidden', 'timestart');
             $mform->setType('timestart', PARAM_INT);
             $mform->addElement('hidden', 'timeend');
@@ -287,12 +256,9 @@ class mod_reactforum_post_form extends moodleform
 
         //-------------------------------------------------------------------------------
         // buttons
-        if (isset($post->edit))
-        { // hack alert
+        if (isset($post->edit)) { // hack alert
             $submit_string = get_string('savechanges');
-        }
-        else
-        {
+        } else {
             $submit_string = get_string('posttoreactforum', 'reactforum');
         }
 
@@ -327,19 +293,15 @@ class mod_reactforum_post_form extends moodleform
      * @param array $files files uploaded.
      * @return array of errors.
      */
-    function validation($data, $files)
-    {
+    function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (($data['timeend'] != 0) && ($data['timestart'] != 0) && $data['timeend'] <= $data['timestart'])
-        {
+        if (($data['timeend'] != 0) && ($data['timestart'] != 0) && $data['timeend'] <= $data['timestart']) {
             $errors['timeend'] = get_string('timestartenderror', 'reactforum');
         }
-        if (empty($data['message']['text']))
-        {
+        if (empty($data['message']['text'])) {
             $errors['message'] = get_string('erroremptymessage', 'reactforum');
         }
-        if (empty($data['subject']))
-        {
+        if (empty($data['subject'])) {
             $errors['subject'] = get_string('erroremptysubject', 'reactforum');
         }
         return $errors;

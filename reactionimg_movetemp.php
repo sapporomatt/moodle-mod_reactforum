@@ -25,8 +25,7 @@
 require_once(dirname(dirname(__DIR__)) . '/config.php');
 require_once($CFG->dirroot . '/mod/reactforum/lib.php');
 
-if(!isset($_POST['url']))
-{
+if (!isset($_POST['url'])) {
     throw new invalid_parameter_exception();
 }
 

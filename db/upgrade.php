@@ -42,14 +42,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_reactforum_upgrade($oldversion)
-{
+function xmldb_reactforum_upgrade($oldversion) {
     global $CFG, $DB;
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
 
-    if ($oldversion < 2017070600)
-    {
+    if ($oldversion < 2017070600) {
         $selfReactedIDs = $DB->get_records_sql(
             "SELECT {reactforum_user_reactions}.`id` AS 'id'
                     FROM {reactforum_user_reactions}, `{reactforum_posts}`
@@ -57,34 +55,29 @@ function xmldb_reactforum_upgrade($oldversion)
                       AND {reactforum_user_reactions}.`user_id` = {reactforum_posts}.`userid`"
         );
 
-        foreach ($selfReactedIDs as $selfReactedID)
-        {
-            $DB->delete_records("reactforum_user_reactions", array("id" => $selfReactedID->id));
+        foreach ($selfReactedIDs as $selfReactedID) {
+            $DB->delete_records('reactforum_user_reactions', array('id' => $selfReactedID->id));
         }
 
         // ReactForum savepoint reached.
         upgrade_mod_savepoint(true, 2017070600, 'reactforum');
     }
 
-    if($oldversion < 2017071216)
-    {
+    if($oldversion < 2017071216) {
         $table = new xmldb_table('reactforum_discussions');
         $field = new xmldb_field('reactiontype', XMLDB_TYPE_CHAR, '50', null, true, false, 'text', 'pinned');
 
-        if (!$dbman->field_exists($table, $field))
-        {
+        if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         upgrade_mod_savepoint(true, 2017071216, 'reactforum');
     }
 
-    if($oldversion < 2017072700)
-    {
+    if($oldversion < 2017072700) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('reactiontype', XMLDB_TYPE_CHAR, '50', null, true, false, 'text', 'displaywordcount');
-        if (!$dbman->field_exists($table, $field))
-        {
+        if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
@@ -93,26 +86,22 @@ function xmldb_reactforum_upgrade($oldversion)
         $table = new xmldb_table('reactforum_reactions');
 
         $field = new xmldb_field('reactforum_id', XMLDB_TYPE_INTEGER, '10', null, null, false, '0', 'id');
-        if (!$dbman->field_exists($table, $field))
-        {
+        if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         $key = new xmldb_key('reactforum_id', XMLDB_KEY_FOREIGN, array('reactforum_id'), 'reactforum', 'id');
-        if (!$dbman->find_key_name($table, $key))
-        {
+        if (!$dbman->find_key_name($table, $key)) {
             $dbman->add_key($table, $key);
         }
 
         $index = new xmldb_index('discussion_idx', XMLDB_INDEX_NOTUNIQUE, array('discussion_id'));
-        if(!$dbman->index_exists($table, $index))
-        {
+        if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
         $index = new xmldb_index('reactforum_idx', XMLDB_INDEX_NOTUNIQUE, array('reactforum_id'));
-        if(!$dbman->index_exists($table, $index))
-        {
+        if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
@@ -121,20 +110,17 @@ function xmldb_reactforum_upgrade($oldversion)
         $table = new xmldb_table('reactforum_user_reactions');
 
         $index = new xmldb_index('post_idx', XMLDB_INDEX_NOTUNIQUE, array('post_id'));
-        if(!$dbman->index_exists($table, $index))
-        {
+        if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
         $index = new xmldb_index('user_idx', XMLDB_INDEX_NOTUNIQUE, array('user_id'));
-        if(!$dbman->index_exists($table, $index))
-        {
+        if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
         $index = new xmldb_index('reaction_idxs', XMLDB_INDEX_NOTUNIQUE, array('reaction_id'));
-        if(!$dbman->index_exists($table, $index))
-        {
+        if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
@@ -143,31 +129,26 @@ function xmldb_reactforum_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2017072700,'reactforum');
     }
 
-    if($oldversion < 2017102400)
-    {
+    if ($oldversion < 2017102400) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
-        if(!$dbman->field_exists($table, $field))
-        {
+        if(!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         $table = new xmldb_table('reactforum_discussions');
         $field = new xmldb_field('reactionallreplies', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'reactiontype');
-        if(!$dbman->field_exists($table, $field))
-        {
+        if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         upgrade_mod_savepoint(true, 2017102400, 'reactforum');
     }
 
-    if($oldversion < 2018041000)
-    {
+    if ($oldversion < 2018041000) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('delayedcounter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
-        if(!$dbman->field_exists($table, $field))
-        {
+        if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 

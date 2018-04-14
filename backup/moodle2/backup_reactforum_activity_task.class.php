@@ -32,21 +32,18 @@ require_once($CFG->dirroot . '/mod/reactforum/backup/moodle2/backup_reactforum_s
 /**
  * Provides the steps to perform one complete backup of the ReactForum instance
  */
-class backup_reactforum_activity_task extends backup_activity_task
-{
+class backup_reactforum_activity_task extends backup_activity_task {
 
     /**
      * No specific settings for this activity
      */
-    protected function define_my_settings()
-    {
+    protected function define_my_settings() {
     }
 
     /**
      * Defines a backup step to store the instance data in the reactforum.xml file
      */
-    protected function define_my_steps()
-    {
+    protected function define_my_steps() {
         $this->add_step(new backup_reactforum_activity_structure_step('reactforum structure', 'reactforum.xml'));
     }
 
@@ -56,8 +53,7 @@ class backup_reactforum_activity_task extends backup_activity_task
      * @param string $content some HTML text that eventually contains URLs to the activity instance scripts
      * @return string the content with the URLs encoded
      */
-    static public function encode_content_links($content)
-    {
+    static public function encode_content_links($content) {
         global $CFG;
 
         $base = preg_quote($CFG->wwwroot, "/");
