@@ -305,7 +305,7 @@ function xmldb_reactforum_upgrade($oldversion)
 
     if ($oldversion < 2018041400) {
         $table = new xmldb_table('reactforum');
-        $field = new xmldb_field('delayed_counter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 'reactionallreplies');
+        $field = new xmldb_field('delayed_counter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
