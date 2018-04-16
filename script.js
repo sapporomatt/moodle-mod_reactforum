@@ -21,12 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require(['jquery'], function ($)
-{
-    $(document).ready(function ()
-    {
-        $(".react-btn").click(function ()
-        {
+require(['jquery'], function ($) {
+    $(document).ready(function () {
+        $(".react-btn").click(function () {
             var parentNode = $(this).parent();
             var numberNode = $(this).next("span");
             numberNode.html("<img src='pix/loading.gif'>");
@@ -37,24 +34,28 @@ require(['jquery'], function ($)
                     post: parentNode.attr("post-id"),
                     reaction: parentNode.attr("reaction-id")
                 },
-                function (response)
-                {
-                    if (response.status)
-                    {
+                function (response) {
+                    if (response.status) {
 
                         $('.reaction-container[post-id=' + parentNode.attr("post-id") + '] button').removeClass("btn-primary").removeClass("btn-default");
 
-                        for (i = 0; i < response.data.length; i++)
-                        {
+                        for (i = 0; i < response.data.length; i++) {
                             $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] span').html(response.data[i].count);
 
-                            if (response.data[i].reacted)
-                            {
-                                $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button').addClass("btn-primary");
+                            var $button = $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button');
+
+                            if (response.data[i].reacted) {
+                                $button.addClass('btn-primary');
                             }
-                            else
-                            {
-                                $('.reaction-container[post-id=' + response.data[i].post_id + '][reaction-id=' + response.data[i].reaction_id + '] button').addClass("btn-default");
+                            else {
+                                $button.addClass('btn-default');
+                            }
+
+                            if (response.data[i].enabled) {
+                                $button.prop('disabled', false);
+                            }
+                            else {
+                                $button.prop('disabled', true);
                             }
                         }
                     }
