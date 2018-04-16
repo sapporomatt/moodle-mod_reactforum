@@ -305,12 +305,22 @@ function xmldb_reactforum_upgrade($oldversion)
 
     if ($oldversion < 2018041400) {
         $table = new xmldb_table('reactforum');
-        $field = new xmldb_field('delayed_counter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
+        $field = new xmldb_field('delayedcounter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         upgrade_mod_savepoint(true, 2018041400, 'reactforum');
+    }
+
+    if($oldversion < 2018041401) {
+        $table = new xmldb_table('reactforum');
+        $field = new xmldb_field('delayed_counter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'delayedcounter');
+        }
+
+        upgrade_mod_savepoint(true, 2018041401, 'reactforum');
     }
 
     return true;
