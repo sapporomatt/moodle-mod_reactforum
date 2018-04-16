@@ -122,8 +122,7 @@ foreach ($newObjArr as $obj) {
     if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {
         $item['count'] = '';
     }
-
-    if ($reactforum->delayedcounter && $postisreacted) {
+    if ($post->userid == $USER->id || ($reactforum->delayedcounter && $postisreacted)) {
         $item['enabled'] = false;
     }
 
