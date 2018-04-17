@@ -25,11 +25,13 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
-require_once ($CFG->dirroot.'/course/moodleform_mod.php');
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
-class mod_reactforum_mod_form extends moodleform_mod {
+class mod_reactforum_mod_form extends moodleform_mod
+{
 
-    function definition() {
+    function definition()
+    {
         global $CFG, $COURSE, $DB, $PAGE;
 
         reactforum_include_styles();
@@ -70,8 +72,10 @@ class mod_reactforum_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
         $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
 
-        if(isset($_GET['update']))
-        {
+        $mform->addElement('checkbox', 'delayedcounter', get_string('reactions_delayedcounter', 'reactforum'));
+        $mform->addHelpButton('delayedcounter', 'reactions_delayedcounter', 'reactforum');
+
+        if (isset($_GET['update'])) {
             $cmid = $_GET['update'];
             $cm = get_coursemodule_from_id('reactforum', $cmid);
             $rid = $cm->instance;
@@ -80,8 +84,7 @@ class mod_reactforum_mod_form extends moodleform_mod {
             $reactions_values = array();
             $reactions = $DB->get_records("reactforum_reactions", array("reactforum_id" => $rid));
 
-            foreach($reactions as $reactionObj)
-            {
+            foreach ($reactions as $reactionObj) {
                 array_push($reactions_values, array("id" => $reactionObj->id, "value" => $reactionObj->reaction));
             }
 
