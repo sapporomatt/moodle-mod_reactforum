@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/reactforum/db" VERSION="20171101" COMMENT="XMLDB file for Moodle mod/reactforum"
+<XMLDB PATH="mod/reactforum/db" VERSION="20180414" COMMENT="XMLDB file for Moodle mod/reactforum"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -32,6 +32,7 @@
         <FIELD NAME="displaywordcount" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="reactiontype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" DEFAULT="none"/>
         <FIELD NAME="reactionallreplies" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="delayedcounter" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="lockdiscussionafter" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

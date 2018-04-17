@@ -24,8 +24,8 @@ defined('MOODLE_INTERNAL') || die();
 
 /** Include required files */
 require_once(__DIR__ . '/deprecatedlib.php');
-require_once($CFG->libdir.'/filelib.php');
-require_once($CFG->libdir.'/eventslib.php');
+require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->libdir . '/eventslib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ define('REACTFORUM_MODE_NESTED', 3);
 define('REACTFORUM_CHOOSESUBSCRIBE', 0);
 define('REACTFORUM_FORCESUBSCRIBE', 1);
 define('REACTFORUM_INITIALSUBSCRIBE', 2);
-define('REACTFORUM_DISALLOWSUBSCRIBE',3);
+define('REACTFORUM_DISALLOWSUBSCRIBE', 3);
 
 /**
  * REACTFORUM_TRACKING_OFF - Tracking is not available for this reactforum.
@@ -84,7 +84,8 @@ define('REACTFORUM_DISCUSSION_UNPINNED', 0);
  * @param mod_reactforum_mod_form $mform
  * @return int intance id
  */
-function reactforum_add_instance($reactforum, $mform = null) {
+function reactforum_add_instance($reactforum, $mform = null)
+{
     global $CFG, $DB;
 
     $reactforum->timemodified = time();
@@ -94,7 +95,7 @@ function reactforum_add_instance($reactforum, $mform = null) {
     }
 
     if (empty($reactforum->ratingtime) or empty($reactforum->assessed)) {
-        $reactforum->assesstimestart  = 0;
+        $reactforum->assesstimestart = 0;
         $reactforum->assesstimefinish = 0;
     }
 
@@ -103,15 +104,15 @@ function reactforum_add_instance($reactforum, $mform = null) {
 
     if ($reactforum->type == 'single') {  // Create related discussion.
         $discussion = new stdClass();
-        $discussion->course        = $reactforum->course;
-        $discussion->reactforum         = $reactforum->id;
-        $discussion->name          = $reactforum->name;
-        $discussion->assessed      = $reactforum->assessed;
-        $discussion->message       = $reactforum->intro;
+        $discussion->course = $reactforum->course;
+        $discussion->reactforum = $reactforum->id;
+        $discussion->name = $reactforum->name;
+        $discussion->assessed = $reactforum->assessed;
+        $discussion->message = $reactforum->intro;
         $discussion->messageformat = $reactforum->introformat;
-        $discussion->messagetrust  = trusttext_trusted(context_course::instance($reactforum->course));
-        $discussion->mailnow       = false;
-        $discussion->groupid       = -1;
+        $discussion->messagetrust = trusttext_trusted(context_course::instance($reactforum->course));
+        $discussion->mailnow = false;
+        $discussion->groupid = -1;
 
         $message = '';
 
@@ -119,48 +120,39 @@ function reactforum_add_instance($reactforum, $mform = null) {
 
         if ($mform and $draftid = file_get_submitted_draft_itemid('introeditor')) {
             // Ugly hack - we need to copy the files somehow.
-            $discussion = $DB->get_record('reactforum_discussions', array('id'=>$discussion->id), '*', MUST_EXIST);
-            $post = $DB->get_record('reactforum_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
+            $discussion = $DB->get_record('reactforum_discussions', array('id' => $discussion->id), '*', MUST_EXIST);
+            $post = $DB->get_record('reactforum_posts', array('id' => $discussion->firstpost), '*', MUST_EXIST);
 
-            $options = array('subdirs'=>true); // Use the same options as intro field!
+            $options = array('subdirs' => true); // Use the same options as intro field!
             $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_reactforum', 'post', $post->id, $options, $post->message);
-            $DB->set_field('reactforum_posts', 'message', $post->message, array('id'=>$post->id));
+            $DB->set_field('reactforum_posts', 'message', $post->message, array('id' => $post->id));
         }
     }
 
 
-    if(isset($_POST['reactions']['new']))
-    {
-        if ($reactforum->reactiontype == 'text')
-        {
-            foreach ($_POST['reactions']['new'] as $reactiontxt)
-            {
+    if (isset($_POST['reactions']['new'])) {
+        if ($reactforum->reactiontype == 'text') {
+            foreach ($_POST['reactions']['new'] as $reactiontxt) {
                 $reaction = new stdClass();
                 $reaction->reactforum_id = $reactforum->id;
                 $reaction->discussion_id = 0;
                 $reaction->reaction = $reactiontxt;
-                if (!$DB->insert_record('reactforum_reactions', $reaction))
-                {
+                if (!$DB->insert_record('reactforum_reactions', $reaction)) {
                     throw new moodle_exception('');
                 }
             }
-        }
-        else if ($reactforum->reactiontype == 'image')
-        {
+        } else if ($reactforum->reactiontype == 'image') {
             $fs = get_file_storage();
-            foreach ($_POST['reactions']['new'] as $fileid)
-            {
+            foreach ($_POST['reactions']['new'] as $fileid) {
                 $reaction = new stdClass();
                 $reaction->reactforum_id = $reactforum->id;
                 $reaction->discussion_id = 0;
                 $reaction->reaction = '';
                 $reactionid = $DB->insert_record('reactforum_reactions', $reaction);
-                if (!$reactionid)
-                {
+                if (!$reactionid) {
                     throw new moodle_exception('');
                 }
-                if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($fileid), $reactionid))
-                {
+                if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($fileid), $reactionid)) {
                     throw new moodle_exception('');
                 }
             }
@@ -181,7 +173,8 @@ function reactforum_add_instance($reactforum, $mform = null) {
  * @param stdClass $reactforum The reactforum object
  * @return void
  */
-function reactforum_instance_created($context, $reactforum) {
+function reactforum_instance_created($context, $reactforum)
+{
     if ($reactforum->forcesubscribe == REACTFORUM_INITIALSUBSCRIBE) {
         $users = \mod_reactforum\subscriptions::get_potential_subscribers($context, 0, 'u.id, u.email');
         foreach ($users as $user) {
@@ -199,32 +192,33 @@ function reactforum_instance_created($context, $reactforum) {
  * @param object $reactforum reactforum instance (with magic quotes)
  * @return bool success
  */
-function reactforum_update_instance($reactforum, $mform) {
+function reactforum_update_instance($reactforum, $mform)
+{
     global $DB, $OUTPUT, $USER;
 
     $reactforum->timemodified = time();
-    $reactforum->id           = $reactforum->instance;
+    $reactforum->id = $reactforum->instance;
 
     if (empty($reactforum->assessed)) {
         $reactforum->assessed = 0;
     }
 
     if (empty($reactforum->ratingtime) or empty($reactforum->assessed)) {
-        $reactforum->assesstimestart  = 0;
+        $reactforum->assesstimestart = 0;
         $reactforum->assesstimefinish = 0;
     }
 
-    $oldreactforum = $DB->get_record('reactforum', array('id'=>$reactforum->id));
+    $oldreactforum = $DB->get_record('reactforum', array('id' => $reactforum->id));
 
     // MDL-3942 - if the aggregation type or scale (i.e. max grade) changes then recalculate the grades for the entire reactforum
     // if  scale changes - do we need to recheck the ratings, if ratings higher than scale how do we want to respond?
     // for count and sum aggregation types the grade we check to make sure they do not exceed the scale (i.e. max score) when calculating the grade
-    if (($oldreactforum->assessed<>$reactforum->assessed) or ($oldreactforum->scale<>$reactforum->scale)) {
+    if (($oldreactforum->assessed <> $reactforum->assessed) or ($oldreactforum->scale <> $reactforum->scale)) {
         reactforum_update_grades($reactforum); // recalculate grades for the reactforum
     }
 
     if ($reactforum->type == 'single') {  // Update related discussion and post.
-        $discussions = $DB->get_records('reactforum_discussions', array('reactforum'=>$reactforum->id), 'timemodified ASC');
+        $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id), 'timemodified ASC');
         if (!empty($discussions)) {
             if (count($discussions) > 1) {
                 echo $OUTPUT->notification(get_string('warnformorepost', 'reactforum'));
@@ -233,42 +227,42 @@ function reactforum_update_instance($reactforum, $mform) {
         } else {
             // try to recover by creating initial discussion - MDL-16262
             $discussion = new stdClass();
-            $discussion->course          = $reactforum->course;
-            $discussion->reactforum           = $reactforum->id;
-            $discussion->name            = $reactforum->name;
-            $discussion->assessed        = $reactforum->assessed;
-            $discussion->message         = $reactforum->intro;
-            $discussion->messageformat   = $reactforum->introformat;
-            $discussion->messagetrust    = true;
-            $discussion->mailnow         = false;
-            $discussion->groupid         = -1;
+            $discussion->course = $reactforum->course;
+            $discussion->reactforum = $reactforum->id;
+            $discussion->name = $reactforum->name;
+            $discussion->assessed = $reactforum->assessed;
+            $discussion->message = $reactforum->intro;
+            $discussion->messageformat = $reactforum->introformat;
+            $discussion->messagetrust = true;
+            $discussion->mailnow = false;
+            $discussion->groupid = -1;
 
             $message = '';
 
             reactforum_add_discussion($discussion, null, $message);
 
-            if (! $discussion = $DB->get_record('reactforum_discussions', array('reactforum'=>$reactforum->id))) {
+            if (!$discussion = $DB->get_record('reactforum_discussions', array('reactforum' => $reactforum->id))) {
                 print_error('cannotadd', 'reactforum');
             }
         }
-        if (! $post = $DB->get_record('reactforum_posts', array('id'=>$discussion->firstpost))) {
+        if (!$post = $DB->get_record('reactforum_posts', array('id' => $discussion->firstpost))) {
             print_error('cannotfindfirstpost', 'reactforum');
         }
 
-        $cm         = get_coursemodule_from_instance('reactforum', $reactforum->id);
+        $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
         $modcontext = context_module::instance($cm->id, MUST_EXIST);
 
-        $post = $DB->get_record('reactforum_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
-        $post->subject       = $reactforum->name;
-        $post->message       = $reactforum->intro;
+        $post = $DB->get_record('reactforum_posts', array('id' => $discussion->firstpost), '*', MUST_EXIST);
+        $post->subject = $reactforum->name;
+        $post->message = $reactforum->intro;
         $post->messageformat = $reactforum->introformat;
-        $post->messagetrust  = trusttext_trusted($modcontext);
-        $post->modified      = $reactforum->timemodified;
-        $post->userid        = $USER->id;    // MDL-18599, so that current teacher can take ownership of activities.
+        $post->messagetrust = trusttext_trusted($modcontext);
+        $post->modified = $reactforum->timemodified;
+        $post->userid = $USER->id;    // MDL-18599, so that current teacher can take ownership of activities.
 
         if ($mform and $draftid = file_get_submitted_draft_itemid('introeditor')) {
             // Ugly hack - we need to copy the files somehow.
-            $options = array('subdirs'=>true); // Use the same options as intro field!
+            $options = array('subdirs' => true); // Use the same options as intro field!
             $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_reactforum', 'post', $post->id, $options, $post->message);
         }
 
@@ -277,47 +271,39 @@ function reactforum_update_instance($reactforum, $mform) {
         $DB->update_record('reactforum_discussions', $discussion);
     }
 
-    if(!$reactforum->reactionallreplies)
-    {
+    if (!$reactforum->reactionallreplies) {
         $reactforum->reactionallreplies = 0;
     }
 
+    if (!$reactforum->delayedcounter) {
+        $reactforum->delayedcounter = 0;
+    }
+
     $fs = get_file_storage();
-    if($reactforum->reactiontype != $oldreactforum->reactiontype)
-    {
+    if ($reactforum->reactiontype != $oldreactforum->reactiontype) {
         $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
-        foreach($reactions as $reaction)
-        {
+        foreach ($reactions as $reaction) {
             reactforum_remove_reaction($reaction->id);
         }
         $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id));
-        foreach ($discussions as $discussion)
-        {
+        foreach ($discussions as $discussion) {
             $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
-            foreach($reactions as $reaction)
-            {
+            foreach ($reactions as $reaction) {
                 reactforum_remove_reaction($reaction->id);
             }
         }
     }
-    if(in_array($reactforum->reactiontype, array('text', 'image')))
-    {
-        if(isset($_POST['reactions']['delete']))
-        {
-            foreach($_POST['reactions']['delete'] as $reactionid)
-            {
+    if (in_array($reactforum->reactiontype, array('text', 'image'))) {
+        if (isset($_POST['reactions']['delete'])) {
+            foreach ($_POST['reactions']['delete'] as $reactionid) {
                 reactforum_remove_reaction($reactionid);
             }
         }
 
-        if(isset($_POST['reactions']['edit']))
-        {
-            if($reactforum->reactiontype == 'text')
-            {
-                foreach($_POST['reactions']['edit'] as $reactionid => $reaction)
-                {
-                    if(trim($reaction) == '')
-                    {
+        if (isset($_POST['reactions']['edit'])) {
+            if ($reactforum->reactiontype == 'text') {
+                foreach ($_POST['reactions']['edit'] as $reactionid => $reaction) {
+                    if (trim($reaction) == '') {
                         continue;
                     }
                     $reactionobj = new stdClass();
@@ -325,51 +311,38 @@ function reactforum_update_instance($reactforum, $mform) {
                     $reactionobj->reaction = $reaction;
                     $DB->update_record('reactforum_reactions', $reactionobj);
                 }
-            }
-            else if($reactforum->reactiontype == 'image')
-            {
+            } else if ($reactforum->reactiontype == 'image') {
                 $context = reactforum_get_context($reactforum->id);
-                foreach($_POST['reactions']['edit'] as $reactionid => $filetempid)
-                {
-                    if($filetempid > 0)
-                    {
+                foreach ($_POST['reactions']['edit'] as $reactionid => $filetempid) {
+                    if ($filetempid > 0) {
                         reactforum_save_temp($fs, $context->id, $fs->get_file_by_id($filetempid), $reactionid);
                     }
                 }
             }
         }
-        if(isset($_POST['reactions']['new']))
-        {
-            if ($reactforum->reactiontype == 'text')
-            {
-                foreach ($_POST['reactions']['new'] as $reactiontxt)
-                {
+        if (isset($_POST['reactions']['new'])) {
+            if ($reactforum->reactiontype == 'text') {
+                foreach ($_POST['reactions']['new'] as $reactiontxt) {
                     $reaction = new stdClass();
                     $reaction->reactforum_id = $reactforum->id;
                     $reaction->discussion_id = 0;
                     $reaction->reaction = $reactiontxt;
-                    if (!$DB->insert_record('reactforum_reactions', $reaction))
-                    {
+                    if (!$DB->insert_record('reactforum_reactions', $reaction)) {
                         throw new moodle_exception();
                     }
                 }
-            }
-            else if ($reactforum->reactiontype == 'image')
-            {
+            } else if ($reactforum->reactiontype == 'image') {
                 $context = reactforum_get_context($reactforum->id);
-                foreach ($_POST['reactions']['new'] as $fileid)
-                {
+                foreach ($_POST['reactions']['new'] as $fileid) {
                     $reaction = new stdClass();
                     $reaction->reactforum_id = $reactforum->id;
                     $reaction->discussion_id = 0;
                     $reaction->reaction = '';
                     $reactionid = $DB->insert_record('reactforum_reactions', $reaction);
-                    if (!$reactionid)
-                    {
+                    if (!$reactionid) {
                         throw new moodle_exception();
                     }
-                    if (!reactforum_save_temp($fs, $context->id, $fs->get_file_by_id($fileid), $reactionid))
-                    {
+                    if (!reactforum_save_temp($fs, $context->id, $fs->get_file_by_id($fileid), $reactionid)) {
                         throw new moodle_exception();
                     }
                 }
@@ -403,16 +376,17 @@ function reactforum_update_instance($reactforum, $mform) {
  * @param int $id reactforum instance id
  * @return bool success
  */
-function reactforum_delete_instance($id) {
+function reactforum_delete_instance($id)
+{
     global $DB;
 
-    if (!$reactforum = $DB->get_record('reactforum', array('id'=>$id))) {
+    if (!$reactforum = $DB->get_record('reactforum', array('id' => $id))) {
         return false;
     }
     if (!$cm = get_coursemodule_from_instance('reactforum', $reactforum->id)) {
         return false;
     }
-    if (!$course = $DB->get_record('course', array('id'=>$cm->course))) {
+    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
         return false;
     }
 
@@ -427,21 +401,19 @@ function reactforum_delete_instance($id) {
     // Delete reactions
     $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $id));
     $discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $id));
-    foreach($discussions as $discussion)
-    {
+    foreach ($discussions as $discussion) {
         $reactions += $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
     }
-    foreach($reactions as $reaction)
-    {
+    foreach ($reactions as $reaction) {
         reactforum_remove_reaction($reaction->id);
     }
 
     // Delete digest and subscription preferences.
     $DB->delete_records('reactforum_digests', array('reactforum' => $reactforum->id));
-    $DB->delete_records('reactforum_subscriptions', array('reactforum'=>$reactforum->id));
+    $DB->delete_records('reactforum_subscriptions', array('reactforum' => $reactforum->id));
     $DB->delete_records('reactforum_discussion_subs', array('reactforum' => $reactforum->id));
 
-    if ($discussions = $DB->get_records('reactforum_discussions', array('reactforum'=>$reactforum->id))) {
+    if ($discussions = $DB->get_records('reactforum_discussions', array('reactforum' => $reactforum->id))) {
         foreach ($discussions as $discussion) {
             if (!reactforum_delete_discussion($discussion, true, $course, $cm, $reactforum)) {
                 $result = false;
@@ -451,7 +423,7 @@ function reactforum_delete_instance($id) {
 
     reactforum_tp_delete_read_records(-1, -1, -1, $reactforum->id);
 
-    if (!$DB->delete_records('reactforum', array('id'=>$reactforum->id))) {
+    if (!$DB->delete_records('reactforum', array('id' => $reactforum->id))) {
         $result = false;
     }
 
@@ -474,21 +446,34 @@ function reactforum_delete_instance($id) {
  * @param string $feature
  * @return mixed True if yes (some features may use other values)
  */
-function reactforum_supports($feature) {
-    switch($feature) {
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_COMPLETION_HAS_RULES:    return true;
-        case FEATURE_GRADE_HAS_GRADE:         return true;
-        case FEATURE_GRADE_OUTCOMES:          return true;
-        case FEATURE_RATE:                    return true;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_PLAGIARISM:              return true;
+function reactforum_supports($feature)
+{
+    switch ($feature) {
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
+        case FEATURE_COMPLETION_HAS_RULES:
+            return true;
+        case FEATURE_GRADE_HAS_GRADE:
+            return true;
+        case FEATURE_GRADE_OUTCOMES:
+            return true;
+        case FEATURE_RATE:
+            return true;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
+        case FEATURE_PLAGIARISM:
+            return true;
 
-        default: return null;
+        default:
+            return null;
     }
 }
 
@@ -506,18 +491,19 @@ function reactforum_supports($feature) {
  * @return bool True if completed, false if not. (If no conditions, then return
  *   value depends on comparison type)
  */
-function reactforum_get_completion_state($course,$cm,$userid,$type) {
-    global $CFG,$DB;
+function reactforum_get_completion_state($course, $cm, $userid, $type)
+{
+    global $CFG, $DB;
 
     // Get reactforum details
-    if (!($reactforum=$DB->get_record('reactforum',array('id'=>$cm->instance)))) {
+    if (!($reactforum = $DB->get_record('reactforum', array('id' => $cm->instance)))) {
         throw new Exception("Can't find reactforum {$cm->instance}");
     }
 
-    $result=$type; // Default return value
+    $result = $type; // Default return value
 
-    $postcountparams=array('userid'=>$userid,'reactforumid'=>$reactforum->id);
-    $postcountsql="
+    $postcountparams = array('userid' => $userid, 'reactforumid' => $reactforum->id);
+    $postcountsql = "
 SELECT
     COUNT(1)
 FROM
@@ -528,7 +514,7 @@ WHERE
 
     if ($reactforum->completiondiscussions) {
         $value = $reactforum->completiondiscussions <=
-                 $DB->count_records('reactforum_discussions',array('reactforum'=>$reactforum->id,'userid'=>$userid));
+            $DB->count_records('reactforum_discussions', array('reactforum' => $reactforum->id, 'userid' => $userid));
         if ($type == COMPLETION_AND) {
             $result = $result && $value;
         } else {
@@ -537,15 +523,15 @@ WHERE
     }
     if ($reactforum->completionreplies) {
         $value = $reactforum->completionreplies <=
-                 $DB->get_field_sql( $postcountsql.' AND fp.parent<>0',$postcountparams);
-        if ($type==COMPLETION_AND) {
+            $DB->get_field_sql($postcountsql . ' AND fp.parent<>0', $postcountparams);
+        if ($type == COMPLETION_AND) {
             $result = $result && $value;
         } else {
             $result = $result || $value;
         }
     }
     if ($reactforum->completionposts) {
-        $value = $reactforum->completionposts <= $DB->get_field_sql($postcountsql,$postcountparams);
+        $value = $reactforum->completionposts <= $DB->get_field_sql($postcountsql, $postcountparams);
         if ($type == COMPLETION_AND) {
             $result = $result && $value;
         } else {
@@ -565,7 +551,8 @@ WHERE
  * @param int $usertoid The ID of the user being notified
  * @return string A unique message-id
  */
-function reactforum_get_email_message_id($postid, $usertoid) {
+function reactforum_get_email_message_id($postid, $usertoid)
+{
     return generate_email_messageid(hash('sha256', $postid . 'to' . $usertoid));
 }
 
@@ -575,7 +562,8 @@ function reactforum_get_email_message_id($postid, $usertoid) {
  * @param stdClass $user
  * @return void, $user parameter is modified
  */
-function reactforum_cron_minimise_user_record(stdClass $user) {
+function reactforum_cron_minimise_user_record(stdClass $user)
+{
 
     // We store large amount of users in one huge array,
     // make sure we do not store info there we do not actually need
@@ -602,7 +590,8 @@ function reactforum_cron_minimise_user_record(stdClass $user) {
  *
  * @todo MDL-44734 The function will be split up into seperate tasks.
  */
-function reactforum_cron() {
+function reactforum_cron()
+{
     global $CFG, $USER, $DB, $PAGE;
 
     $site = get_site();
@@ -622,22 +611,22 @@ function reactforum_cron() {
     $userscount = 0; // Cached user counter - count($users) in PHP is horribly slow!!!
 
     // Status arrays.
-    $mailcount  = array();
+    $mailcount = array();
     $errorcount = array();
 
     // caches
-    $discussions        = array();
-    $reactforums             = array();
-    $courses            = array();
-    $coursemodules      = array();
-    $subscribedusers    = array();
+    $discussions = array();
+    $reactforums = array();
+    $courses = array();
+    $coursemodules = array();
+    $subscribedusers = array();
     $messageinboundhandlers = array();
 
     // Posts older than 2 days will not be mailed.  This is to avoid the problem where
     // cron has not been running for a long time, and then suddenly people are flooded
     // with mail from the past few weeks or months
-    $timenow   = time();
-    $endtime   = $timenow - $CFG->maxeditingtime;
+    $timenow = time();
+    $endtime = $timenow - $CFG->maxeditingtime;
     $starttime = $endtime - 48 * 3600;   // Two days earlier
 
     // Get the list of reactforum subscriptions for per-user per-reactforum maildigest settings.
@@ -671,7 +660,7 @@ function reactforum_cron() {
 
             $discussionid = $post->discussion;
             if (!isset($discussions[$discussionid])) {
-                if ($discussion = $DB->get_record('reactforum_discussions', array('id'=> $post->discussion))) {
+                if ($discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion))) {
                     $discussions[$discussionid] = $discussion;
                     \mod_reactforum\subscriptions::fill_subscription_cache($discussion->reactforum);
                     \mod_reactforum\subscriptions::fill_discussion_subscription_cache($discussion->reactforum);
@@ -687,7 +676,7 @@ function reactforum_cron() {
                 if ($reactforum = $DB->get_record('reactforum', array('id' => $reactforumid))) {
                     $reactforums[$reactforumid] = $reactforum;
                 } else {
-                    mtrace('Could not find reactforum '.$reactforumid);
+                    mtrace('Could not find reactforum ' . $reactforumid);
                     unset($posts[$pid]);
                     continue;
                 }
@@ -697,7 +686,7 @@ function reactforum_cron() {
                 if ($course = $DB->get_record('course', array('id' => $courseid))) {
                     $courses[$courseid] = $course;
                 } else {
-                    mtrace('Could not find course '.$courseid);
+                    mtrace('Could not find course ' . $courseid);
                     unset($posts[$pid]);
                     continue;
                 }
@@ -706,7 +695,7 @@ function reactforum_cron() {
                 if ($cm = get_coursemodule_from_instance('reactforum', $reactforumid, $courseid)) {
                     $coursemodules[$reactforumid] = $cm;
                 } else {
-                    mtrace('Could not find course module for reactforum '.$reactforumid);
+                    mtrace('Could not find course module for reactforum ' . $reactforumid);
                     unset($posts[$pid]);
                     continue;
                 }
@@ -762,24 +751,24 @@ function reactforum_cron() {
                 reactforum_cron_minimise_user_record($userto);
             }
             $userto->viewfullnames = array();
-            $userto->canpost       = array();
-            $userto->markposts     = array();
+            $userto->canpost = array();
+            $userto->markposts = array();
 
             // Setup this user so that the capabilities are cached, and environment matches receiving user.
             cron_setup_user($userto);
 
             // Reset the caches.
             foreach ($coursemodules as $reactforumid => $unused) {
-                $coursemodules[$reactforumid]->cache       = new stdClass();
+                $coursemodules[$reactforumid]->cache = new stdClass();
                 $coursemodules[$reactforumid]->cache->caps = array();
                 unset($coursemodules[$reactforumid]->uservisible);
             }
 
             foreach ($posts as $pid => $post) {
                 $discussion = $discussions[$post->discussion];
-                $reactforum      = $reactforums[$discussion->reactforum];
-                $course     = $courses[$reactforum->course];
-                $cm         =& $coursemodules[$reactforum->id];
+                $reactforum = $reactforums[$discussion->reactforum];
+                $course = $courses[$reactforum->course];
+                $cm =& $coursemodules[$reactforum->id];
 
                 // Do some checks to see if we can bail out now.
 
@@ -805,7 +794,7 @@ function reactforum_cron() {
                 // Don't send email if the reactforum is Q&A and the user has not posted.
                 // Initial topics are still mailed.
                 if ($reactforum->type == 'qanda' && !reactforum_get_user_posted_time($discussion->id, $userto->id) && $pid != $discussion->firstpost) {
-                    mtrace('Did not email ' . $userto->id.' because user has not posted in discussion');
+                    mtrace('Did not email ' . $userto->id . ' because user has not posted in discussion');
                     continue;
                 }
 
@@ -874,7 +863,7 @@ function reactforum_cron() {
 
                 // Make sure we're allowed to see the post.
                 if (!reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm)) {
-                    mtrace('User ' . $userto->id .' can not see ' . $post->id . '. Not sending message.');
+                    mtrace('User ' . $userto->id . ' can not see ' . $post->id . '. Not sending message.');
                     continue;
                 }
 
@@ -886,9 +875,9 @@ function reactforum_cron() {
                 if ($maildigest > 0) {
                     // This user wants the mails to be in digest form.
                     $queue = new stdClass();
-                    $queue->userid       = $userto->id;
+                    $queue->userid = $userto->id;
                     $queue->discussionid = $discussion->id;
-                    $queue->postid       = $post->id;
+                    $queue->postid = $post->id;
                     $queue->timemodified = $post->created;
                     $DB->insert_record('reactforum_queue', $queue);
                     continue;
@@ -898,13 +887,13 @@ function reactforum_cron() {
 
                 $cleanreactforumname = str_replace('"', "'", strip_tags(format_string($reactforum->name)));
 
-                $userfrom->customheaders = array (
+                $userfrom->customheaders = array(
                     // Headers to make emails easier to track.
-                    'List-Id: "'        . $cleanreactforumname . '" ' . generate_email_messageid('moodlereactforum' . $reactforum->id),
-                    'List-Help: '       . $CFG->wwwroot . '/mod/reactforum/view.php?f=' . $reactforum->id,
-                    'Message-ID: '      . reactforum_get_email_message_id($post->id, $userto->id),
-                    'X-Course-Id: '     . $course->id,
-                    'X-Course-Name: '   . format_string($course->fullname, true),
+                    'List-Id: "' . $cleanreactforumname . '" ' . generate_email_messageid('moodlereactforum' . $reactforum->id),
+                    'List-Help: ' . $CFG->wwwroot . '/mod/reactforum/view.php?f=' . $reactforum->id,
+                    'Message-ID: ' . reactforum_get_email_message_id($post->id, $userto->id),
+                    'X-Course-Id: ' . $course->id,
+                    'X-Course-Name: ' . format_string($course->fullname, true),
 
                     // Headers to help prevent auto-responders.
                     'Precedence: Bulk',
@@ -928,15 +917,15 @@ function reactforum_cron() {
                 }
 
                 $data = new \mod_reactforum\output\reactforum_post_email(
-                        $course,
-                        $cm,
-                        $reactforum,
-                        $discussion,
-                        $post,
-                        $userfrom,
-                        $userto,
-                        $canreply
-                    );
+                    $course,
+                    $cm,
+                    $reactforum,
+                    $discussion,
+                    $post,
+                    $userfrom,
+                    $userto,
+                    $canreply
+                );
 
                 $userfrom->customheaders[] = sprintf('List-Unsubscribe: <%s>',
                     $data->get_unsubscribediscussionlink());
@@ -987,30 +976,30 @@ function reactforum_cron() {
                 mtrace('Sending ', '');
 
                 $eventdata = new \core\message\message();
-                $eventdata->courseid            = $course->id;
-                $eventdata->component           = 'mod_reactforum';
-                $eventdata->name                = 'posts';
-                $eventdata->userfrom            = $userfrom;
-                $eventdata->userto              = $userto;
-                $eventdata->subject             = $postsubject;
-                $eventdata->fullmessage         = $textout->render($data);
-                $eventdata->fullmessageformat   = FORMAT_PLAIN;
-                $eventdata->fullmessagehtml     = $htmlout->render($data);
-                $eventdata->notification        = 1;
-                $eventdata->replyto             = $replyaddress;
+                $eventdata->courseid = $course->id;
+                $eventdata->component = 'mod_reactforum';
+                $eventdata->name = 'posts';
+                $eventdata->userfrom = $userfrom;
+                $eventdata->userto = $userto;
+                $eventdata->subject = $postsubject;
+                $eventdata->fullmessage = $textout->render($data);
+                $eventdata->fullmessageformat = FORMAT_PLAIN;
+                $eventdata->fullmessagehtml = $htmlout->render($data);
+                $eventdata->notification = 1;
+                $eventdata->replyto = $replyaddress;
                 if (!empty($replyaddress)) {
                     // Add extra text to email messages if they can reply back.
                     $textfooter = "\n\n" . get_string('replytopostbyemail', 'mod_reactforum');
                     $htmlfooter = html_writer::tag('p', get_string('replytopostbyemail', 'mod_reactforum'));
                     $additionalcontent = array('fullmessage' => array('footer' => $textfooter),
-                                     'fullmessagehtml' => array('footer' => $htmlfooter));
+                        'fullmessagehtml' => array('footer' => $htmlfooter));
                     $eventdata->set_additional_content('email', $additionalcontent);
                 }
 
                 $smallmessagestrings = new stdClass();
-                $smallmessagestrings->user          = fullname($userfrom);
-                $smallmessagestrings->reactforumname     = "$shortname: " . format_string($reactforum->name, true) . ": " . $discussion->name;
-                $smallmessagestrings->message       = $post->message;
+                $smallmessagestrings->user = fullname($userfrom);
+                $smallmessagestrings->reactforumname = "$shortname: " . format_string($reactforum->name, true) . ": " . $discussion->name;
+                $smallmessagestrings->message = $post->message;
 
                 // Make sure strings are in message recipients language.
                 $eventdata->smallmessage = get_string_manager()->get_string('smallmessage', 'reactforum', $smallmessagestrings, $userto->lang);
@@ -1021,8 +1010,8 @@ function reactforum_cron() {
 
                 $mailresult = message_send($eventdata);
                 if (!$mailresult) {
-                    mtrace("Error: mod/reactforum/lib.php reactforum_cron(): Could not send out mail for id $post->id to user $userto->id".
-                            " ($userto->email) .. not trying again.");
+                    mtrace("Error: mod/reactforum/lib.php reactforum_cron(): Could not send out mail for id $post->id to user $userto->id" .
+                        " ($userto->email) .. not trying again.");
                     $errorcount[$post->id]++;
                 } else {
                     $mailcount[$post->id]++;
@@ -1047,7 +1036,7 @@ function reactforum_cron() {
 
     if ($posts) {
         foreach ($posts as $post) {
-            mtrace($mailcount[$post->id]." users were sent post $post->id, '$post->subject'");
+            mtrace($mailcount[$post->id] . " users were sent post $post->id, '$post->subject'");
             if ($errorcount[$post->id]) {
                 $DB->set_field('reactforum_posts', 'mailed', REACTFORUM_MAILED_ERROR, array('id' => $post->id));
             }
@@ -1079,11 +1068,11 @@ function reactforum_cron() {
     // Delete any really old ones (normally there shouldn't be any)
     $weekago = $timenow - (7 * 24 * 3600);
     $DB->delete_records_select('reactforum_queue', "timemodified < ?", array($weekago));
-    mtrace ('Cleaned old digest records');
+    mtrace('Cleaned old digest records');
 
     if ($CFG->digestmailtimelast < $digesttime and $timenow > $digesttime) {
 
-        mtrace('Sending reactforum digests: '.userdate($timenow, '', $sitetimezone));
+        mtrace('Sending reactforum digests: ' . userdate($timenow, '', $sitetimezone));
 
         $digestposts_rs = $DB->get_recordset_select('reactforum_queue', "timemodified < ?", array($digesttime));
 
@@ -1163,8 +1152,8 @@ function reactforum_cron() {
                     reactforum_cron_minimise_user_record($userto);
                 }
                 $userto->viewfullnames = array();
-                $userto->canpost       = array();
-                $userto->markposts     = array();
+                $userto->canpost = array();
+                $userto->markposts = array();
 
                 // Override the language and timezone of the "current" user, so that
                 // mail is customised for the receiver.
@@ -1174,12 +1163,12 @@ function reactforum_cron() {
 
                 $headerdata = new stdClass();
                 $headerdata->sitename = format_string($site->fullname, true);
-                $headerdata->userprefs = $CFG->wwwroot.'/user/reactforum.php?id='.$userid.'&amp;course='.$site->id;
+                $headerdata->userprefs = $CFG->wwwroot . '/user/reactforum.php?id=' . $userid . '&amp;course=' . $site->id;
 
-                $posttext = get_string('digestmailheader', 'reactforum', $headerdata)."\n\n";
-                $headerdata->userprefs = '<a target="_blank" href="'.$headerdata->userprefs.'">'.get_string('digestmailprefs', 'reactforum').'</a>';
+                $posttext = get_string('digestmailheader', 'reactforum', $headerdata) . "\n\n";
+                $headerdata->userprefs = '<a target="_blank" href="' . $headerdata->userprefs . '">' . get_string('digestmailprefs', 'reactforum') . '</a>';
 
-                $posthtml = '<p>'.get_string('digestmailheader', 'reactforum', $headerdata).'</p>'
+                $posthtml = '<p>' . get_string('digestmailheader', 'reactforum', $headerdata) . '</p>'
                     . '<br /><hr size="1" noshade="noshade" />';
 
                 foreach ($thesediscussions as $discussionid) {
@@ -1187,9 +1176,9 @@ function reactforum_cron() {
                     core_php_time_limit::raise(120);   // to be reset for each post
 
                     $discussion = $discussions[$discussionid];
-                    $reactforum      = $reactforums[$discussion->reactforum];
-                    $course     = $courses[$reactforum->course];
-                    $cm         = $coursemodules[$reactforum->id];
+                    $reactforum = $reactforums[$discussion->reactforum];
+                    $course = $courses[$reactforum->course];
+                    $cm = $coursemodules[$reactforum->id];
 
                     //override language
                     cron_setup_user($userto, $course);
@@ -1204,30 +1193,30 @@ function reactforum_cron() {
                         $userto->canpost[$discussion->id] = reactforum_user_can_post($reactforum, $discussion, $userto, $cm, $course, $modcontext);
                     }
 
-                    $strreactforums      = get_string('reactforums', 'reactforum');
-                    $canunsubscribe = ! \mod_reactforum\subscriptions::is_forcesubscribed($reactforum);
-                    $canreply       = $userto->canpost[$discussion->id];
+                    $strreactforums = get_string('reactforums', 'reactforum');
+                    $canunsubscribe = !\mod_reactforum\subscriptions::is_forcesubscribed($reactforum);
+                    $canreply = $userto->canpost[$discussion->id];
                     $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
 
                     $posttext .= "\n \n";
                     $posttext .= '=====================================================================';
                     $posttext .= "\n \n";
-                    $posttext .= "$shortname -> $strreactforums -> ".format_string($reactforum->name,true);
+                    $posttext .= "$shortname -> $strreactforums -> " . format_string($reactforum->name, true);
                     if ($discussion->name != $reactforum->name) {
-                        $posttext  .= " -> ".format_string($discussion->name,true);
+                        $posttext .= " -> " . format_string($discussion->name, true);
                     }
                     $posttext .= "\n";
-                    $posttext .= $CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$discussion->id;
+                    $posttext .= $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $discussion->id;
                     $posttext .= "\n";
 
-                    $posthtml .= "<p><font face=\"sans-serif\">".
-                    "<a target=\"_blank\" href=\"$CFG->wwwroot/course/view.php?id=$course->id\">$shortname</a> -> ".
-                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/index.php?id=$course->id\">$strreactforums</a> -> ".
-                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id\">".format_string($reactforum->name,true)."</a>";
+                    $posthtml .= "<p><font face=\"sans-serif\">" .
+                        "<a target=\"_blank\" href=\"$CFG->wwwroot/course/view.php?id=$course->id\">$shortname</a> -> " .
+                        "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/index.php?id=$course->id\">$strreactforums</a> -> " .
+                        "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id\">" . format_string($reactforum->name, true) . "</a>";
                     if ($discussion->name == $reactforum->name) {
                         $posthtml .= "</font></p>";
                     } else {
-                        $posthtml .= " -> <a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/discuss.php?d=$discussion->id\">".format_string($discussion->name,true)."</a></font></p>";
+                        $posthtml .= " -> <a target=\"_blank\" href=\"$CFG->wwwroot/mod/reactforum/discuss.php?d=$discussion->id\">" . format_string($discussion->name, true) . "</a></font></p>";
                     }
                     $posthtml .= '<p>';
 
@@ -1253,7 +1242,7 @@ function reactforum_cron() {
                             }
 
                         } else {
-                            mtrace('Could not find user '.$post->userid);
+                            mtrace('Could not find user ' . $post->userid);
                             continue;
                         }
 
@@ -1272,10 +1261,10 @@ function reactforum_cron() {
 
                         // Headers to help prevent auto-responders.
                         $userfrom->customheaders = array(
-                                "Precedence: Bulk",
-                                'X-Auto-Response-Suppress: All',
-                                'Auto-Submitted: auto-generated',
-                            );
+                            "Precedence: Bulk",
+                            'X-Auto-Response-Suppress: All',
+                            'Auto-Submitted: auto-generated',
+                        );
 
                         $maildigest = reactforum_get_user_maildigest_bulk($digests, $userto, $reactforum->id);
                         if (!isset($userto->canpost[$discussion->id])) {
@@ -1285,15 +1274,15 @@ function reactforum_cron() {
                         }
 
                         $data = new \mod_reactforum\output\reactforum_post_email(
-                                $course,
-                                $cm,
-                                $reactforum,
-                                $discussion,
-                                $post,
-                                $userfrom,
-                                $userto,
-                                $canreply
-                            );
+                            $course,
+                            $cm,
+                            $reactforum,
+                            $discussion,
+                            $post,
+                            $userfrom,
+                            $userto,
+                            $canreply
+                        );
 
                         if (!isset($userto->viewfullnames[$reactforum->id])) {
                             $data->viewfullnames = has_capability('moodle/site:viewfullnames', $modcontext, $userto->id);
@@ -1334,21 +1323,21 @@ function reactforum_cron() {
                 }
 
                 $eventdata = new \core\message\message();
-                $eventdata->courseid            = SITEID;
-                $eventdata->component           = 'mod_reactforum';
-                $eventdata->name                = 'digests';
-                $eventdata->userfrom            = core_user::get_noreply_user();
-                $eventdata->userto              = $userto;
-                $eventdata->subject             = $postsubject;
-                $eventdata->fullmessage         = $posttext;
-                $eventdata->fullmessageformat   = FORMAT_PLAIN;
-                $eventdata->fullmessagehtml     = $posthtml;
-                $eventdata->notification        = 1;
-                $eventdata->smallmessage        = get_string('smallmessagedigest', 'reactforum', $sentcount);
+                $eventdata->courseid = SITEID;
+                $eventdata->component = 'mod_reactforum';
+                $eventdata->name = 'digests';
+                $eventdata->userfrom = core_user::get_noreply_user();
+                $eventdata->userto = $userto;
+                $eventdata->subject = $postsubject;
+                $eventdata->fullmessage = $posttext;
+                $eventdata->fullmessageformat = FORMAT_PLAIN;
+                $eventdata->fullmessagehtml = $posthtml;
+                $eventdata->notification = 1;
+                $eventdata->smallmessage = get_string('smallmessagedigest', 'reactforum', $sentcount);
                 $mailresult = message_send($eventdata);
 
                 if (!$mailresult) {
-                    mtrace("ERROR: mod/reactforum/cron.php: Could not send out digest mail to user $userto->id ".
+                    mtrace("ERROR: mod/reactforum/cron.php: Could not send out digest mail to user $userto->id " .
                         "($userto->email)... not trying again.");
                 } else {
                     mtrace("success.");
@@ -1361,7 +1350,7 @@ function reactforum_cron() {
                 }
             }
         }
-    /// We have finishied all digest emails, update $CFG->digestmailtimelast
+        /// We have finishied all digest emails, update $CFG->digestmailtimelast
         set_config('digestmailtimelast', $timenow);
     }
 
@@ -1373,7 +1362,7 @@ function reactforum_cron() {
 
     if (!empty($CFG->reactforum_lastreadclean)) {
         $timenow = time();
-        if ($CFG->reactforum_lastreadclean + (24*3600) < $timenow) {
+        if ($CFG->reactforum_lastreadclean + (24 * 3600) < $timenow) {
             set_config('reactforum_lastreadclean', $timenow);
             mtrace('Removing old reactforum read tracking info...');
             reactforum_tp_clean_read_records();
@@ -1393,7 +1382,8 @@ function reactforum_cron() {
  * @param object $reactforum
  * @return object A standard object with 2 variables: info (number of posts for this user) and time (last modified)
  */
-function reactforum_user_outline($course, $user, $mod, $reactforum) {
+function reactforum_user_outline($course, $user, $mod, $reactforum)
+{
     global $CFG;
     require_once("$CFG->libdir/gradelib.php");
     $grades = grade_get_grades($course->id, 'mod', 'reactforum', $reactforum->id, $user->id);
@@ -1440,16 +1430,17 @@ function reactforum_user_outline($course, $user, $mod, $reactforum) {
  * @param object $mod
  * @param object $reactforum
  */
-function reactforum_user_complete($course, $user, $mod, $reactforum) {
-    global $CFG,$USER, $OUTPUT;
+function reactforum_user_complete($course, $user, $mod, $reactforum)
+{
+    global $CFG, $USER, $OUTPUT;
     require_once("$CFG->libdir/gradelib.php");
 
     $grades = grade_get_grades($course->id, 'mod', 'reactforum', $reactforum->id, $user->id);
     if (!empty($grades->items[0]->grades)) {
         $grade = reset($grades->items[0]->grades);
-        echo $OUTPUT->container(get_string('grade').': '.$grade->str_long_grade);
+        echo $OUTPUT->container(get_string('grade') . ': ' . $grade->str_long_grade);
         if ($grade->str_feedback) {
-            echo $OUTPUT->container(get_string('feedback').': '.$grade->str_feedback);
+            echo $OUTPUT->container(get_string('feedback') . ': ' . $grade->str_feedback);
         }
     }
 
@@ -1469,7 +1460,7 @@ function reactforum_user_complete($course, $user, $mod, $reactforum) {
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, false, false, false);
         }
     } else {
-        echo "<p>".get_string("noposts", "reactforum")."</p>";
+        echo "<p>" . get_string("noposts", "reactforum") . "</p>";
     }
 }
 
@@ -1480,7 +1471,8 @@ function reactforum_user_complete($course, $user, $mod, $reactforum) {
  * @param  array $discussions Discussions with new posts array
  * @return array ReactForums with the number of new posts
  */
-function reactforum_filter_user_groups_discussions($discussions) {
+function reactforum_filter_user_groups_discussions($discussions)
+{
 
     // Group the remaining discussions posts by their reactforumid.
     $filteredreactforums = array();
@@ -1518,7 +1510,8 @@ function reactforum_filter_user_groups_discussions($discussions) {
  * @param int $discussiongroupid The discussion groupid
  * @return bool
  */
-function reactforum_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
+function reactforum_is_user_group_discussion(cm_info $cm, $discussiongroupid)
+{
 
     if ($discussiongroupid == -1 || $cm->effectivegroupmode != SEPARATEGROUPS) {
         return true;
@@ -1529,7 +1522,7 @@ function reactforum_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
     }
 
     if (has_capability('moodle/site:accessallgroups', context_module::instance($cm->id)) ||
-            in_array($discussiongroupid, $cm->get_modinfo()->get_groups($cm->groupingid))) {
+        in_array($discussiongroupid, $cm->get_modinfo()->get_groups($cm->groupingid))) {
         return true;
     }
 
@@ -1543,14 +1536,15 @@ function reactforum_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
  * @param array $courses
  * @param array $htmlarray
  */
-function reactforum_print_overview($courses,&$htmlarray) {
+function reactforum_print_overview($courses, &$htmlarray)
+{
     global $USER, $CFG, $DB, $SESSION;
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
         return array();
     }
 
-    if (!$reactforums = get_all_instances_in_courses('reactforum',$courses)) {
+    if (!$reactforums = get_all_instances_in_courses('reactforum', $courses)) {
         return;
     }
 
@@ -1564,7 +1558,7 @@ function reactforum_print_overview($courses,&$htmlarray) {
             $coursessqls[] = '(d.course = ?)';
             $params[] = $course->id;
 
-        // Only posts created after the course last access
+            // Only posts created after the course last access
         } else {
             $coursessqls[] = '(d.course = ? AND p.created > ?)';
             $params[] = $course->id;
@@ -1575,13 +1569,13 @@ function reactforum_print_overview($courses,&$htmlarray) {
     $coursessql = implode(' OR ', $coursessqls);
 
     $sql = "SELECT d.id, d.reactforum, d.course, d.groupid, COUNT(*) as count "
-                .'FROM {reactforum_discussions} d '
-                .'JOIN {reactforum_posts} p ON p.discussion = d.id '
-                ."WHERE ($coursessql) "
-                .'AND p.userid != ? '
-                .'AND (d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?)) '
-                .'GROUP BY d.id, d.reactforum, d.course, d.groupid '
-                .'ORDER BY d.course, d.reactforum';
+        . 'FROM {reactforum_discussions} d '
+        . 'JOIN {reactforum_posts} p ON p.discussion = d.id '
+        . "WHERE ($coursessql) "
+        . 'AND p.userid != ? '
+        . 'AND (d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?)) '
+        . 'GROUP BY d.id, d.reactforum, d.course, d.groupid '
+        . 'ORDER BY d.course, d.reactforum';
     $params[] = time();
     $params[] = time();
 
@@ -1601,10 +1595,10 @@ function reactforum_print_overview($courses,&$htmlarray) {
     }
 
     if (count($trackingreactforums) > 0) {
-        $cutoffdate = isset($CFG->reactforum_oldpostdays) ? (time() - ($CFG->reactforum_oldpostdays*24*60*60)) : 0;
-        $sql = 'SELECT d.reactforum,d.course,COUNT(p.id) AS count '.
-            ' FROM {reactforum_posts} p '.
-            ' JOIN {reactforum_discussions} d ON p.discussion = d.id '.
+        $cutoffdate = isset($CFG->reactforum_oldpostdays) ? (time() - ($CFG->reactforum_oldpostdays * 24 * 60 * 60)) : 0;
+        $sql = 'SELECT d.reactforum,d.course,COUNT(p.id) AS count ' .
+            ' FROM {reactforum_posts} p ' .
+            ' JOIN {reactforum_discussions} d ON p.discussion = d.id ' .
             ' LEFT JOIN {reactforum_read} r ON r.postid = p.id AND r.userid = ? WHERE (';
         $params = array($USER->id);
 
@@ -1612,7 +1606,7 @@ function reactforum_print_overview($courses,&$htmlarray) {
             $sql .= '(d.reactforum = ? AND (d.groupid = -1 OR d.groupid = 0 OR d.groupid = ?)) OR ';
             $params[] = $track->id;
             if (isset($SESSION->currentgroup[$track->course])) {
-                $groupid =  $SESSION->currentgroup[$track->course];
+                $groupid = $SESSION->currentgroup[$track->course];
             } else {
                 // get first groupid
                 $groupids = groups_get_all_groups($track->course, $USER->id);
@@ -1627,7 +1621,7 @@ function reactforum_print_overview($courses,&$htmlarray) {
             }
             $params[] = $groupid;
         }
-        $sql = substr($sql,0,-3); // take off the last OR
+        $sql = substr($sql, 0, -3); // take off the last OR
         $sql .= ') AND p.modified >= ? AND r.id is NULL ';
         $sql .= 'AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)) ';
         $sql .= 'GROUP BY d.reactforum,d.course';
@@ -1646,7 +1640,7 @@ function reactforum_print_overview($courses,&$htmlarray) {
         return;
     }
 
-    $strreactforum = get_string('modulename','reactforum');
+    $strreactforum = get_string('modulename', 'reactforum');
 
     foreach ($reactforums as $reactforum) {
         $str = '';
@@ -1657,25 +1651,25 @@ function reactforum_print_overview($courses,&$htmlarray) {
         if (array_key_exists($reactforum->id, $reactforumsnewposts) && !empty($reactforumsnewposts[$reactforum->id])) {
             $count = $reactforumsnewposts[$reactforum->id]->count;
         }
-        if (array_key_exists($reactforum->id,$unread)) {
+        if (array_key_exists($reactforum->id, $unread)) {
             $thisunread = $unread[$reactforum->id]->count;
             $showunread = true;
         }
         if ($count > 0 || $thisunread > 0) {
-            $str .= '<div class="overview reactforum"><div class="name">'.$strreactforum.': <a title="'.$strreactforum.'" href="'.$CFG->wwwroot.'/mod/reactforum/view.php?f='.$reactforum->id.'">'.
-                $reactforum->name.'</a></div>';
+            $str .= '<div class="overview reactforum"><div class="name">' . $strreactforum . ': <a title="' . $strreactforum . '" href="' . $CFG->wwwroot . '/mod/reactforum/view.php?f=' . $reactforum->id . '">' .
+                $reactforum->name . '</a></div>';
             $str .= '<div class="info"><span class="postsincelogin">';
-            $str .= get_string('overviewnumpostssince', 'reactforum', $count)."</span>";
+            $str .= get_string('overviewnumpostssince', 'reactforum', $count) . "</span>";
             if (!empty($showunread)) {
-                $str .= '<div class="unreadposts">'.get_string('overviewnumunread', 'reactforum', $thisunread).'</div>';
+                $str .= '<div class="unreadposts">' . get_string('overviewnumunread', 'reactforum', $thisunread) . '</div>';
             }
             $str .= '</div></div>';
         }
         if (!empty($str)) {
-            if (!array_key_exists($reactforum->course,$htmlarray)) {
+            if (!array_key_exists($reactforum->course, $htmlarray)) {
                 $htmlarray[$reactforum->course] = array();
             }
-            if (!array_key_exists('reactforum',$htmlarray[$reactforum->course])) {
+            if (!array_key_exists('reactforum', $htmlarray[$reactforum->course])) {
                 $htmlarray[$reactforum->course]['reactforum'] = ''; // initialize, avoid warnings
             }
             $htmlarray[$reactforum->course]['reactforum'] .= $str;
@@ -1697,7 +1691,8 @@ function reactforum_print_overview($courses,&$htmlarray) {
  * @param int $timestart
  * @return bool success
  */
-function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
+function reactforum_print_recent_activity($course, $viewfullnames, $timestart)
+{
     global $CFG, $USER, $DB, $OUTPUT;
 
     // do not use log table if possible, it may be huge and is expensive to join with other tables
@@ -1711,13 +1706,13 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
                                               JOIN {user} u              ON u.id = p.userid
                                         WHERE p.created > ? AND f.course = ?
                                      ORDER BY p.id ASC", array($timestart, $course->id))) { // order by initial posting date
-         return false;
+        return false;
     }
 
     $modinfo = get_fast_modinfo($course);
 
     $groupmodes = array();
-    $cms    = array();
+    $cms = array();
 
     $strftimerecent = get_string('strftimerecent');
 
@@ -1738,7 +1733,7 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
         }
 
         if (!empty($CFG->reactforum_enabletimedposts) and $USER->id != $post->duserid
-          and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
+            and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
             if (!has_capability('mod/reactforum:viewhiddentimedposts', $context)) {
                 continue;
             }
@@ -1756,12 +1751,12 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
         return false;
     }
 
-    echo $OUTPUT->heading(get_string('newreactforumposts', 'reactforum').':', 3);
+    echo $OUTPUT->heading(get_string('newreactforumposts', 'reactforum') . ':', 3);
     $list = html_writer::start_tag('ul', ['class' => 'unlist']);
 
     foreach ($printposts as $post) {
         $subjectclass = empty($post->parent) ? ' bold' : '';
-        $authorhidden = reactforum_is_author_hidden($post, (object) ['type' => $post->reactforumtype]);
+        $authorhidden = reactforum_is_author_hidden($post, (object)['type' => $post->reactforumtype]);
 
         $list .= html_writer::start_tag('li');
         $list .= html_writer::start_div('head');
@@ -1775,7 +1770,7 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
         $discussionurl = new moodle_url('/mod/reactforum/discuss.php', ['d' => $post->discussion]);
         if (!empty($post->parent)) {
             $discussionurl->param('parent', $post->parent);
-            $discussionurl->set_anchor('p'. $post->id);
+            $discussionurl->set_anchor('p' . $post->id);
         }
         $post->subject = break_up_long_words(format_string($post->subject, true));
         $list .= html_writer::link($discussionurl, $post->subject);
@@ -1798,10 +1793,11 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
  * @param int $userid optional user id, 0 means all users
  * @return array array of grades, false if none
  */
-function reactforum_get_user_grades($reactforum, $userid = 0) {
+function reactforum_get_user_grades($reactforum, $userid = 0)
+{
     global $CFG;
 
-    require_once($CFG->dirroot.'/rating/lib.php');
+    require_once($CFG->dirroot . '/rating/lib.php');
 
     $ratingoptions = new stdClass;
     $ratingoptions->component = 'mod_reactforum';
@@ -1809,7 +1805,7 @@ function reactforum_get_user_grades($reactforum, $userid = 0) {
 
     //need these to work backwards to get a context id. Is there a better way to get contextid from a module instance?
     $ratingoptions->modulename = 'reactforum';
-    $ratingoptions->moduleid   = $reactforum->id;
+    $ratingoptions->moduleid = $reactforum->id;
     $ratingoptions->userid = $userid;
     $ratingoptions->aggregationmethod = $reactforum->assessed;
     $ratingoptions->scaleid = $reactforum->scale;
@@ -1829,9 +1825,10 @@ function reactforum_get_user_grades($reactforum, $userid = 0) {
  * @param boolean $nullifnone return null if grade does not exist
  * @return void
  */
-function reactforum_update_grades($reactforum, $userid=0, $nullifnone=true) {
+function reactforum_update_grades($reactforum, $userid = 0, $nullifnone = true)
+{
     global $CFG, $DB;
-    require_once($CFG->libdir.'/gradelib.php');
+    require_once($CFG->libdir . '/gradelib.php');
 
     if (!$reactforum->assessed) {
         reactforum_grade_item_update($reactforum);
@@ -1841,7 +1838,7 @@ function reactforum_update_grades($reactforum, $userid=0, $nullifnone=true) {
 
     } else if ($userid and $nullifnone) {
         $grade = new stdClass();
-        $grade->userid   = $userid;
+        $grade->userid = $userid;
         $grade->rawgrade = NULL;
         reactforum_grade_item_update($reactforum, $grade);
 
@@ -1861,28 +1858,29 @@ function reactforum_update_grades($reactforum, $userid=0, $nullifnone=true) {
  * @param mixed $grades Optional array/object of grade(s); 'reset' means reset grades in gradebook
  * @return int 0 if ok
  */
-function reactforum_grade_item_update($reactforum, $grades=NULL) {
+function reactforum_grade_item_update($reactforum, $grades = NULL)
+{
     global $CFG;
     if (!function_exists('grade_update')) { //workaround for buggy PHP versions
-        require_once($CFG->libdir.'/gradelib.php');
+        require_once($CFG->libdir . '/gradelib.php');
     }
 
-    $params = array('itemname'=>$reactforum->name, 'idnumber'=>$reactforum->cmidnumber);
+    $params = array('itemname' => $reactforum->name, 'idnumber' => $reactforum->cmidnumber);
 
     if (!$reactforum->assessed or $reactforum->scale == 0) {
         $params['gradetype'] = GRADE_TYPE_NONE;
 
     } else if ($reactforum->scale > 0) {
         $params['gradetype'] = GRADE_TYPE_VALUE;
-        $params['grademax']  = $reactforum->scale;
-        $params['grademin']  = 0;
+        $params['grademax'] = $reactforum->scale;
+        $params['grademin'] = 0;
 
     } else if ($reactforum->scale < 0) {
         $params['gradetype'] = GRADE_TYPE_SCALE;
-        $params['scaleid']   = -$reactforum->scale;
+        $params['scaleid'] = -$reactforum->scale;
     }
 
-    if ($grades  === 'reset') {
+    if ($grades === 'reset') {
         $params['reset'] = true;
         $grades = NULL;
     }
@@ -1897,11 +1895,12 @@ function reactforum_grade_item_update($reactforum, $grades=NULL) {
  * @param stdClass $reactforum ReactForum object
  * @return grade_item
  */
-function reactforum_grade_item_delete($reactforum) {
+function reactforum_grade_item_delete($reactforum)
+{
     global $CFG;
-    require_once($CFG->libdir.'/gradelib.php');
+    require_once($CFG->libdir . '/gradelib.php');
 
-    return grade_update('mod/reactforum', $reactforum->course, 'mod', 'reactforum', $reactforum->id, 0, NULL, array('deleted'=>1));
+    return grade_update('mod/reactforum', $reactforum->course, 'mod', 'reactforum', $reactforum->id, 0, NULL, array('deleted' => 1));
 }
 
 
@@ -1913,11 +1912,12 @@ function reactforum_grade_item_delete($reactforum) {
  * @param int $scaleid negative number
  * @return bool
  */
-function reactforum_scale_used ($reactforumid,$scaleid) {
+function reactforum_scale_used($reactforumid, $scaleid)
+{
     global $DB;
     $return = false;
 
-    $rec = $DB->get_record("reactforum",array("id" => "$reactforumid","scale" => "-$scaleid"));
+    $rec = $DB->get_record("reactforum", array("id" => "$reactforumid", "scale" => "-$scaleid"));
 
     if (!empty($rec) && !empty($scaleid)) {
         $return = true;
@@ -1935,7 +1935,8 @@ function reactforum_scale_used ($reactforumid,$scaleid) {
  * @param $scaleid int
  * @return boolean True if the scale is used by any reactforum
  */
-function reactforum_scale_used_anywhere($scaleid) {
+function reactforum_scale_used_anywhere($scaleid)
+{
     global $DB;
     if ($scaleid and $DB->record_exists('reactforum', array('scale' => -$scaleid))) {
         return true;
@@ -1955,7 +1956,8 @@ function reactforum_scale_used_anywhere($scaleid) {
  * @param int $postid
  * @return mixed array of posts or false
  */
-function reactforum_get_post_full($postid) {
+function reactforum_get_post_full($postid)
+{
     global $CFG, $DB;
 
     $allnames = get_all_user_name_fields(true, 'u');
@@ -1977,15 +1979,16 @@ function reactforum_get_post_full($postid) {
  * @param bool $tracking does user track the reactforum?
  * @return array of posts
  */
-function reactforum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
+function reactforum_get_all_discussion_posts($discussionid, $sort, $tracking = false)
+{
     global $CFG, $DB, $USER;
 
-    $tr_sel  = "";
+    $tr_sel = "";
     $tr_join = "";
     $params = array();
 
     if ($tracking) {
-        $tr_sel  = ", fr.id AS postread";
+        $tr_sel = ", fr.id AS postread";
         $tr_join = "LEFT JOIN {reactforum_read} fr ON (fr.postid = p.id AND fr.userid = ?)";
         $params[] = $USER->id;
     }
@@ -2001,10 +2004,10 @@ function reactforum_get_all_discussion_posts($discussionid, $sort, $tracking=fal
         return array();
     }
 
-    foreach ($posts as $pid=>$p) {
+    foreach ($posts as $pid => $p) {
         if ($tracking) {
             if (reactforum_tp_is_post_old($p)) {
-                 $posts[$pid]->postread = true;
+                $posts[$pid]->postread = true;
             }
         }
         if (!$p->parent) {
@@ -2028,7 +2031,7 @@ function reactforum_get_all_discussion_posts($discussionid, $sort, $tracking=fal
             $post->lastpost = true;
             $lastpost = true;
         } else {
-             // Go to the last child of this post.
+            // Go to the last child of this post.
             $post = &$posts[end($post->children)->id];
         }
     }
@@ -2049,10 +2052,11 @@ function reactforum_get_all_discussion_posts($discussionid, $sort, $tracking=fal
  *         id, type, course, cmid, cmvisible, cmgroupmode, accessallgroups,
  *         viewhiddentimedposts
  */
-function reactforum_get_readable_reactforums($userid, $courseid=0) {
+function reactforum_get_readable_reactforums($userid, $courseid = 0)
+{
 
     global $CFG, $DB, $USER;
-    require_once($CFG->dirroot.'/course/lib.php');
+    require_once($CFG->dirroot . '/course/lib.php');
 
     if (!$reactforummod = $DB->get_record('modules', array('name' => 'reactforum'))) {
         print_error('notinstalled', 'reactforum');
@@ -2096,14 +2100,14 @@ function reactforum_get_readable_reactforums($userid, $courseid=0) {
                 continue;
             }
 
-         /// group access
+            /// group access
             if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context)) {
 
                 $reactforum->onlygroups = $modinfo->get_groups($cm->groupingid);
                 $reactforum->onlygroups[] = -1;
             }
 
-        /// hidden timed discussions
+            /// hidden timed discussions
             $reactforum->viewhiddentimedposts = true;
             if (!empty($CFG->reactforum_enabletimedposts)) {
                 if (!has_capability('mod/reactforum:viewhiddentimedposts', $context)) {
@@ -2111,13 +2115,13 @@ function reactforum_get_readable_reactforums($userid, $courseid=0) {
                 }
             }
 
-        /// qanda access
+            /// qanda access
             if ($reactforum->type == 'qanda'
-                    && !has_capability('mod/reactforum:viewqandawithoutposting', $context)) {
+                && !has_capability('mod/reactforum:viewqandawithoutposting', $context)) {
 
                 // We need to check whether the user has posted in the qanda reactforum.
                 $reactforum->onlydiscussions = array();  // Holds discussion ids for the discussions
-                                                    // the user is allowed to see in this reactforum.
+                // the user is allowed to see in this reactforum.
                 if ($discussionspostedin = reactforum_discussions_user_has_posted_in($reactforum->id, $USER->id)) {
                     foreach ($discussionspostedin as $d) {
                         $reactforum->onlydiscussions[] = $d->id;
@@ -2149,10 +2153,11 @@ function reactforum_get_readable_reactforums($userid, $courseid=0) {
  * @param string $extrasql
  * @return array|bool Array of posts found or false
  */
-function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=50,
-                            &$totalcount, $extrasql='') {
+function reactforum_search_posts($searchterms, $courseid = 0, $limitfrom = 0, $limitnum = 50,
+                                 &$totalcount, $extrasql = '')
+{
     global $CFG, $DB, $USER;
-    require_once($CFG->libdir.'/searchlib.php');
+    require_once($CFG->libdir . '/searchlib.php');
 
     $reactforums = reactforum_get_readable_reactforums($USER->id, $courseid);
 
@@ -2172,7 +2177,7 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
 
         if (!$reactforum->viewhiddentimedposts) {
             $select[] = "(d.userid = :userid{$reactforumid} OR (d.timestart < :timestart{$reactforumid} AND (d.timeend = 0 OR d.timeend > :timeend{$reactforumid})))";
-            $params = array_merge($params, array('userid'.$reactforumid=>$USER->id, 'timestart'.$reactforumid=>$now, 'timeend'.$reactforumid=>$now));
+            $params = array_merge($params, array('userid' . $reactforumid => $USER->id, 'timestart' . $reactforumid => $now, 'timeend' . $reactforumid => $now));
         }
 
         $cm = $reactforum->cm;
@@ -2181,7 +2186,7 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
         if ($reactforum->type == 'qanda'
             && !has_capability('mod/reactforum:viewqandawithoutposting', $context)) {
             if (!empty($reactforum->onlydiscussions)) {
-                list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($reactforum->onlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$reactforumid.'_');
+                list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($reactforum->onlydiscussions, SQL_PARAMS_NAMED, 'qanda' . $reactforumid . '_');
                 $params = array_merge($params, $discussionid_params);
                 $select[] = "(d.id $discussionid_sql OR p.parent = 0)";
             } else {
@@ -2190,7 +2195,7 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
         }
 
         if (!empty($reactforum->onlygroups)) {
-            list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($reactforum->onlygroups, SQL_PARAMS_NAMED, 'grps'.$reactforumid.'_');
+            list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($reactforum->onlygroups, SQL_PARAMS_NAMED, 'grps' . $reactforumid . '_');
             $params = array_merge($params, $groupid_params);
             $select[] = "d.groupid $groupid_sql";
         }
@@ -2198,7 +2203,7 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
         if ($select) {
             $selects = implode(" AND ", $select);
             $where[] = "(d.reactforum = :reactforum{$reactforumid} AND $selects)";
-            $params['reactforum'.$reactforumid] = $reactforumid;
+            $params['reactforum' . $reactforumid] = $reactforumid;
         } else {
             $fullaccess[] = $reactforumid;
         }
@@ -2210,13 +2215,13 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
         $where[] = "(d.reactforum $fullid_sql)";
     }
 
-    $selectdiscussion = "(".implode(" OR ", $where).")";
+    $selectdiscussion = "(" . implode(" OR ", $where) . ")";
 
     $messagesearch = '';
     $searchstring = '';
 
     // Need to concat these back together for parser to work.
-    foreach($searchterms as $searchterm){
+    foreach ($searchterms as $searchterm) {
         if ($searchstring != '') {
             $searchstring .= ' ';
         }
@@ -2225,15 +2230,15 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
 
     // We need to allow quoted strings for the search. The quotes *should* be stripped
     // by the parser, but this should be examined carefully for security implications.
-    $searchstring = str_replace("\\\"","\"",$searchstring);
+    $searchstring = str_replace("\\\"", "\"", $searchstring);
     $parser = new search_parser();
     $lexer = new search_lexer($parser);
 
     if ($lexer->parse($searchstring)) {
         $parsearray = $parser->get_parsed_array();
         list($messagesearch, $msparams) = search_generate_SQL($parsearray, 'p.message', 'p.subject',
-                                                              'p.userid', 'u.id', 'u.firstname',
-                                                              'u.lastname', 'p.modified', 'd.reactforum');
+            'p.userid', 'u.id', 'u.firstname',
+            'u.lastname', 'p.modified', 'd.reactforum');
         $params = array_merge($params, $msparams);
     }
 
@@ -2275,7 +2280,8 @@ function reactforum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limit
  * @param int $now used for timed discussions only
  * @return array
  */
-function reactforum_get_unmailed_posts($starttime, $endtime, $now=null) {
+function reactforum_get_unmailed_posts($starttime, $endtime, $now = null)
+{
     global $CFG, $DB;
 
     $params = array();
@@ -2317,7 +2323,8 @@ function reactforum_get_unmailed_posts($starttime, $endtime, $now=null) {
  * @param int $now Defaults to time()
  * @return bool
  */
-function reactforum_mark_old_posts_as_mailed($endtime, $now=null) {
+function reactforum_mark_old_posts_as_mailed($endtime, $now = null)
+{
     global $CFG, $DB;
 
     if (empty($now)) {
@@ -2355,7 +2362,8 @@ function reactforum_mark_old_posts_as_mailed($endtime, $now=null) {
  * @uses CONTEXT_MODULE
  * @return array
  */
-function reactforum_get_user_posts($reactforumid, $userid) {
+function reactforum_get_user_posts($reactforumid, $userid)
+{
     global $CFG, $DB;
 
     $timedsql = "";
@@ -2363,7 +2371,7 @@ function reactforum_get_user_posts($reactforumid, $userid) {
 
     if (!empty($CFG->reactforum_enabletimedposts)) {
         $cm = get_coursemodule_from_instance('reactforum', $reactforumid);
-        if (!has_capability('mod/reactforum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+        if (!has_capability('mod/reactforum:viewhiddentimedposts', context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2393,14 +2401,15 @@ function reactforum_get_user_posts($reactforumid, $userid) {
  * @param int $userid
  * @return array Array or false
  */
-function reactforum_get_user_involved_discussions($reactforumid, $userid) {
+function reactforum_get_user_involved_discussions($reactforumid, $userid)
+{
     global $CFG, $DB;
 
     $timedsql = "";
     $params = array($reactforumid, $userid);
     if (!empty($CFG->reactforum_enabletimedposts)) {
         $cm = get_coursemodule_from_instance('reactforum', $reactforumid);
-        if (!has_capability('mod/reactforum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+        if (!has_capability('mod/reactforum:viewhiddentimedposts', context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2426,14 +2435,15 @@ function reactforum_get_user_involved_discussions($reactforumid, $userid) {
  * @param int $userid
  * @return array of counts or false
  */
-function reactforum_count_user_posts($reactforumid, $userid) {
+function reactforum_count_user_posts($reactforumid, $userid)
+{
     global $CFG, $DB;
 
     $timedsql = "";
     $params = array($reactforumid, $userid);
     if (!empty($CFG->reactforum_enabletimedposts)) {
         $cm = get_coursemodule_from_instance('reactforum', $reactforumid);
-        if (!has_capability('mod/reactforum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+        if (!has_capability('mod/reactforum:viewhiddentimedposts', context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2459,7 +2469,8 @@ function reactforum_count_user_posts($reactforumid, $userid) {
  * @param object $log
  * @return array|null
  */
-function reactforum_get_post_from_log($log) {
+function reactforum_get_post_from_log($log)
+{
     global $CFG, $DB;
 
     $allnames = get_all_user_name_fields(true, 'u');
@@ -2501,7 +2512,8 @@ function reactforum_get_post_from_log($log) {
  * @param int $dicsussionid
  * @return array
  */
-function reactforum_get_firstpost_from_discussion($discussionid) {
+function reactforum_get_firstpost_from_discussion($discussionid)
+{
     global $CFG, $DB;
 
     return $DB->get_record_sql("SELECT p.*
@@ -2523,18 +2535,19 @@ function reactforum_get_firstpost_from_discussion($discussionid) {
  * @param int $perpage
  * @return array
  */
-function reactforum_count_discussion_replies($reactforumid, $reactforumsort="", $limit=-1, $page=-1, $perpage=0) {
+function reactforum_count_discussion_replies($reactforumid, $reactforumsort = "", $limit = -1, $page = -1, $perpage = 0)
+{
     global $CFG, $DB;
 
     if ($limit > 0) {
         $limitfrom = 0;
-        $limitnum  = $limit;
+        $limitnum = $limit;
     } else if ($page != -1) {
-        $limitfrom = $page*$perpage;
-        $limitnum  = $perpage;
+        $limitfrom = $page * $perpage;
+        $limitnum = $perpage;
     } else {
         $limitfrom = 0;
-        $limitnum  = 0;
+        $limitnum = 0;
     }
 
     if ($reactforumsort == "") {
@@ -2543,7 +2556,7 @@ function reactforum_count_discussion_replies($reactforumid, $reactforumsort="", 
 
     } else {
         $orderby = "ORDER BY $reactforumsort";
-        $groupby = ", ".strtolower($reactforumsort);
+        $groupby = ", " . strtolower($reactforumsort);
         $groupby = str_replace('desc', '', $groupby);
         $groupby = str_replace('asc', '', $groupby);
     }
@@ -2576,7 +2589,8 @@ function reactforum_count_discussion_replies($reactforumid, $reactforumsort="", 
  * @param object $course
  * @return mixed
  */
-function reactforum_count_discussions($reactforum, $cm, $course) {
+function reactforum_count_discussions($reactforum, $cm, $course)
+{
     global $CFG, $DB, $USER;
 
     static $cache = array();
@@ -2625,7 +2639,7 @@ function reactforum_count_discussions($reactforum, $cm, $course) {
         return $cache[$course->id][$reactforum->id];
     }
 
-    require_once($CFG->dirroot.'/course/lib.php');
+    require_once($CFG->dirroot . '/course/lib.php');
 
     $modinfo = get_fast_modinfo($course);
 
@@ -2674,9 +2688,10 @@ function reactforum_count_discussions($reactforum, $cm, $course) {
  * @param int $updatedsince retrieve only discussions updated since the given time
  * @return array
  */
-function reactforum_get_discussions($cm, $reactforumsort="", $fullpost=true, $unused=-1, $limit=-1,
-                                $userlastmodified=false, $page=-1, $perpage=0, $groupid = -1,
-                                $updatedsince = 0) {
+function reactforum_get_discussions($cm, $reactforumsort = "", $fullpost = true, $unused = -1, $limit = -1,
+                                    $userlastmodified = false, $page = -1, $perpage = 0, $groupid = -1,
+                                    $updatedsince = 0)
+{
     global $CFG, $DB, $USER;
 
     $timelimit = '';
@@ -2706,16 +2721,16 @@ function reactforum_get_discussions($cm, $reactforumsort="", $fullpost=true, $un
 
     if ($limit > 0) {
         $limitfrom = 0;
-        $limitnum  = $limit;
+        $limitnum = $limit;
     } else if ($page != -1) {
-        $limitfrom = $page*$perpage;
-        $limitnum  = $perpage;
+        $limitfrom = $page * $perpage;
+        $limitnum = $perpage;
     } else {
         $limitfrom = 0;
-        $limitnum  = 0;
+        $limitnum = 0;
     }
 
-    $groupmode    = groups_get_activity_groupmode($cm);
+    $groupmode = groups_get_activity_groupmode($cm);
 
     if ($groupmode) {
 
@@ -2753,7 +2768,7 @@ function reactforum_get_discussions($cm, $reactforumsort="", $fullpost=true, $un
             if ($currentgroup === null) {
                 $mygroups = array_keys(groups_get_all_groups($cm->course, $USER->id, $cm->groupingid, 'g.id'));
                 if (empty($mygroups)) {
-                     $groupselect = "AND d.groupid = -1";
+                    $groupselect = "AND d.groupid = -1";
                 } else {
                     list($insqlgroups, $inparamsgroups) = $DB->get_in_or_equal($mygroups);
                     $groupselect = "AND (d.groupid = -1 OR d.groupid $insqlgroups)";
@@ -2780,11 +2795,11 @@ function reactforum_get_discussions($cm, $reactforumsort="", $fullpost=true, $un
 
     if (empty($userlastmodified)) {  // We don't need to know this
         $umfields = "";
-        $umtable  = "";
+        $umtable = "";
     } else {
         $umfields = ', ' . get_all_user_name_fields(true, 'um', null, 'um') . ', um.email AS umemail, um.picture AS umpicture,
                         um.imagealt AS umimagealt';
-        $umtable  = " LEFT JOIN {user} um ON (d.usermodified = um.id)";
+        $umtable = " LEFT JOIN {user} um ON (d.usermodified = um.id)";
     }
 
     $updatedsincesql = '';
@@ -2827,7 +2842,8 @@ function reactforum_get_discussions($cm, $reactforumsort="", $fullpost=true, $un
  *               they contain the record with minimal information such as 'id' and 'name'.
  *               When the neighbour is not found the value is false.
  */
-function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
+function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum)
+{
     global $CFG, $DB, $USER;
 
     if ($cm->instance != $discussion->reactforum or $discussion->reactforum != $reactforum->id or $reactforum->id != $cm->instance) {
@@ -2839,7 +2855,7 @@ function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
     $params = array();
 
     $modcontext = context_module::instance($cm->id);
-    $groupmode    = groups_get_activity_groupmode($cm);
+    $groupmode = groups_get_activity_groupmode($cm);
     $currentgroup = groups_get_activity_group($cm);
 
     // Users must fulfill timed posts.
@@ -2882,10 +2898,10 @@ function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
     $params['discid4'] = $discussion->id;
     $params['disctimecompare1'] = $discussion->timemodified;
     $params['disctimecompare2'] = $discussion->timemodified;
-    $params['pinnedstate1'] = (int) $discussion->pinned;
-    $params['pinnedstate2'] = (int) $discussion->pinned;
-    $params['pinnedstate3'] = (int) $discussion->pinned;
-    $params['pinnedstate4'] = (int) $discussion->pinned;
+    $params['pinnedstate1'] = (int)$discussion->pinned;
+    $params['pinnedstate2'] = (int)$discussion->pinned;
+    $params['pinnedstate3'] = (int)$discussion->pinned;
+    $params['pinnedstate4'] = (int)$discussion->pinned;
 
     $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
               FROM {reactforum_discussions} d
@@ -2896,7 +2912,7 @@ function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
                    $groupselect";
     $comparefield = "d.timemodified";
     $comparevalue = ":disctimecompare1";
-    $comparevalue2  = ":disctimecompare2";
+    $comparevalue2 = ":disctimecompare2";
     if (!empty($CFG->reactforum_enabletimedposts)) {
         // Here we need to take into account the release time (timestart)
         // if one is set, of the neighbouring posts and compare it to the
@@ -2920,23 +2936,23 @@ function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
     $orderbyasc = reactforum_get_default_sort_order(false, $comparefield, 'd', false);
 
     if ($reactforum->type === 'blog') {
-         $subselect = "SELECT pp.created
+        $subselect = "SELECT pp.created
                    FROM {reactforum_discussions} dd
                    JOIN {reactforum_posts} pp ON dd.firstpost = pp.id ";
 
-         $subselectwhere1 = " WHERE dd.id = :discid3";
-         $subselectwhere2 = " WHERE dd.id = :discid4";
+        $subselectwhere1 = " WHERE dd.id = :discid3";
+        $subselectwhere2 = " WHERE dd.id = :discid4";
 
-         $comparefield = "p.created";
+        $comparefield = "p.created";
 
-         $sub1 = $subselect.$subselectwhere1;
-         $comparevalue = "($sub1)";
+        $sub1 = $subselect . $subselectwhere1;
+        $comparevalue = "($sub1)";
 
-         $sub2 = $subselect.$subselectwhere2;
-         $comparevalue2 = "($sub2)";
+        $sub2 = $subselect . $subselectwhere2;
+        $comparevalue2 = "($sub2)";
 
-         $orderbydesc = "d.pinned, p.created DESC";
-         $orderbyasc = "d.pinned, p.created ASC";
+        $orderbydesc = "d.pinned, p.created DESC";
+        $orderbyasc = "d.pinned, p.created ASC";
     }
 
     $prevsql = $sql . " AND ( (($comparefield < $comparevalue) AND :pinnedstate1 = d.pinned)
@@ -2965,7 +2981,8 @@ function reactforum_get_discussion_neighbours($cm, $discussion, $reactforum) {
  * @param bool $pinned sort pinned posts to the top
  * @return string
  */
-function reactforum_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd', $pinned = true) {
+function reactforum_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd', $pinned = true)
+{
     global $CFG;
 
     if (!empty($prefix)) {
@@ -3000,14 +3017,15 @@ function reactforum_get_default_sort_order($desc = true, $compare = 'd.timemodif
  * @param object $cm
  * @return array
  */
-function reactforum_get_discussions_unread($cm) {
+function reactforum_get_discussions_unread($cm)
+{
     global $CFG, $DB, $USER;
 
     $now = round(time(), -2);
-    $cutoffdate = $now - ($CFG->reactforum_oldpostdays*24*60*60);
+    $cutoffdate = $now - ($CFG->reactforum_oldpostdays * 24 * 60 * 60);
 
     $params = array();
-    $groupmode    = groups_get_activity_groupmode($cm);
+    $groupmode = groups_get_activity_groupmode($cm);
     $currentgroup = groups_get_activity_group($cm);
 
     if ($groupmode) {
@@ -3072,12 +3090,13 @@ function reactforum_get_discussions_unread($cm) {
  * @param object $cm
  * @return array
  */
-function reactforum_get_discussions_count($cm) {
+function reactforum_get_discussions_count($cm)
+{
     global $CFG, $DB, $USER;
 
     $now = round(time(), -2);
     $params = array($cm->instance);
-    $groupmode    = groups_get_activity_groupmode($cm);
+    $groupmode = groups_get_activity_groupmode($cm);
     $currentgroup = groups_get_activity_group($cm);
 
     if ($groupmode) {
@@ -3141,7 +3160,8 @@ function reactforum_get_discussions_count($cm) {
  * @param int $courseid
  * @param string $type
  */
-function reactforum_get_course_reactforum($courseid, $type) {
+function reactforum_get_course_reactforum($courseid, $type)
+{
 // How to set up special 1-per-course reactforums
     global $CFG, $DB, $OUTPUT, $USER;
 
@@ -3162,17 +3182,17 @@ function reactforum_get_course_reactforum($courseid, $type) {
     }
     switch ($reactforum->type) {
         case "news":
-            $reactforum->name  = get_string("namenews", "reactforum");
+            $reactforum->name = get_string("namenews", "reactforum");
             $reactforum->intro = get_string("intronews", "reactforum");
             $reactforum->forcesubscribe = REACTFORUM_FORCESUBSCRIBE;
             $reactforum->assessed = 0;
             if ($courseid == SITEID) {
-                $reactforum->name  = get_string("sitenews");
+                $reactforum->name = get_string("sitenews");
                 $reactforum->forcesubscribe = 0;
             }
             break;
         case "social":
-            $reactforum->name  = get_string("namesocial", "reactforum");
+            $reactforum->name = get_string("namesocial", "reactforum");
             $reactforum->intro = get_string("introsocial", "reactforum");
             $reactforum->assessed = 0;
             $reactforum->forcesubscribe = 0;
@@ -3192,7 +3212,7 @@ function reactforum_get_course_reactforum($courseid, $type) {
     $reactforum->timemodified = time();
     $reactforum->id = $DB->insert_record("reactforum", $reactforum);
 
-    if (! $module = $DB->get_record("modules", array("name" => "reactforum"))) {
+    if (!$module = $DB->get_record("modules", array("name" => "reactforum"))) {
         echo $OUTPUT->notification("Could not find reactforum module!!");
         return false;
     }
@@ -3202,7 +3222,7 @@ function reactforum_get_course_reactforum($courseid, $type) {
     $mod->instance = $reactforum->id;
     $mod->section = 0;
     include_once("$CFG->dirroot/course/lib.php");
-    if (! $mod->coursemodule = add_course_module($mod) ) {
+    if (!$mod->coursemodule = add_course_module($mod)) {
         echo $OUTPUT->notification("Could not add a new course module to the course '" . $courseid . "'");
         return false;
     }
@@ -3241,8 +3261,9 @@ function reactforum_get_course_reactforum($courseid, $type) {
  * @param bool|null $istracked
  * @return void
  */
-function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $ownpost=false, $reply=false, $link=false,
-                          $footer="", $highlight="", $postisread=null, $dummyifcantsee=true, $istracked=null, $return=false) {
+function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $ownpost = false, $reply = false, $link = false,
+                               $footer = "", $highlight = "", $postisread = null, $dummyifcantsee = true, $istracked = null, $return = false)
+{
     global $USER, $CFG, $OUTPUT, $DB;
 
     require_once($CFG->libdir . '/filelib.php');
@@ -3259,10 +3280,10 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     $modcontext = context_module::instance($cm->id);
 
     $post->course = $course->id;
-    $post->reactforum  = $reactforum->id;
+    $post->reactforum = $reactforum->id;
     $post->message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php', $modcontext->id, 'mod_reactforum', 'post', $post->id);
     if (!empty($CFG->enableplagiarism)) {
-        require_once($CFG->libdir.'/plagiarismlib.php');
+        require_once($CFG->libdir . '/plagiarismlib.php');
         $post->message .= plagiarism_get_links(array('userid' => $post->userid,
             'content' => $post->message,
             'cmid' => $cm->id,
@@ -3277,15 +3298,15 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     if (!isset($cm->cache->caps)) {
         $cm->cache->caps = array();
-        $cm->cache->caps['mod/reactforum:viewdiscussion']   = has_capability('mod/reactforum:viewdiscussion', $modcontext);
-        $cm->cache->caps['moodle/site:viewfullnames']  = has_capability('moodle/site:viewfullnames', $modcontext);
-        $cm->cache->caps['mod/reactforum:editanypost']      = has_capability('mod/reactforum:editanypost', $modcontext);
+        $cm->cache->caps['mod/reactforum:viewdiscussion'] = has_capability('mod/reactforum:viewdiscussion', $modcontext);
+        $cm->cache->caps['moodle/site:viewfullnames'] = has_capability('moodle/site:viewfullnames', $modcontext);
+        $cm->cache->caps['mod/reactforum:editanypost'] = has_capability('mod/reactforum:editanypost', $modcontext);
         $cm->cache->caps['mod/reactforum:splitdiscussions'] = has_capability('mod/reactforum:splitdiscussions', $modcontext);
-        $cm->cache->caps['mod/reactforum:deleteownpost']    = has_capability('mod/reactforum:deleteownpost', $modcontext);
-        $cm->cache->caps['mod/reactforum:deleteanypost']    = has_capability('mod/reactforum:deleteanypost', $modcontext);
-        $cm->cache->caps['mod/reactforum:viewanyrating']    = has_capability('mod/reactforum:viewanyrating', $modcontext);
-        $cm->cache->caps['mod/reactforum:exportpost']       = has_capability('mod/reactforum:exportpost', $modcontext);
-        $cm->cache->caps['mod/reactforum:exportownpost']    = has_capability('mod/reactforum:exportownpost', $modcontext);
+        $cm->cache->caps['mod/reactforum:deleteownpost'] = has_capability('mod/reactforum:deleteownpost', $modcontext);
+        $cm->cache->caps['mod/reactforum:deleteanypost'] = has_capability('mod/reactforum:deleteanypost', $modcontext);
+        $cm->cache->caps['mod/reactforum:viewanyrating'] = has_capability('mod/reactforum:viewanyrating', $modcontext);
+        $cm->cache->caps['mod/reactforum:exportpost'] = has_capability('mod/reactforum:exportpost', $modcontext);
+        $cm->cache->caps['mod/reactforum:exportownpost'] = has_capability('mod/reactforum:exportownpost', $modcontext);
     }
 
     if (!isset($cm->uservisible)) {
@@ -3305,26 +3326,26 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             echo $output;
             return;
         }
-        $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
-        $output .= html_writer::start_tag('div', array('class'=>'reactforumpost clearfix',
-                                                       'role' => 'region',
-                                                       'aria-label' => get_string('hiddenreactforumpost', 'reactforum')));
-        $output .= html_writer::start_tag('div', array('class'=>'row header'));
-        $output .= html_writer::tag('div', '', array('class'=>'left picture')); // Picture
+        $output .= html_writer::tag('a', '', array('id' => 'p' . $post->id));
+        $output .= html_writer::start_tag('div', array('class' => 'reactforumpost clearfix',
+            'role' => 'region',
+            'aria-label' => get_string('hiddenreactforumpost', 'reactforum')));
+        $output .= html_writer::start_tag('div', array('class' => 'row header'));
+        $output .= html_writer::tag('div', '', array('class' => 'left picture')); // Picture
         if ($post->parent) {
-            $output .= html_writer::start_tag('div', array('class'=>'topic'));
+            $output .= html_writer::start_tag('div', array('class' => 'topic'));
         } else {
-            $output .= html_writer::start_tag('div', array('class'=>'topic starter'));
+            $output .= html_writer::start_tag('div', array('class' => 'topic starter'));
         }
-        $output .= html_writer::tag('div', get_string('reactforumsubjecthidden','reactforum'), array('class' => 'subject',
-                                                                                           'role' => 'header')); // Subject.
+        $output .= html_writer::tag('div', get_string('reactforumsubjecthidden', 'reactforum'), array('class' => 'subject',
+            'role' => 'header')); // Subject.
         $output .= html_writer::tag('div', get_string('reactforumauthorhidden', 'reactforum'), array('class' => 'author',
-                                                                                           'role' => 'header')); // Author.
+            'role' => 'header')); // Author.
         $output .= html_writer::end_tag('div');
         $output .= html_writer::end_tag('div'); // row
-        $output .= html_writer::start_tag('div', array('class'=>'row'));
-        $output .= html_writer::tag('div', '&nbsp;', array('class'=>'left side')); // Groups
-        $output .= html_writer::tag('div', get_string('reactforumbodyhidden','reactforum'), array('class'=>'content')); // Content
+        $output .= html_writer::start_tag('div', array('class' => 'row'));
+        $output .= html_writer::tag('div', '&nbsp;', array('class' => 'left side')); // Groups
+        $output .= html_writer::tag('div', get_string('reactforumbodyhidden', 'reactforum'), array('class' => 'content')); // Content
         $output .= html_writer::end_tag('div'); // row
         $output .= html_writer::end_tag('div'); // reactforumpost
 
@@ -3337,26 +3358,26 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     if (empty($str)) {
         $str = new stdClass;
-        $str->edit         = get_string('edit', 'reactforum');
-        $str->delete       = get_string('delete', 'reactforum');
-        $str->reply        = get_string('reply', 'reactforum');
-        $str->parent       = get_string('parent', 'reactforum');
+        $str->edit = get_string('edit', 'reactforum');
+        $str->delete = get_string('delete', 'reactforum');
+        $str->reply = get_string('reply', 'reactforum');
+        $str->parent = get_string('parent', 'reactforum');
         $str->pruneheading = get_string('pruneheading', 'reactforum');
-        $str->prune        = get_string('prune', 'reactforum');
-        $str->displaymode     = get_user_preferences('reactforum_displaymode', $CFG->reactforum_displaymode);
-        $str->markread     = get_string('markread', 'reactforum');
-        $str->markunread   = get_string('markunread', 'reactforum');
+        $str->prune = get_string('prune', 'reactforum');
+        $str->displaymode = get_user_preferences('reactforum_displaymode', $CFG->reactforum_displaymode);
+        $str->markread = get_string('markread', 'reactforum');
+        $str->markunread = get_string('markunread', 'reactforum');
     }
 
-    $discussionlink = new moodle_url('/mod/reactforum/discuss.php', array('d'=>$post->discussion));
+    $discussionlink = new moodle_url('/mod/reactforum/discuss.php', array('d' => $post->discussion));
 
     // Build an object that represents the posting user
     $postuser = new stdClass;
     $postuserfields = explode(',', user_picture::fields());
     $postuser = username_load_fields_from_object($postuser, $post, null, $postuserfields);
     $postuser->id = $post->userid;
-    $postuser->fullname    = fullname($postuser, $cm->cache->caps['moodle/site:viewfullnames']);
-    $postuser->profilelink = new moodle_url('/user/view.php', array('id'=>$post->userid, 'course'=>$course->id));
+    $postuser->fullname = fullname($postuser, $cm->cache->caps['moodle/site:viewfullnames']);
+    $postuser->profilelink = new moodle_url('/user/view.php', array('id' => $post->userid, 'course' => $course->id));
 
     // Prepare the groups the posting user belongs to
     if (isset($cm->cache->usersgroups)) {
@@ -3388,7 +3409,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     // SPECIAL CASE: The front page can display a news item post to non-logged in users.
     // Don't display the mark read / unread controls in this case.
     if ($istracked && $CFG->reactforum_usermarksread && isloggedin()) {
-        $url = new moodle_url($discussionlink, array('postid'=>$post->id, 'mark'=>'unread'));
+        $url = new moodle_url($discussionlink, array('postid' => $post->id, 'mark' => 'unread'));
         $text = $str->markunread;
         if (!$postisread) {
             $url->param('mark', 'read');
@@ -3397,9 +3418,9 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         if ($str->displaymode == REACTFORUM_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
-            $url->set_anchor('p'.$post->id);
+            $url->set_anchor('p' . $post->id);
         }
-        $commands[] = array('url'=>$url, 'text'=>$text);
+        $commands[] = array('url' => $url, 'text' => $text);
     }
 
     // Zoom in to the parent specifically
@@ -3408,9 +3429,9 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         if ($str->displaymode == REACTFORUM_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
-            $url->set_anchor('p'.$post->parent);
+            $url->set_anchor('p' . $post->parent);
         }
-        $commands[] = array('url'=>$url, 'text'=>$str->parent);
+        $commands[] = array('url' => $url, 'text' => $str->parent);
     }
 
     // Hack for allow to edit news posts those are not displayed yet until they are displayed
@@ -3422,29 +3443,29 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     if ($reactforum->type == 'single' and $discussion->firstpost == $post->id) {
         if (has_capability('moodle/course:manageactivities', $modcontext)) {
             // The first post in single simple is the reactforum description.
-            $commands[] = array('url'=>new moodle_url('/course/modedit.php', array('update'=>$cm->id, 'sesskey'=>sesskey(), 'return'=>1)), 'text'=>$str->edit);
+            $commands[] = array('url' => new moodle_url('/course/modedit.php', array('update' => $cm->id, 'sesskey' => sesskey(), 'return' => 1)), 'text' => $str->edit);
         }
     } else if (($ownpost && $age < $CFG->maxeditingtime) || $cm->cache->caps['mod/reactforum:editanypost']) {
-        $commands[] = array('url'=>new moodle_url('/mod/reactforum/post.php', array('edit'=>$post->id)), 'text'=>$str->edit);
+        $commands[] = array('url' => new moodle_url('/mod/reactforum/post.php', array('edit' => $post->id)), 'text' => $str->edit);
     }
 
     if ($cm->cache->caps['mod/reactforum:splitdiscussions'] && $post->parent && $reactforum->type != 'single') {
-        $commands[] = array('url'=>new moodle_url('/mod/reactforum/post.php', array('prune'=>$post->id)), 'text'=>$str->prune, 'title'=>$str->pruneheading);
+        $commands[] = array('url' => new moodle_url('/mod/reactforum/post.php', array('prune' => $post->id)), 'text' => $str->prune, 'title' => $str->pruneheading);
     }
 
     if ($reactforum->type == 'single' and $discussion->firstpost == $post->id) {
         // Do not allow deleting of first post in single simple type.
     } else if (($ownpost && $age < $CFG->maxeditingtime && $cm->cache->caps['mod/reactforum:deleteownpost']) || $cm->cache->caps['mod/reactforum:deleteanypost']) {
-        $commands[] = array('url'=>new moodle_url('/mod/reactforum/post.php', array('delete'=>$post->id)), 'text'=>$str->delete);
+        $commands[] = array('url' => new moodle_url('/mod/reactforum/post.php', array('delete' => $post->id)), 'text' => $str->delete);
     }
 
     if ($reply) {
-        $commands[] = array('url'=>new moodle_url('/mod/reactforum/post.php#mformreactforum', array('reply'=>$post->id)), 'text'=>$str->reply);
+        $commands[] = array('url' => new moodle_url('/mod/reactforum/post.php#mformreactforum', array('reply' => $post->id)), 'text' => $str->reply);
     }
 
     if ($CFG->enableportfolios && ($cm->cache->caps['mod/reactforum:exportpost'] || ($ownpost && $cm->cache->caps['mod/reactforum:exportownpost']))) {
         $p = array('postid' => $post->id);
-        require_once($CFG->libdir.'/portfoliolib.php');
+        require_once($CFG->libdir . '/portfoliolib.php');
         $button = new portfolio_add_button();
         $button->set_callback_options('reactforum_portfolio_caller', array('postid' => $post->id), 'mod_reactforum');
         if (empty($attachments)) {
@@ -3464,36 +3485,42 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     // Loading Reactions
     $reactionallreplies = $reactforum->reactionallreplies;
     $reactiontype = $reactforum->reactiontype;
-    if($reactiontype == 'discussion')
-    {
+    if ($reactiontype == 'discussion') {
         $reactiontype = $discussion->reactiontype;
         $reactionallreplies = $discussion->reactionallreplies;
     }
     $reactable = $reactionallreplies || ($discussion->firstpost == $post->id);
-    $reactionData = array();
-    if($reactable)
-    {
+    $reaction_data = array();
+    if ($reactable) {
         $reactions = reactforum_get_reactions_from_discussion($discussion);
+        $postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
         foreach ($reactions as $reaction) {
             $countObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id), "COUNT(*) AS 'count'");
             $userCountObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id, "user_id" => $USER->id), "COUNT(*) AS 'count'");
             $item = array(
-                "id" => $reaction->id,
-                "reaction" => $reaction->reaction,
-                "count" => $countObj->count,
-                "reacted" => false
+                'id' => $reaction->id,
+                'reaction' => $reaction->reaction,
+                'count' => $countObj->count,
+                'reacted' => false,
+                'enabled' => true
             );
             if ($userCountObj->count == 1) {
                 $item['reacted'] = true;
             }
-            array_push($reactionData, $item);
+            if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {
+                $item['count'] = '';
+            }
+            if ($reactforum->delayedcounter && $postisreacted) {
+                $item['enabled'] = false;
+            }
+            array_push($reaction_data, $item);
         }
     }
 
 
     // Begin output
 
-    $output  = '';
+    $output = '';
 
     if ($istracked) {
         if ($postisread) {
@@ -3526,7 +3553,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     $postbyuser->post = $post->subject;
     $postbyuser->user = $postuser->fullname;
     $discussionbyuser = get_string('postbyuser', 'reactforum', $postbyuser);
-    $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
+    $output .= html_writer::tag('a', '', array('id' => 'p' . $post->id));
     // Begin reactforum post.
     $output .= html_writer::start_div('reactforumpost clearfix' . $reactforumpostclass . $topicclass,
         ['role' => 'region', 'aria-label' => $discussionbyuser]);
@@ -3583,44 +3610,44 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         $output .= html_writer::end_div(); // Left side.
     }
 
-    $output .= html_writer::start_tag('div', array('class'=>'no-overflow'));
-    $output .= html_writer::start_tag('div', array('class'=>'content'));
+    $output .= html_writer::start_tag('div', array('class' => 'no-overflow'));
+    $output .= html_writer::start_tag('div', array('class' => 'content'));
 
     $options = new stdClass;
-    $options->para    = false;
+    $options->para = false;
     $options->trusted = $post->messagetrust;
     $options->context = $modcontext;
     if ($shortenpost) {
         // Prepare shortened version by filtering the text then shortening it.
-        $postclass    = 'shortenedpost';
-        $postcontent  = format_text($post->message, $post->messageformat, $options);
-        $postcontent  = shorten_text($postcontent, $CFG->reactforum_shortpost);
+        $postclass = 'shortenedpost';
+        $postcontent = format_text($post->message, $post->messageformat, $options);
+        $postcontent = shorten_text($postcontent, $CFG->reactforum_shortpost);
         $postcontent .= html_writer::link($discussionlink, get_string('readtherest', 'reactforum'));
-        $postcontent .= html_writer::tag('div', '('.get_string('numwords', 'moodle', count_words($post->message)).')',
-            array('class'=>'post-word-count'));
+        $postcontent .= html_writer::tag('div', '(' . get_string('numwords', 'moodle', count_words($post->message)) . ')',
+            array('class' => 'post-word-count'));
     } else {
         // Prepare whole post
-        $postclass    = 'fullpost';
-        $postcontent  = format_text($post->message, $post->messageformat, $options, $course->id);
+        $postclass = 'fullpost';
+        $postcontent = format_text($post->message, $post->messageformat, $options, $course->id);
         if (!empty($highlight)) {
             $postcontent = highlight($highlight, $postcontent);
         }
         if (!empty($reactforum->displaywordcount)) {
             $postcontent .= html_writer::tag('div', get_string('numwords', 'moodle', count_words($post->message)),
-                array('class'=>'post-word-count'));
+                array('class' => 'post-word-count'));
         }
-        $postcontent .= html_writer::tag('div', $attachedimages, array('class'=>'attachedimages'));
+        $postcontent .= html_writer::tag('div', $attachedimages, array('class' => 'attachedimages'));
     }
 
     // Output the post content
-    $output .= html_writer::tag('div', $postcontent, array('class'=>'posting '.$postclass));
+    $output .= html_writer::tag('div', $postcontent, array('class' => 'posting ' . $postclass));
     $output .= html_writer::end_tag('div'); // Content
     $output .= html_writer::end_tag('div'); // Content mask
     $output .= html_writer::end_tag('div'); // Row
 
-    $output .= html_writer::start_tag('div', array('class'=>'row side'));
-    $output .= html_writer::tag('div','&nbsp;', array('class'=>'left'));
-    $output .= html_writer::start_tag('div', array('class'=>'options clearfix'));
+    $output .= html_writer::start_tag('div', array('class' => 'row side'));
+    $output .= html_writer::tag('div', '&nbsp;', array('class' => 'left'));
+    $output .= html_writer::start_tag('div', array('class' => 'options clearfix'));
 
     if (!empty($attachments)) {
         $output .= html_writer::tag('div', $attachments, array('class' => 'attachments'));
@@ -3628,40 +3655,39 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     // Reactions
     // Reactions
-    if($reactable)
-    {
+    if ($reactable) {
         $output .= html_writer::start_tag('div', array('style' => 'margin: 15px 0;'));
-        foreach ($reactionData as $reactionDatum) {
+        foreach ($reaction_data as $reaction) {
             $output .= html_writer::start_tag('div',
                 array(
                     'style' => 'display: inline; margin: 0 8px 0 0;',
                     'post-id' => $post->id,
-                    'reaction-id' => $reactionDatum['id'],
+                    'reaction-id' => $reaction['id'],
                     'class' => 'reaction-container'
                 )
             );
             $class = 'btn-default';
-            if ($reactionDatum['reacted']) {
+            if ($reaction['reacted']) {
                 $class = 'btn-primary';
             }
-            $buttonAttributes = array('class' => "btn {$class} react-btn");
-            if ($post->userid == $USER->id) {
-                $buttonAttributes['disabled'] = 'disabled';
+            $buttonattrs = array('class' => "btn {$class} react-btn");
+            if ($post->userid == $USER->id || !$reaction['enabled']) {
+                $buttonattrs['disabled'] = 'disabled';
             }
             $reactionhtml = '';
             if ($reactiontype == 'text') {
-                $reactionhtml = $reactionDatum['reaction'];
+                $reactionhtml = $reaction['reaction'];
             } else if ($reactiontype == 'image') {
                 $reactionhtml = html_writer::empty_tag('img',
                     array(
-                        'src' => 'reactionimg.php?id=' . $reactionDatum['id'] . '&sesskey=' . sesskey(),
+                        'src' => 'reactionimg.php?id=' . $reaction['id'] . '&sesskey=' . sesskey(),
                         'alt' => '',
                         'class' => 'reaction-img'
                     )
                 );
             }
-            $output .= html_writer::tag('button', $reactionhtml, $buttonAttributes);
-            $output .= ' ' . html_writer::tag('span', "{$reactionDatum['count']}") . ' ';
+            $output .= html_writer::tag('button', $reactionhtml, $buttonattrs);
+            $output .= ' ' . html_writer::tag('span', "{$reaction['count']}") . ' ';
             $output .= html_writer::end_tag('div');
         }
         $output .= html_writer::end_tag('div');
@@ -3669,7 +3695,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     // Output ratings
     if (!empty($post->rating)) {
-        $output .= html_writer::tag('div', $OUTPUT->render($post->rating), array('class'=>'reactforum-post-rating'));
+        $output .= html_writer::tag('div', $OUTPUT->render($post->rating), array('class' => 'reactforum-post-rating'));
     }
 
     // Output the commands
@@ -3681,7 +3707,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             $commandhtml[] = $command;
         }
     }
-    $output .= html_writer::tag('div', implode(' | ', $commandhtml), array('class'=>'commands'));
+    $output .= html_writer::tag('div', implode(' | ', $commandhtml), array('class' => 'commands'));
 
     // Output link to post if required
     if ($link) {
@@ -3705,15 +3731,15 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             $replystring .= '</span>';
         }
 
-        $output .= html_writer::start_tag('div', array('class'=>'link'));
+        $output .= html_writer::start_tag('div', array('class' => 'link'));
         $output .= html_writer::link($discussionlink, get_string($langstring, 'reactforum'));
-        $output .= '&nbsp;('.$replystring.')';
+        $output .= '&nbsp;(' . $replystring . ')';
         $output .= html_writer::end_tag('div'); // link
     }
 
     // Output footer if required
     if ($footer) {
-        $output .= html_writer::tag('div', $footer, array('class'=>'footer'));
+        $output .= html_writer::tag('div', $footer, array('class' => 'footer'));
     }
 
     // Close remaining open divs
@@ -3739,7 +3765,8 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
  * @param string $options the context id
  * @return array an associative array of the user's rating permissions
  */
-function reactforum_rating_permissions($contextid, $component, $ratingarea) {
+function reactforum_rating_permissions($contextid, $component, $ratingarea)
+{
     $context = context::instance_by_id($contextid, MUST_EXIST);
     if ($component != 'mod_reactforum' || $ratingarea != 'post') {
         // We don't know about this component/ratingarea so just return null to get the
@@ -3747,10 +3774,10 @@ function reactforum_rating_permissions($contextid, $component, $ratingarea) {
         return null;
     }
     return array(
-        'view'    => has_capability('mod/reactforum:viewrating', $context),
+        'view' => has_capability('mod/reactforum:viewrating', $context),
         'viewany' => has_capability('mod/reactforum:viewanyrating', $context),
         'viewall' => has_capability('mod/reactforum:viewallratings', $context),
-        'rate'    => has_capability('mod/reactforum:rate', $context)
+        'rate' => has_capability('mod/reactforum:rate', $context)
     );
 }
 
@@ -3767,7 +3794,8 @@ function reactforum_rating_permissions($contextid, $component, $ratingarea) {
  *            aggregation => int the aggregation method to apply when calculating grades ie RATING_AGGREGATE_AVERAGE [required]
  * @return boolean true if the rating is valid. Will throw rating_exception if not
  */
-function reactforum_rating_validate($params) {
+function reactforum_rating_validate($params)
+{
     global $DB, $USER;
 
     // Check the component is mod_reactforum
@@ -3790,7 +3818,7 @@ function reactforum_rating_validate($params) {
     $discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
     $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum), '*', MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id , false, MUST_EXIST);
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
     $context = context_module::instance($cm->id);
 
     // Make sure the context provided is the context of the reactforum
@@ -3813,7 +3841,7 @@ function reactforum_rating_validate($params) {
     //check that the submitted rating is valid for the scale
 
     // lower limit
-    if ($params['rating'] < 0  && $params['rating'] != RATING_UNSET_RATING) {
+    if ($params['rating'] < 0 && $params['rating'] != RATING_UNSET_RATING) {
         throw new rating_exception('invalidnum');
     }
 
@@ -3867,7 +3895,8 @@ function reactforum_rating_validate($params) {
  * @throws coding_exception
  * @throws rating_exception
  */
-function mod_reactforum_rating_can_see_item_ratings($params) {
+function mod_reactforum_rating_can_see_item_ratings($params)
+{
     global $DB, $USER;
 
     // Check the component is mod_reactforum.
@@ -3888,7 +3917,7 @@ function mod_reactforum_rating_can_see_item_ratings($params) {
     $discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
     $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum), '*', MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id , false, MUST_EXIST);
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
 
     // Perform some final capability checks.
     if (!reactforum_user_can_see_post($reactforum, $discussion, $post, $USER, $cm)) {
@@ -3915,8 +3944,9 @@ function mod_reactforum_rating_can_see_item_ratings($params) {
  * @param boolean $canviewhiddentimedposts True if user has the viewhiddentimedposts permission for this reactforum
  */
 function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $datestring = "",
-                                        $cantrack = true, $reactforumtracked = true, $canviewparticipants = true, $modcontext = null,
-                                        $canviewhiddentimedposts = false) {
+                                            $cantrack = true, $reactforumtracked = true, $canviewparticipants = true, $modcontext = null,
+                                            $canviewhiddentimedposts = false)
+{
 
     global $COURSE, $USER, $CFG, $OUTPUT, $PAGE;
 
@@ -3937,7 +3967,7 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
         $rowcount = ($rowcount + 1) % 2;
     }
 
-    $post->subject = format_string($post->subject,true);
+    $post->subject = format_string($post->subject, true);
 
     $timeddiscussion = !empty($CFG->reactforum_enabletimedposts) && ($post->timestart || $post->timeend);
     $timedoutsidewindow = '';
@@ -3946,13 +3976,13 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
     }
 
     echo "\n\n";
-    echo '<tr class="discussion r'.$rowcount.$timedoutsidewindow.'">';
+    echo '<tr class="discussion r' . $rowcount . $timedoutsidewindow . '">';
 
     $topicclass = 'topic starter';
     if (REACTFORUM_DISCUSSION_PINNED == $post->pinned) {
         $topicclass .= ' pinned';
     }
-    echo '<td class="'.$topicclass.'">';
+    echo '<td class="' . $topicclass . '">';
     if (REACTFORUM_DISCUSSION_PINNED == $post->pinned) {
         echo $OUTPUT->pix_icon('i/pinned', get_string('discussionpinned', 'reactforum'), 'mod_reactforum');
     }
@@ -3961,7 +3991,7 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
         echo $PAGE->get_renderer('mod_reactforum')->timed_discussion_tooltip($post, empty($timedoutsidewindow));
     }
 
-    echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.'">'.$post->subject.'</a>';
+    echo '<a href="' . $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . '">' . $post->subject . '</a>';
     echo "</td>\n";
 
     // Picture
@@ -3971,12 +4001,12 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
     $postuser->id = $post->userid;
     echo '<td class="author">';
     echo '<span class="picture">';
-    echo $OUTPUT->user_picture($postuser, array('courseid'=>$reactforum->course));
+    echo $OUTPUT->user_picture($postuser, array('courseid' => $reactforum->course));
     echo '</span>';
     echo '<span class="name">';
     // User name
     $fullname = fullname($postuser, has_capability('moodle/site:viewfullnames', $modcontext));
-    echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->userid.'&amp;course='.$reactforum->course.'">'.$fullname.'</a>';
+    echo '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $post->userid . '&amp;course=' . $reactforum->course . '">' . $fullname . '</a>';
     echo '</span>';
     echo "</td>\n";
 
@@ -3992,7 +4022,7 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
             print_group_picture($group, $reactforum->course, false, false, $picturelink);
         } else if (isset($group->id)) {
             if ($canviewparticipants && $COURSE->groupmode) {
-                echo '<a href="'.$CFG->wwwroot.'/user/index.php?id='.$reactforum->course.'&amp;group='.$group->id.'">'.$group->name.'</a>';
+                echo '<a href="' . $CFG->wwwroot . '/user/index.php?id=' . $reactforum->course . '&amp;group=' . $group->id . '">' . $group->name . '</a>';
             } else {
                 echo $group->name;
             }
@@ -4002,8 +4032,8 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
 
     if (has_capability('mod/reactforum:viewdiscussion', $modcontext)) {   // Show the column with replies
         echo '<td class="replies">';
-        echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.'">';
-        echo $post->replies.'</a>';
+        echo '<a href="' . $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . '">';
+        echo $post->replies . '</a>';
         echo "</td>\n";
 
         if ($cantrack) {
@@ -4011,12 +4041,12 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
             if ($reactforumtracked) {
                 if ($post->unread > 0) {
                     echo '<span class="unread">';
-                    echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.'#unread">';
+                    echo '<a href="' . $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . '#unread">';
                     echo $post->unread;
                     echo '</a>';
-                    echo '<a title="'.$strmarkalldread.'" href="'.$CFG->wwwroot.'/mod/reactforum/markposts.php?f='.
-                         $reactforum->id.'&amp;d='.$post->discussion.'&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">' .
-                         '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.$strmarkalldread.'" /></a>';
+                    echo '<a title="' . $strmarkalldread . '" href="' . $CFG->wwwroot . '/mod/reactforum/markposts.php?f=' .
+                        $reactforum->id . '&amp;d=' . $post->discussion . '&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">' .
+                        '<img src="' . $OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="' . $strmarkalldread . '" /></a>';
                     echo '</span>';
                 } else {
                     echo '<span class="read">';
@@ -4041,13 +4071,13 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
 
     // In QA reactforums we check that the user can view participants.
     if ($reactforum->type !== 'qanda' || $canviewparticipants) {
-        echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->usermodified.'&amp;course='.$reactforum->course.'">'.
-             fullname($usermodified).'</a><br />';
-        $parenturl = (empty($post->lastpostid)) ? '' : '&amp;parent='.$post->lastpostid;
+        echo '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $post->usermodified . '&amp;course=' . $reactforum->course . '">' .
+            fullname($usermodified) . '</a><br />';
+        $parenturl = (empty($post->lastpostid)) ? '' : '&amp;parent=' . $post->lastpostid;
     }
 
-    echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.$parenturl.'">'.
-          userdate($usedate, $datestring).'</a>';
+    echo '<a href="' . $CFG->wwwroot . '/mod/reactforum/discuss.php?d=' . $post->discussion . $parenturl . '">' .
+        userdate($usedate, $datestring) . '</a>';
     echo "</td>\n";
 
     // is_guest should be used here as this also checks whether the user is a guest in the current course.
@@ -4072,7 +4102,8 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
  * @param int $discussionid The discussion to create an icon for.
  * @return string The generated markup.
  */
-function reactforum_get_discussion_subscription_icon($reactforum, $discussionid, $returnurl = null, $includetext = false) {
+function reactforum_get_discussion_subscription_icon($reactforum, $discussionid, $returnurl = null, $includetext = false)
+{
     global $USER, $OUTPUT, $PAGE;
 
     if ($returnurl === null && $PAGE->url) {
@@ -4099,12 +4130,12 @@ function reactforum_get_discussion_subscription_icon($reactforum, $discussionid,
         }
 
         return html_writer::link($subscriptionlink, $output, array(
-                'title' => get_string('clicktounsubscribe', 'reactforum'),
-                'class' => 'discussiontoggle iconsmall',
-                'data-reactforumid' => $reactforum->id,
-                'data-discussionid' => $discussionid,
-                'data-includetext' => $includetext,
-            ));
+            'title' => get_string('clicktounsubscribe', 'reactforum'),
+            'class' => 'discussiontoggle iconsmall',
+            'data-reactforumid' => $reactforum->id,
+            'data-discussionid' => $discussionid,
+            'data-includetext' => $includetext,
+        ));
 
     } else {
         $output = $OUTPUT->pix_icon('t/unsubscribed', get_string('clicktosubscribe', 'reactforum'), 'mod_reactforum');
@@ -4113,12 +4144,12 @@ function reactforum_get_discussion_subscription_icon($reactforum, $discussionid,
         }
 
         return html_writer::link($subscriptionlink, $output, array(
-                'title' => get_string('clicktosubscribe', 'reactforum'),
-                'class' => 'discussiontoggle iconsmall',
-                'data-reactforumid' => $reactforum->id,
-                'data-discussionid' => $discussionid,
-                'data-includetext' => $includetext,
-            ));
+            'title' => get_string('clicktosubscribe', 'reactforum'),
+            'class' => 'discussiontoggle iconsmall',
+            'data-reactforumid' => $reactforum->id,
+            'data-discussionid' => $discussionid,
+            'data-includetext' => $includetext,
+        ));
     }
 }
 
@@ -4128,7 +4159,8 @@ function reactforum_get_discussion_subscription_icon($reactforum, $discussionid,
  *
  * @return string The generated markup
  */
-function reactforum_get_discussion_subscription_icon_preloaders() {
+function reactforum_get_discussion_subscription_icon_preloaders()
+{
     $o = '';
     $o .= html_writer::span('&nbsp;', 'preload-subscribe');
     $o .= html_writer::span('&nbsp;', 'preload-unsubscribe');
@@ -4144,14 +4176,15 @@ function reactforum_get_discussion_subscription_icon_preloaders() {
  * @param mixed $mode reactforum layout mode
  * @param string $reactforumtype optional
  */
-function reactforum_print_mode_form($id, $mode, $reactforumtype='') {
+function reactforum_print_mode_form($id, $mode, $reactforumtype = '')
+{
     global $OUTPUT;
     if ($reactforumtype == 'single') {
-        $select = new single_select(new moodle_url("/mod/reactforum/view.php", array('f'=>$id)), 'mode', reactforum_get_layout_modes(), $mode, null, "mode");
+        $select = new single_select(new moodle_url("/mod/reactforum/view.php", array('f' => $id)), 'mode', reactforum_get_layout_modes(), $mode, null, "mode");
         $select->set_label(get_string('displaymode', 'reactforum'), array('class' => 'accesshide'));
         $select->class = "reactforummode";
     } else {
-        $select = new single_select(new moodle_url("/mod/reactforum/discuss.php", array('d'=>$id)), 'mode', reactforum_get_layout_modes(), $mode, null, "mode");
+        $select = new single_select(new moodle_url("/mod/reactforum/discuss.php", array('d' => $id)), 'mode', reactforum_get_layout_modes(), $mode, null, "mode");
         $select->set_label(get_string('displaymode', 'reactforum'), array('class' => 'accesshide'));
     }
     echo $OUTPUT->render($select);
@@ -4163,7 +4196,8 @@ function reactforum_print_mode_form($id, $mode, $reactforumtype='') {
  * @param string $search
  * @return string
  */
-function reactforum_search_form($course, $search='') {
+function reactforum_search_form($course, $search = '')
+{
     global $CFG, $PAGE;
     $reactforumsearch = new \mod_reactforum\output\quick_search_form($course->id, $search);
     $output = $PAGE->get_renderer('mod_reactforum');
@@ -4175,13 +4209,14 @@ function reactforum_search_form($course, $search='') {
  * @global object
  * @global object
  */
-function reactforum_set_return() {
+function reactforum_set_return()
+{
     global $CFG, $SESSION;
 
-    if (! isset($SESSION->fromdiscussion)) {
+    if (!isset($SESSION->fromdiscussion)) {
         $referer = get_local_referer(false);
         // If the referer is NOT a login screen then save it.
-        if (! strncasecmp("$CFG->wwwroot/login", $referer, 300)) {
+        if (!strncasecmp("$CFG->wwwroot/login", $referer, 300)) {
             $SESSION->fromdiscussion = $referer;
         }
     }
@@ -4193,7 +4228,8 @@ function reactforum_set_return() {
  * @param string|\moodle_url $default
  * @return string
  */
-function reactforum_go_back_to($default) {
+function reactforum_go_back_to($default)
+{
     global $SESSION;
 
     if (!empty($SESSION->fromdiscussion)) {
@@ -4217,7 +4253,8 @@ function reactforum_go_back_to($default) {
  * @param int $reactforumto target reactforum id
  * @return bool success
  */
-function reactforum_move_attachments($discussion, $reactforumfrom, $reactforumto) {
+function reactforum_move_attachments($discussion, $reactforumfrom, $reactforumto)
+{
     global $DB;
 
     $fs = get_file_storage();
@@ -4229,12 +4266,12 @@ function reactforum_move_attachments($discussion, $reactforumfrom, $reactforumto
     $oldcontext = context_module::instance($oldcm->id);
 
     // loop through all posts, better not use attachment flag ;-)
-    if ($posts = $DB->get_records('reactforum_posts', array('discussion'=>$discussion->id), '', 'id, attachment')) {
+    if ($posts = $DB->get_records('reactforum_posts', array('discussion' => $discussion->id), '', 'id, attachment')) {
         foreach ($posts as $post) {
             $fs->move_area_files_to_new_context($oldcontext->id,
-                    $newcontext->id, 'mod_reactforum', 'post', $post->id);
+                $newcontext->id, 'mod_reactforum', 'post', $post->id);
             $attachmentsmoved = $fs->move_area_files_to_new_context($oldcontext->id,
-                    $newcontext->id, 'mod_reactforum', 'attachment', $post->id);
+                $newcontext->id, 'mod_reactforum', 'attachment', $post->id);
             if ($attachmentsmoved > 0 && $post->attachment != '1') {
                 // Weird - let's fix it
                 $post->attachment = '1';
@@ -4261,7 +4298,8 @@ function reactforum_move_attachments($discussion, $reactforumfrom, $reactforumto
  * @param string $type html/text/separateimages
  * @return mixed string or array of (html text withouth images and image HTML)
  */
-function reactforum_print_attachments($post, $cm, $type) {
+function reactforum_print_attachments($post, $cm, $type)
+{
     global $CFG, $DB, $USER, $OUTPUT;
 
     if (empty($post->attachment)) {
@@ -4285,7 +4323,7 @@ function reactforum_print_attachments($post, $cm, $type) {
     $canexport = !empty($CFG->enableportfolios) && (has_capability('mod/reactforum:exportpost', $context) || ($post->userid == $USER->id && has_capability('mod/reactforum:exportownpost', $context)));
 
     if ($canexport) {
-        require_once($CFG->libdir.'/portfoliolib.php');
+        require_once($CFG->libdir . '/portfoliolib.php');
     }
 
     // We retrieve all files according to the time that they were created.  In the case that several files were uploaded
@@ -4299,11 +4337,11 @@ function reactforum_print_attachments($post, $cm, $type) {
             $filename = $file->get_filename();
             $mimetype = $file->get_mimetype();
             $iconimage = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', array('class' => 'icon'));
-            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$context->id.'/mod_reactforum/attachment/'.$post->id.'/'.$filename);
+            $path = file_encode_url($CFG->wwwroot . '/pluginfile.php', '/' . $context->id . '/mod_reactforum/attachment/' . $post->id . '/' . $filename);
 
             if ($type == 'html') {
                 $output .= "<a href=\"$path\">$iconimage</a> ";
-                $output .= "<a href=\"$path\">".s($filename)."</a>";
+                $output .= "<a href=\"$path\">" . s($filename) . "</a>";
                 if ($canexport) {
                     $button->set_callback_options('reactforum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_reactforum');
                     $button->set_format_by_file($file);
@@ -4312,7 +4350,7 @@ function reactforum_print_attachments($post, $cm, $type) {
                 $output .= "<br />";
 
             } else if ($type == 'text') {
-                $output .= "$strattachment ".s($filename).":\n$path\n";
+                $output .= "$strattachment " . s($filename) . ":\n$path\n";
 
             } else { //'returnimages'
                 if (in_array($mimetype, array('image/gif', 'image/jpeg', 'image/png'))) {
@@ -4325,7 +4363,7 @@ function reactforum_print_attachments($post, $cm, $type) {
                     }
                 } else {
                     $output .= "<a href=\"$path\">$iconimage</a> ";
-                    $output .= format_text("<a href=\"$path\">".s($filename)."</a>", FORMAT_HTML, array('context'=>$context));
+                    $output .= format_text("<a href=\"$path\">" . s($filename) . "</a>", FORMAT_HTML, array('context' => $context));
                     if ($canexport) {
                         $button->set_callback_options('reactforum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_reactforum');
                         $button->set_format_by_file($file);
@@ -4336,7 +4374,7 @@ function reactforum_print_attachments($post, $cm, $type) {
             }
 
             if (!empty($CFG->enableplagiarism)) {
-                require_once($CFG->libdir.'/plagiarismlib.php');
+                require_once($CFG->libdir . '/plagiarismlib.php');
                 $output .= plagiarism_get_links(array('userid' => $post->userid,
                     'file' => $file,
                     'cmid' => $cm->id,
@@ -4369,7 +4407,8 @@ function reactforum_print_attachments($post, $cm, $type) {
  * @param stdClass $context context object
  * @return array
  */
-function reactforum_get_file_areas($course, $cm, $context) {
+function reactforum_get_file_areas($course, $cm, $context)
+{
     return array(
         'attachment' => get_string('areaattachment', 'mod_reactforum'),
         'post' => get_string('areapost', 'mod_reactforum'),
@@ -4392,7 +4431,8 @@ function reactforum_get_file_areas($course, $cm, $context) {
  * @param string $filename file name
  * @return file_info instance or null if not found
  */
-function reactforum_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
+function reactforum_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename)
+{
     global $CFG, $DB, $USER;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -4412,7 +4452,7 @@ function reactforum_get_file_info($browser, $areas, $course, $cm, $context, $fil
     }
 
     if (is_null($itemid)) {
-        require_once($CFG->dirroot.'/mod/reactforum/locallib.php');
+        require_once($CFG->dirroot . '/mod/reactforum/locallib.php');
         return new reactforum_file_info_container($browser, $course, $cm, $context, $areas, $filearea);
     }
 
@@ -4472,7 +4512,7 @@ function reactforum_get_file_info($browser, $areas, $course, $cm, $context, $fil
         return null;
     }
 
-    $urlbase = $CFG->wwwroot.'/pluginfile.php';
+    $urlbase = $CFG->wwwroot . '/pluginfile.php';
     return new file_info_stored($browser, $context, $storedfile, $urlbase, $itemid, true, true, false, false);
 }
 
@@ -4490,7 +4530,8 @@ function reactforum_get_file_info($browser, $areas, $course, $cm, $context, $fil
  * @param array $options additional options affecting the file serving
  * @return bool false if file not found, does not return if found - justsend the file
  */
-function reactforum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function reactforum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array())
+{
     global $CFG, $DB;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -4508,15 +4549,15 @@ function reactforum_pluginfile($course, $cm, $context, $filearea, $args, $forced
 
     $postid = (int)array_shift($args);
 
-    if (!$post = $DB->get_record('reactforum_posts', array('id'=>$postid))) {
+    if (!$post = $DB->get_record('reactforum_posts', array('id' => $postid))) {
         return false;
     }
 
-    if (!$discussion = $DB->get_record('reactforum_discussions', array('id'=>$post->discussion))) {
+    if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion))) {
         return false;
     }
 
-    if (!$reactforum = $DB->get_record('reactforum', array('id'=>$cm->instance))) {
+    if (!$reactforum = $DB->get_record('reactforum', array('id' => $cm->instance))) {
         return false;
     }
 
@@ -4557,7 +4598,8 @@ function reactforum_pluginfile($course, $cm, $context, $filearea, $args, $forced
  * @param string $unused
  * @return bool
  */
-function reactforum_add_attachment($post, $reactforum, $cm, $mform=null, $unused=null) {
+function reactforum_add_attachment($post, $reactforum, $cm, $mform = null, $unused = null)
+{
     global $DB;
 
     if (empty($mform)) {
@@ -4571,11 +4613,11 @@ function reactforum_add_attachment($post, $reactforum, $cm, $mform=null, $unused
     $context = context_module::instance($cm->id);
 
     $info = file_get_draft_area_info($post->attachments);
-    $present = ($info['filecount']>0) ? '1' : '';
+    $present = ($info['filecount'] > 0) ? '1' : '';
     file_save_draft_area_files($post->attachments, $context->id, 'mod_reactforum', 'attachment', $post->id,
-            mod_reactforum_post_form::attachment_options($reactforum));
+        mod_reactforum_post_form::attachment_options($reactforum));
 
-    $DB->set_field('reactforum_posts', 'attachment', $present, array('id'=>$post->id));
+    $DB->set_field('reactforum_posts', 'attachment', $present, array('id' => $post->id));
 
     return true;
 }
@@ -4583,34 +4625,35 @@ function reactforum_add_attachment($post, $reactforum, $cm, $mform=null, $unused
 /**
  * Add a new post in an existing discussion.
  *
- * @param   stdClass    $post       The post data
- * @param   mixed       $mform      The submitted form
- * @param   string      $unused
+ * @param   stdClass $post The post data
+ * @param   mixed $mform The submitted form
+ * @param   string $unused
  * @return int
  */
-function reactforum_add_new_post($post, $mform, $unused = null) {
+function reactforum_add_new_post($post, $mform, $unused = null)
+{
     global $USER, $DB;
 
     $discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion));
-    $reactforum      = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
-    $cm         = get_coursemodule_from_instance('reactforum', $reactforum->id);
-    $context    = context_module::instance($cm->id);
+    $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
+    $context = context_module::instance($cm->id);
 
-    $post->created    = $post->modified = time();
-    $post->mailed     = REACTFORUM_MAILED_PENDING;
-    $post->userid     = $USER->id;
+    $post->created = $post->modified = time();
+    $post->mailed = REACTFORUM_MAILED_PENDING;
+    $post->userid = $USER->id;
     $post->attachment = "";
     if (!isset($post->totalscore)) {
         $post->totalscore = 0;
     }
     if (!isset($post->mailnow)) {
-        $post->mailnow    = 0;
+        $post->mailnow = 0;
     }
 
     $post->id = $DB->insert_record("reactforum_posts", $post);
     $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_reactforum', 'post', $post->id,
-            mod_reactforum_post_form::editor_options($context, null), $post->message);
-    $DB->set_field('reactforum_posts', 'message', $post->message, array('id'=>$post->id));
+        mod_reactforum_post_form::editor_options($context, null), $post->message);
+    $DB->set_field('reactforum_posts', 'message', $post->message, array('id' => $post->id));
     reactforum_add_attachment($post, $reactforum, $cm, $mform);
 
     // Update discussion modified date
@@ -4630,19 +4673,20 @@ function reactforum_add_new_post($post, $mform, $unused = null) {
 /**
  * Update a post.
  *
- * @param   stdClass    $newpost    The post to update
- * @param   mixed       $mform      The submitted form
- * @param   string      $unused
+ * @param   stdClass $newpost The post to update
+ * @param   mixed $mform The submitted form
+ * @param   string $unused
  * @return  bool
  */
-function reactforum_update_post($newpost, $mform, $unused = null) {
+function reactforum_update_post($newpost, $mform, $unused = null)
+{
     global $DB, $USER;
 
-    $post       = $DB->get_record('reactforum_posts', array('id' => $newpost->id));
+    $post = $DB->get_record('reactforum_posts', array('id' => $newpost->id));
     $discussion = $DB->get_record('reactforum_discussions', array('id' => $post->discussion));
-    $reactforum      = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
-    $cm         = get_coursemodule_from_instance('reactforum', $reactforum->id);
-    $context    = context_module::instance($cm->id);
+    $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
+    $context = context_module::instance($cm->id);
 
     // Allowed modifiable fields.
     $modifiablefields = [
@@ -4667,16 +4711,16 @@ function reactforum_update_post($newpost, $mform, $unused = null) {
     $discussion->usermodified = $post->userid;
 
     if (!$post->parent) {   // Post is a discussion starter - update discussion title and times too
-        $discussion->name      = $post->subject;
+        $discussion->name = $post->subject;
         $discussion->timestart = $post->timestart;
-        $discussion->timeend   = $post->timeend;
+        $discussion->timeend = $post->timeend;
 
         if (isset($post->pinned)) {
             $discussion->pinned = $post->pinned;
         }
     }
     $post->message = file_save_draft_area_files($newpost->itemid, $context->id, 'mod_reactforum', 'post', $post->id,
-            mod_reactforum_post_form::editor_options($context, $post->id), $post->message);
+        mod_reactforum_post_form::editor_options($context, $post->id), $post->message);
     $DB->update_record('reactforum_posts', $post);
     $DB->update_record('reactforum_discussions', $discussion);
 
@@ -4702,7 +4746,8 @@ function reactforum_update_post($newpost, $mform, $unused = null) {
  * @param int $userid
  * @return object
  */
-function reactforum_add_discussion($discussion, $mform=null, $unused=null, $userid=null) {
+function reactforum_add_discussion($discussion, $mform = null, $unused = null, $userid = null)
+{
     global $USER, $CFG, $DB;
 
     $timenow = isset($discussion->timenow) ? $discussion->timenow : time();
@@ -4714,24 +4759,24 @@ function reactforum_add_discussion($discussion, $mform=null, $unused=null, $user
     // The first post is stored as a real post, and linked
     // to from the discuss entry.
 
-    $reactforum = $DB->get_record('reactforum', array('id'=>$discussion->reactforum));
-    $cm    = get_coursemodule_from_instance('reactforum', $reactforum->id);
+    $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
 
     $post = new stdClass();
-    $post->discussion    = 0;
-    $post->parent        = 0;
-    $post->userid        = $userid;
-    $post->created       = $timenow;
-    $post->modified      = $timenow;
-    $post->mailed        = REACTFORUM_MAILED_PENDING;
-    $post->subject       = $discussion->name;
-    $post->message       = $discussion->message;
+    $post->discussion = 0;
+    $post->parent = 0;
+    $post->userid = $userid;
+    $post->created = $timenow;
+    $post->modified = $timenow;
+    $post->mailed = REACTFORUM_MAILED_PENDING;
+    $post->subject = $discussion->name;
+    $post->message = $discussion->message;
     $post->messageformat = $discussion->messageformat;
-    $post->messagetrust  = $discussion->messagetrust;
-    $post->attachments   = isset($discussion->attachments) ? $discussion->attachments : null;
-    $post->reactforum         = $reactforum->id;     // speedup
-    $post->course        = $reactforum->course; // speedup
-    $post->mailnow       = $discussion->mailnow;
+    $post->messagetrust = $discussion->messagetrust;
+    $post->attachments = isset($discussion->attachments) ? $discussion->attachments : null;
+    $post->reactforum = $reactforum->id;     // speedup
+    $post->course = $reactforum->course; // speedup
+    $post->mailnow = $discussion->mailnow;
 
     $post->id = $DB->insert_record("reactforum_posts", $post);
 
@@ -4739,22 +4784,22 @@ function reactforum_add_discussion($discussion, $mform=null, $unused=null, $user
     if (!empty($cm->id) && !empty($discussion->itemid)) {   // In "single simple discussions" this may not exist yet
         $context = context_module::instance($cm->id);
         $text = file_save_draft_area_files($discussion->itemid, $context->id, 'mod_reactforum', 'post', $post->id,
-                mod_reactforum_post_form::editor_options($context, null), $post->message);
-        $DB->set_field('reactforum_posts', 'message', $text, array('id'=>$post->id));
+            mod_reactforum_post_form::editor_options($context, null), $post->message);
+        $DB->set_field('reactforum_posts', 'message', $text, array('id' => $post->id));
     }
 
     // Now do the main entry for the discussion, linking to this first post
 
-    $discussion->firstpost    = $post->id;
+    $discussion->firstpost = $post->id;
     $discussion->timemodified = $timenow;
     $discussion->usermodified = $post->userid;
-    $discussion->userid       = $userid;
-    $discussion->assessed     = 0;
+    $discussion->userid = $userid;
+    $discussion->assessed = 0;
 
     $post->discussion = $DB->insert_record("reactforum_discussions", $discussion);
 
     // Finally, set the pointer on the post.
-    $DB->set_field("reactforum_posts", "discussion", $post->discussion, array("id"=>$post->id));
+    $DB->set_field("reactforum_posts", "discussion", $post->discussion, array("id" => $post->id));
 
     if (!empty($cm->id)) {
         reactforum_add_attachment($post, $reactforum, $cm, $mform, $unused);
@@ -4784,16 +4829,17 @@ function reactforum_add_discussion($discussion, $mform=null, $unused=null, $user
  * @param object $reactforum ReactForum
  * @return bool
  */
-function reactforum_delete_discussion($discussion, $fulldelete, $course, $cm, $reactforum) {
+function reactforum_delete_discussion($discussion, $fulldelete, $course, $cm, $reactforum)
+{
     global $DB, $CFG;
-    require_once($CFG->libdir.'/completionlib.php');
+    require_once($CFG->libdir . '/completionlib.php');
 
     $result = true;
 
     if ($posts = $DB->get_records("reactforum_posts", array("discussion" => $discussion->id))) {
         foreach ($posts as $post) {
             $post->course = $discussion->course;
-            $post->reactforum  = $discussion->reactforum;
+            $post->reactforum = $discussion->reactforum;
             if (!reactforum_delete_post($post, 'ignore', $course, $cm, $reactforum, $fulldelete)) {
                 $result = false;
             }
@@ -4813,7 +4859,7 @@ function reactforum_delete_discussion($discussion, $fulldelete, $course, $cm, $r
     if (!$fulldelete) {
         $completion = new completion_info($course);
         if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC &&
-           ($reactforum->completiondiscussions || $reactforum->completionreplies || $reactforum->completionposts)) {
+            ($reactforum->completiondiscussions || $reactforum->completionreplies || $reactforum->completionposts)) {
             $completion->update_state($cm, COMPLETION_INCOMPLETE, $discussion->userid);
         }
     }
@@ -4839,24 +4885,25 @@ function reactforum_delete_discussion($discussion, $fulldelete, $course, $cm, $r
  *   would otherwise be updated, i.e. when deleting entire reactforum anyway.
  * @return bool
  */
-function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $skipcompletion=false) {
+function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $skipcompletion = false)
+{
     global $DB, $CFG, $USER;
-    require_once($CFG->libdir.'/completionlib.php');
+    require_once($CFG->libdir . '/completionlib.php');
 
     $context = context_module::instance($cm->id);
 
-    if ($children !== 'ignore' && ($childposts = $DB->get_records('reactforum_posts', array('parent'=>$post->id)))) {
-       if ($children) {
-           foreach ($childposts as $childpost) {
-               reactforum_delete_post($childpost, true, $course, $cm, $reactforum, $skipcompletion);
-           }
-       } else {
-           return false;
-       }
+    if ($children !== 'ignore' && ($childposts = $DB->get_records('reactforum_posts', array('parent' => $post->id)))) {
+        if ($children) {
+            foreach ($childposts as $childpost) {
+                reactforum_delete_post($childpost, true, $course, $cm, $reactforum, $skipcompletion);
+            }
+        } else {
+            return false;
+        }
     }
 
     // Delete ratings.
-    require_once($CFG->dirroot.'/rating/lib.php');
+    require_once($CFG->dirroot . '/rating/lib.php');
     $delopt = new stdClass;
     $delopt->contextid = $context->id;
     $delopt->component = 'mod_reactforum';
@@ -4872,7 +4919,7 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
 
     // Delete cached RSS feeds.
     if (!empty($CFG->enablerssfeeds)) {
-        require_once($CFG->dirroot.'/mod/reactforum/rsslib.php');
+        require_once($CFG->dirroot . '/mod/reactforum/rsslib.php');
         reactforum_rss_delete_file($reactforum);
     }
 
@@ -4883,7 +4930,7 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
 
         reactforum_tp_delete_read_records(-1, $post->id);
 
-    // Just in case we are deleting the last post
+        // Just in case we are deleting the last post
         reactforum_discussion_update_last_post($post->discussion);
 
         // Update completion state if we are tracking completion based on number of posts
@@ -4892,7 +4939,7 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
         if (!$skipcompletion) {
             $completion = new completion_info($course);
             if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC &&
-               ($reactforum->completiondiscussions || $reactforum->completionreplies || $reactforum->completionposts)) {
+                ($reactforum->completiondiscussions || $reactforum->completionreplies || $reactforum->completionposts)) {
                 $completion->update_state($cm, COMPLETION_INCOMPLETE, $post->userid);
             }
         }
@@ -4924,8 +4971,9 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
  * @param object $cm Course-module
  * @param string $name
  * @return bool
-*/
-function reactforum_trigger_content_uploaded_event($post, $cm, $name) {
+ */
+function reactforum_trigger_content_uploaded_event($post, $cm, $name)
+{
     $context = context_module::instance($cm->id);
     $fs = get_file_storage();
     $files = $fs->get_area_files($context->id, 'mod_reactforum', 'attachment', $post->id, "timemodified", false);
@@ -4950,16 +4998,17 @@ function reactforum_trigger_content_uploaded_event($post, $cm, $name) {
  * @param bool $children
  * @return int
  */
-function reactforum_count_replies($post, $children=true) {
+function reactforum_count_replies($post, $children = true)
+{
     global $DB;
     $count = 0;
 
     if ($children) {
         if ($childposts = $DB->get_records('reactforum_posts', array('parent' => $post->id))) {
-           foreach ($childposts as $childpost) {
-               $count ++;                   // For this child
-               $count += reactforum_count_replies($childpost, true);
-           }
+            foreach ($childposts as $childpost) {
+                $count++;                   // For this child
+                $count += reactforum_count_replies($childpost, true);
+            }
         }
     } else {
         $count += $DB->count_records('reactforum_posts', array('parent' => $post->id));
@@ -4977,7 +5026,8 @@ function reactforum_count_replies($post, $children=true) {
  * @param stdClass $discussion The reactforum discussion record
  * @return string
  */
-function reactforum_post_subscription($fromform, $reactforum, $discussion) {
+function reactforum_post_subscription($fromform, $reactforum, $discussion)
+{
     global $USER;
 
     if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
@@ -4992,7 +5042,7 @@ function reactforum_post_subscription($fromform, $reactforum, $discussion) {
     }
 
     $info = new stdClass();
-    $info->name  = fullname($USER);
+    $info->name = fullname($USER);
     $info->discussion = format_string($discussion->name);
     $info->reactforum = format_string($reactforum->name);
 
@@ -5024,21 +5074,22 @@ function reactforum_post_subscription($fromform, $reactforum, $discussion) {
  * @param array $subscribed_reactforums
  * @return string
  */
-function reactforum_get_subscribe_link($reactforum, $context, $messages = array(), $cantaccessagroup = false, $fakelink=true, $backtoindex=false, $subscribed_reactforums=null) {
+function reactforum_get_subscribe_link($reactforum, $context, $messages = array(), $cantaccessagroup = false, $fakelink = true, $backtoindex = false, $subscribed_reactforums = null)
+{
     global $CFG, $USER, $PAGE, $OUTPUT;
     $defaultmessages = array(
         'subscribed' => get_string('unsubscribe', 'reactforum'),
         'unsubscribed' => get_string('subscribe', 'reactforum'),
         'cantaccessgroup' => get_string('no'),
         'forcesubscribed' => get_string('everyoneissubscribed', 'reactforum'),
-        'cantsubscribe' => get_string('disallowsubscribe','reactforum')
+        'cantsubscribe' => get_string('disallowsubscribe', 'reactforum')
     );
     $messages = $messages + $defaultmessages;
 
     if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
         return $messages['forcesubscribed'];
     } else if (\mod_reactforum\subscriptions::subscription_disabled($reactforum) &&
-            !has_capability('mod/reactforum:managesubscriptions', $context)) {
+        !has_capability('mod/reactforum:managesubscriptions', $context)) {
         return $messages['cantsubscribe'];
     } else if ($cantaccessagroup) {
         return $messages['cantaccessgroup'];
@@ -5073,7 +5124,7 @@ function reactforum_get_subscribe_link($reactforum, $context, $messages = array(
         $options['id'] = $reactforum->id;
         $options['sesskey'] = sesskey();
         $url = new moodle_url('/mod/reactforum/subscribe.php', $options);
-        $link .= $OUTPUT->single_button($url, $linktext, 'get', array('title'=>$linktitle));
+        $link .= $OUTPUT->single_button($url, $linktext, 'get', array('title' => $linktitle));
         if ($fakelink) {
             $link .= '</noscript>';
         }
@@ -5085,12 +5136,13 @@ function reactforum_get_subscribe_link($reactforum, $context, $messages = array(
 /**
  * Returns true if user created new discussion already.
  *
- * @param int $reactforumid  The reactforum to check for postings
- * @param int $userid   The user to check for postings
- * @param int $groupid  The group to restrict the check to
+ * @param int $reactforumid The reactforum to check for postings
+ * @param int $userid The user to check for postings
+ * @param int $groupid The group to restrict the check to
  * @return bool
  */
-function reactforum_user_has_posted_discussion($reactforumid, $userid, $groupid = null) {
+function reactforum_user_has_posted_discussion($reactforumid, $userid, $groupid = null)
+{
     global $CFG, $DB;
 
     $sql = "SELECT 'x'
@@ -5114,7 +5166,8 @@ function reactforum_user_has_posted_discussion($reactforumid, $userid, $groupid 
  * @param int $userid
  * @return array
  */
-function reactforum_discussions_user_has_posted_in($reactforumid, $userid) {
+function reactforum_discussions_user_has_posted_in($reactforumid, $userid)
+{
     global $CFG, $DB;
 
     $haspostedsql = "SELECT d.id AS id,
@@ -5136,7 +5189,8 @@ function reactforum_discussions_user_has_posted_in($reactforumid, $userid) {
  * @param int $userid
  * @return bool
  */
-function reactforum_user_has_posted($reactforumid, $did, $userid) {
+function reactforum_user_has_posted($reactforumid, $did, $userid)
+{
     global $DB;
 
     if (empty($did)) {
@@ -5145,9 +5199,9 @@ function reactforum_user_has_posted($reactforumid, $did, $userid) {
                   FROM {reactforum_posts} p
                   JOIN {reactforum_discussions} d ON d.id = p.discussion
                  WHERE p.userid = :userid AND d.reactforum = :reactforumid";
-        return $DB->record_exists_sql($sql, array('reactforumid'=>$reactforumid,'userid'=>$userid));
+        return $DB->record_exists_sql($sql, array('reactforumid' => $reactforumid, 'userid' => $userid));
     } else {
-        return $DB->record_exists('reactforum_posts', array('discussion'=>$did,'userid'=>$userid));
+        return $DB->record_exists('reactforum_posts', array('discussion' => $did, 'userid' => $userid));
     }
 }
 
@@ -5158,10 +5212,11 @@ function reactforum_user_has_posted($reactforumid, $did, $userid) {
  * @param int $userid User id
  * @return int|bool post creation time stamp or return false
  */
-function reactforum_get_user_posted_time($did, $userid) {
+function reactforum_get_user_posted_time($did, $userid)
+{
     global $DB;
 
-    $posttime = $DB->get_field('reactforum_posts', 'MIN(created)', array('userid'=>$userid, 'discussion'=>$did));
+    $posttime = $DB->get_field('reactforum_posts', 'MIN(created)', array('userid' => $userid, 'discussion' => $did));
     if (empty($posttime)) {
         return false;
     }
@@ -5177,7 +5232,8 @@ function reactforum_get_user_posted_time($did, $userid) {
  * @param object $context
  * @return bool
  */
-function reactforum_user_can_post_discussion($reactforum, $currentgroup=null, $unused=-1, $cm=NULL, $context=NULL) {
+function reactforum_user_can_post_discussion($reactforum, $currentgroup = null, $unused = -1, $cm = NULL, $context = NULL)
+{
 // $reactforum is an object
     global $USER;
 
@@ -5256,7 +5312,8 @@ function reactforum_user_can_post_discussion($reactforum, $currentgroup=null, $u
  * @param object $context
  * @return bool
  */
-function reactforum_user_can_post($reactforum, $discussion, $user=NULL, $cm=NULL, $course=NULL, $context=NULL) {
+function reactforum_user_can_post($reactforum, $discussion, $user = NULL, $cm = NULL, $course = NULL, $context = NULL)
+{
     global $USER, $DB;
     if (empty($user)) {
         $user = $USER;
@@ -5337,14 +5394,15 @@ function reactforum_user_can_post($reactforum, $discussion, $user=NULL, $cm=NULL
 }
 
 /**
-* Check to ensure a user can view a timed discussion.
-*
-* @param object $discussion
-* @param object $user
-* @param object $context
-* @return boolean returns true if they can view post, false otherwise
-*/
-function reactforum_user_can_see_timed_discussion($discussion, $user, $context) {
+ * Check to ensure a user can view a timed discussion.
+ *
+ * @param object $discussion
+ * @param object $user
+ * @param object $context
+ * @return boolean returns true if they can view post, false otherwise
+ */
+function reactforum_user_can_see_timed_discussion($discussion, $user, $context)
+{
     global $CFG;
 
     // Check that the user can view a discussion that is normally hidden due to access times.
@@ -5362,14 +5420,15 @@ function reactforum_user_can_see_timed_discussion($discussion, $user, $context) 
 }
 
 /**
-* Check to ensure a user can view a group discussion.
-*
-* @param object $discussion
-* @param object $cm
-* @param object $context
-* @return boolean returns true if they can view post, false otherwise
-*/
-function reactforum_user_can_see_group_discussion($discussion, $cm, $context) {
+ * Check to ensure a user can view a group discussion.
+ *
+ * @param object $discussion
+ * @param object $cm
+ * @param object $context
+ * @return boolean returns true if they can view post, false otherwise
+ */
+function reactforum_user_can_see_group_discussion($discussion, $cm, $context)
+{
 
     // If it's a grouped discussion, make sure the user is a member.
     if ($discussion->groupid > 0) {
@@ -5392,7 +5451,8 @@ function reactforum_user_can_see_group_discussion($discussion, $cm, $context) {
  * @param object $user
  * @return bool
  */
-function reactforum_user_can_see_discussion($reactforum, $discussion, $context, $user=NULL) {
+function reactforum_user_can_see_discussion($reactforum, $discussion, $context, $user = NULL)
+{
     global $USER, $DB;
 
     if (empty($user) || empty($user->id)) {
@@ -5402,13 +5462,13 @@ function reactforum_user_can_see_discussion($reactforum, $discussion, $context, 
     // retrieve objects (yuk)
     if (is_numeric($reactforum)) {
         debugging('missing full reactforum', DEBUG_DEVELOPER);
-        if (!$reactforum = $DB->get_record('reactforum',array('id'=>$reactforum))) {
+        if (!$reactforum = $DB->get_record('reactforum', array('id' => $reactforum))) {
             return false;
         }
     }
     if (is_numeric($discussion)) {
         debugging('missing full discussion', DEBUG_DEVELOPER);
-        if (!$discussion = $DB->get_record('reactforum_discussions',array('id'=>$discussion))) {
+        if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $discussion))) {
             return false;
         }
     }
@@ -5441,7 +5501,8 @@ function reactforum_user_can_see_discussion($reactforum, $discussion, $context, 
  * @param object $cm
  * @return bool
  */
-function reactforum_user_can_see_post($reactforum, $discussion, $post, $user=NULL, $cm=NULL) {
+function reactforum_user_can_see_post($reactforum, $discussion, $post, $user = NULL, $cm = NULL)
+{
     global $CFG, $USER, $DB;
 
     // Context used throughout function.
@@ -5450,20 +5511,20 @@ function reactforum_user_can_see_post($reactforum, $discussion, $post, $user=NUL
     // retrieve objects (yuk)
     if (is_numeric($reactforum)) {
         debugging('missing full reactforum', DEBUG_DEVELOPER);
-        if (!$reactforum = $DB->get_record('reactforum',array('id'=>$reactforum))) {
+        if (!$reactforum = $DB->get_record('reactforum', array('id' => $reactforum))) {
             return false;
         }
     }
 
     if (is_numeric($discussion)) {
         debugging('missing full discussion', DEBUG_DEVELOPER);
-        if (!$discussion = $DB->get_record('reactforum_discussions',array('id'=>$discussion))) {
+        if (!$discussion = $DB->get_record('reactforum_discussions', array('id' => $discussion))) {
             return false;
         }
     }
     if (is_numeric($post)) {
         debugging('missing full post', DEBUG_DEVELOPER);
-        if (!$post = $DB->get_record('reactforum_posts',array('id'=>$post))) {
+        if (!$post = $DB->get_record('reactforum_posts', array('id' => $post))) {
             return false;
         }
     }
@@ -5511,8 +5572,8 @@ function reactforum_user_can_see_post($reactforum, $discussion, $post, $user=NUL
         $userfirstpost = reactforum_get_user_posted_time($discussion->id, $user->id);
 
         return (($userfirstpost !== false && (time() - $userfirstpost >= $CFG->maxeditingtime)) ||
-                $firstpost->id == $post->id || $post->userid == $user->id || $firstpost->userid == $user->id ||
-                has_capability('mod/reactforum:viewqandawithoutposting', $modcontext, $user->id));
+            $firstpost->id == $post->id || $post->userid == $user->id || $firstpost->userid == $user->id ||
+            has_capability('mod/reactforum:viewqandawithoutposting', $modcontext, $user->id));
     }
     return true;
 }
@@ -5536,7 +5597,8 @@ function reactforum_user_can_see_post($reactforum, $discussion, $post, $user=NUL
  *
  */
 function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussions = -1, $displayformat = 'plain', $sort = '',
-                                        $currentgroup = -1, $groupmode = -1, $page = -1, $perpage = 100, $cm = null) {
+                                             $currentgroup = -1, $groupmode = -1, $page = -1, $perpage = 100, $cm = null)
+{
     global $CFG, $USER, $OUTPUT;
 
     if (!$cm) {
@@ -5552,22 +5614,22 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
 
     $olddiscussionlink = false;
 
- // Sort out some defaults
+    // Sort out some defaults
     if ($perpage <= 0) {
         $perpage = 0;
-        $page    = -1;
+        $page = -1;
     }
 
     if ($maxdiscussions == 0) {
         // all discussions - backwards compatibility
-        $page    = -1;
+        $page = -1;
         $perpage = 0;
         if ($displayformat == 'plain') {
             $displayformat = 'header';  // Abbreviate display by default
         }
 
     } else if ($maxdiscussions > 0) {
-        $page    = -1;
+        $page = -1;
         $perpage = $maxdiscussions;
     }
 
@@ -5581,7 +5643,7 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
 
 // First check the group stuff
     if ($currentgroup == -1 or $groupmode == -1) {
-        $groupmode    = groups_get_activity_groupmode($cm, $course);
+        $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm);
     }
 
@@ -5640,14 +5702,14 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
 
     $getuserlastmodified = ($displayformat == 'header');
 
-    if (! $discussions = reactforum_get_discussions($cm, $sort, $fullpost, null, $maxdiscussions, $getuserlastmodified, $page, $perpage) ) {
+    if (!$discussions = reactforum_get_discussions($cm, $sort, $fullpost, null, $maxdiscussions, $getuserlastmodified, $page, $perpage)) {
         echo '<div class="reactforumnodiscuss">';
         if ($reactforum->type == 'news') {
-            echo '('.get_string('nonews', 'reactforum').')';
+            echo '(' . get_string('nonews', 'reactforum') . ')';
         } else if ($reactforum->type == 'qanda') {
-            echo '('.get_string('noquestions','reactforum').')';
+            echo '(' . get_string('noquestions', 'reactforum') . ')';
         } else {
-            echo '('.get_string('nodiscussions', 'reactforum').')';
+            echo '(' . get_string('nodiscussions', 'reactforum') . ')';
         }
         echo "</div>\n";
         return;
@@ -5675,7 +5737,7 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
         }
     }
 
-    $canviewparticipants = has_capability('moodle/course:viewparticipants',$context);
+    $canviewparticipants = has_capability('moodle/course:viewparticipants', $context);
     $canviewhiddentimedposts = has_capability('mod/reactforum:viewhiddentimedposts', $context);
 
     $strdatestring = get_string('strftimerecentfull');
@@ -5697,26 +5759,26 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
         echo '<table cellspacing="0" class="reactforumheaderlist">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th class="header topic" scope="col">'.get_string('discussion', 'reactforum').'</th>';
-        echo '<th class="header author" scope="col">'.get_string('startedby', 'reactforum').'</th>';
+        echo '<th class="header topic" scope="col">' . get_string('discussion', 'reactforum') . '</th>';
+        echo '<th class="header author" scope="col">' . get_string('startedby', 'reactforum') . '</th>';
         if ($groupmode > 0) {
-            echo '<th class="header group" scope="col">'.get_string('group').'</th>';
+            echo '<th class="header group" scope="col">' . get_string('group') . '</th>';
         }
         if (has_capability('mod/reactforum:viewdiscussion', $context)) {
-            echo '<th class="header replies" scope="col">'.get_string('replies', 'reactforum').'</th>';
+            echo '<th class="header replies" scope="col">' . get_string('replies', 'reactforum') . '</th>';
             // If the reactforum can be tracked, display the unread column.
             if ($cantrack) {
-                echo '<th class="header replies" scope="col">'.get_string('unread', 'reactforum');
+                echo '<th class="header replies" scope="col">' . get_string('unread', 'reactforum');
                 if ($reactforumtracked) {
-                    echo '<a title="'.get_string('markallread', 'reactforum').
-                         '" href="'.$CFG->wwwroot.'/mod/reactforum/markposts.php?f='.
-                         $reactforum->id.'&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">'.
-                         '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.get_string('markallread', 'reactforum').'" /></a>';
+                    echo '<a title="' . get_string('markallread', 'reactforum') .
+                        '" href="' . $CFG->wwwroot . '/mod/reactforum/markposts.php?f=' .
+                        $reactforum->id . '&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">' .
+                        '<img src="' . $OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="' . get_string('markallread', 'reactforum') . '" /></a>';
                 }
                 echo '</th>';
             }
         }
-        echo '<th class="header lastpost" scope="col">'.get_string('lastpost', 'reactforum').'</th>';
+        echo '<th class="header lastpost" scope="col">' . get_string('lastpost', 'reactforum') . '</th>';
         if ((!is_guest($context, $USER) && isloggedin()) && has_capability('mod/reactforum:viewdiscussion', $context)) {
             if (\mod_reactforum\subscriptions::is_subscribable($reactforum)) {
                 echo '<th class="header discussionsubscription" scope="col">';
@@ -5759,7 +5821,7 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
         if (isloggedin()) {
             $ownpost = ($discussion->userid == $USER->id);
         } else {
-            $ownpost=false;
+            $ownpost = false;
         }
         // Use discussion name instead of subject of first post.
         $discussion->subject = $discussion->name;
@@ -5777,7 +5839,7 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
                 }
                 reactforum_print_discussion_header($discussion, $reactforum, $group, $strdatestring, $cantrack, $reactforumtracked,
                     $canviewparticipants, $context, $canviewhiddentimedposts);
-            break;
+                break;
             default:
                 $link = false;
 
@@ -5791,8 +5853,8 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
                 $discussion->reactforum = $reactforum->id;
 
                 reactforum_print_post($discussion, $discussion, $reactforum, $cm, $course, $ownpost, 0, $link, false,
-                        '', null, true, $reactforumtracked);
-            break;
+                    '', null, true, $reactforumtracked);
+                break;
         }
     }
 
@@ -5808,8 +5870,8 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
             $strolder = get_string('olderdiscussions', 'reactforum');
         }
         echo '<div class="reactforumolddiscuss">';
-        echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/view.php?f='.$reactforum->id.'&amp;showall=1">';
-        echo $strolder.'</a> ...</div>';
+        echo '<a href="' . $CFG->wwwroot . '/mod/reactforum/view.php?f=' . $reactforum->id . '&amp;showall=1">';
+        echo $strolder . '</a> ...</div>';
     }
 
     if ($page != -1) { ///Show the paging bar
@@ -5835,10 +5897,11 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
  * @param mixed $canreply
  * @param bool $canrate
  */
-function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $post, $mode, $canreply=NULL, $canrate=false) {
+function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $post, $mode, $canreply = NULL, $canrate = false)
+{
     global $USER, $CFG;
 
-    require_once($CFG->dirroot.'/rating/lib.php');
+    require_once($CFG->dirroot . '/rating/lib.php');
 
     $ownpost = (isloggedin() && $USER->id == $post->userid);
 
@@ -5851,7 +5914,7 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
 
     // $cm holds general cache for reactforum functions
     $cm->cache = new stdClass;
-    $cm->cache->groups      = groups_get_all_groups($course->id, 0, $cm->groupingid);
+    $cm->cache->groups = groups_get_all_groups($course->id, 0, $cm->groupingid);
     $cm->cache->usersgroups = array();
 
     $posters = array();
@@ -5867,13 +5930,13 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
     $posts = reactforum_get_all_discussion_posts($discussion->id, $sort, $reactforumtracked);
     $post = $posts[$post->id];
 
-    foreach ($posts as $pid=>$p) {
+    foreach ($posts as $pid => $p) {
         $posters[$p->userid] = $p->userid;
     }
 
     // preload all groups of ppl that posted in this discussion
     if ($postersgroups = groups_get_all_groups($course->id, $posters, $cm->groupingid, 'gm.id, gm.groupid, gm.userid')) {
-        foreach($postersgroups as $pg) {
+        foreach ($postersgroups as $pg) {
             if (!isset($cm->cache->usersgroups[$pg->userid])) {
                 $cm->cache->usersgroups[$pg->userid] = array();
             }
@@ -5913,7 +5976,7 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
     $postread = !empty($post->postread);
 
     reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, false,
-                         '', '', $postread, true, $reactforumtracked);
+        '', '', $postread, true, $reactforumtracked);
 
     switch ($mode) {
         case REACTFORUM_MODE_FLATOLDEST :
@@ -5948,10 +6011,11 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
  * @param array $posts
  * @return void
  */
-function reactforum_print_posts_flat($course, &$cm, $reactforum, $discussion, $post, $mode, $reply, $reactforumtracked, $posts) {
+function reactforum_print_posts_flat($course, &$cm, $reactforum, $discussion, $post, $mode, $reply, $reactforumtracked, $posts)
+{
     global $USER, $CFG;
 
-    $link  = false;
+    $link = false;
 
     foreach ($posts as $post) {
         if (!$post->parent) {
@@ -5963,7 +6027,7 @@ function reactforum_print_posts_flat($course, &$cm, $reactforum, $discussion, $p
         $postread = !empty($post->postread);
 
         reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
-                             '', '', $postread, true, $reactforumtracked);
+            '', '', $postread, true, $reactforumtracked);
     }
 }
 
@@ -5975,15 +6039,16 @@ function reactforum_print_posts_flat($course, &$cm, $reactforum, $discussion, $p
  * @uses CONTEXT_MODULE
  * @return void
  */
-function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion, $parent, $depth, $reply, $reactforumtracked, $posts) {
+function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion, $parent, $depth, $reply, $reactforumtracked, $posts)
+{
     global $USER, $CFG;
 
-    $link  = false;
+    $link = false;
 
     if (!empty($posts[$parent->id]->children)) {
         $posts = $posts[$parent->id]->children;
 
-        $modcontext       = context_module::instance($cm->id);
+        $modcontext = context_module::instance($cm->id);
         $canviewfullnames = has_capability('moodle/site:viewfullnames', $modcontext);
 
         foreach ($posts as $post) {
@@ -5996,7 +6061,7 @@ function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion
                 $postread = !empty($post->postread);
 
                 reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
-                                     '', '', $postread, true, $reactforumtracked);
+                    '', '', $postread, true, $reactforumtracked);
             } else {
                 if (!reactforum_user_can_see_post($reactforum, $discussion, $post, NULL, $cm)) {
                     echo "</div>\n";
@@ -6015,13 +6080,13 @@ function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion
                 } else {
                     $style = '<span class="reactforumthread">';
                 }
-                echo $style."<a name=\"$post->id\"></a>".
-                     "<a href=\"discuss.php?d=$post->discussion&amp;parent=$post->id\">".format_string($post->subject,true)."</a> ";
+                echo $style . "<a name=\"$post->id\"></a>" .
+                    "<a href=\"discuss.php?d=$post->discussion&amp;parent=$post->id\">" . format_string($post->subject, true) . "</a> ";
                 print_string("bynameondate", "reactforum", $by);
                 echo "</span>";
             }
 
-            reactforum_print_posts_threaded($course, $cm, $reactforum, $discussion, $post, $depth-1, $reply, $reactforumtracked, $posts);
+            reactforum_print_posts_threaded($course, $cm, $reactforum, $discussion, $post, $depth - 1, $reply, $reactforumtracked, $posts);
             echo "</div>\n";
         }
     }
@@ -6033,10 +6098,11 @@ function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion
  * @global object
  * @return void
  */
-function reactforum_print_posts_nested($course, &$cm, $reactforum, $discussion, $parent, $reply, $reactforumtracked, $posts) {
+function reactforum_print_posts_nested($course, &$cm, $reactforum, $discussion, $parent, $reply, $reactforumtracked, $posts)
+{
     global $USER, $CFG;
 
-    $link  = false;
+    $link = false;
 
     if (!empty($posts[$parent->id]->children)) {
         $posts = $posts[$parent->id]->children;
@@ -6054,7 +6120,7 @@ function reactforum_print_posts_nested($course, &$cm, $reactforum, $discussion, 
             $postread = !empty($post->postread);
 
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
-                                 '', '', $postread, true, $reactforumtracked);
+                '', '', $postread, true, $reactforumtracked);
             reactforum_print_posts_nested($course, $cm, $reactforum, $discussion, $post, $reply, $reactforumtracked, $posts);
             echo "</div>\n";
         }
@@ -6070,7 +6136,8 @@ function reactforum_print_posts_nested($course, &$cm, $reactforum, $discussion, 
  * @global object
  * @global object
  */
-function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
+function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid = 0, $groupid = 0)
+{
     global $CFG, $COURSE, $USER, $DB;
 
     if ($COURSE->id == $courseid) {
@@ -6109,11 +6176,11 @@ function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $
                                         WHERE p.created > ? AND f.id = ?
                                               $userselect $groupselect
                                      ORDER BY p.id ASC", $params)) { // order by initial posting date
-         return;
+        return;
     }
 
-    $groupmode       = groups_get_activity_groupmode($cm, $course);
-    $cm_context      = context_module::instance($cm->id);
+    $groupmode = groups_get_activity_groupmode($cm, $course);
+    $cm_context = context_module::instance($cm->id);
     $viewhiddentimed = has_capability('mod/reactforum:viewhiddentimedposts', $cm_context);
     $accessallgroups = has_capability('moodle/site:accessallgroups', $cm_context);
 
@@ -6121,7 +6188,7 @@ function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $
     foreach ($posts as $post) {
 
         if (!empty($CFG->reactforum_enabletimedposts) and $USER->id != $post->duserid
-          and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
+            and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
             if (!$viewhiddentimed) {
                 continue;
             }
@@ -6150,23 +6217,23 @@ function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $
         return;
     }
 
-    $aname = format_string($cm->name,true);
+    $aname = format_string($cm->name, true);
 
     foreach ($printposts as $post) {
         $tmpactivity = new stdClass();
 
-        $tmpactivity->type         = 'reactforum';
-        $tmpactivity->cmid         = $cm->id;
-        $tmpactivity->name         = $aname;
-        $tmpactivity->sectionnum   = $cm->sectionnum;
-        $tmpactivity->timestamp    = $post->modified;
+        $tmpactivity->type = 'reactforum';
+        $tmpactivity->cmid = $cm->id;
+        $tmpactivity->name = $aname;
+        $tmpactivity->sectionnum = $cm->sectionnum;
+        $tmpactivity->timestamp = $post->modified;
 
         $tmpactivity->content = new stdClass();
-        $tmpactivity->content->id         = $post->id;
+        $tmpactivity->content->id = $post->id;
         $tmpactivity->content->discussion = $post->discussion;
-        $tmpactivity->content->subject    = format_string($post->subject);
-        $tmpactivity->content->parent     = $post->parent;
-        $tmpactivity->content->reactforumtype  = $post->reactforumtype;
+        $tmpactivity->content->subject = format_string($post->subject);
+        $tmpactivity->content->parent = $post->parent;
+        $tmpactivity->content->reactforumtype = $post->reactforumtype;
 
         $tmpactivity->user = new stdClass();
         $additionalfields = array('id' => 'userid', 'picture', 'imagealt', 'email');
@@ -6183,13 +6250,14 @@ function reactforum_get_recent_mod_activity(&$activities, &$index, $timestart, $
 /**
  * Outputs the reactforum post indicated by $activity.
  *
- * @param object $activity      the activity object the reactforum resides in
- * @param int    $courseid      the id of the course the reactforum resides in
- * @param bool   $detail        not used, but required for compatibilty with other modules
- * @param int    $modnames      not used, but required for compatibilty with other modules
- * @param bool   $viewfullnames not used, but required for compatibilty with other modules
+ * @param object $activity the activity object the reactforum resides in
+ * @param int $courseid the id of the course the reactforum resides in
+ * @param bool $detail not used, but required for compatibilty with other modules
+ * @param int $modnames not used, but required for compatibilty with other modules
+ * @param bool $viewfullnames not used, but required for compatibilty with other modules
  */
-function reactforum_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
+function reactforum_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames)
+{
     global $OUTPUT;
 
     $content = $activity->content;
@@ -6208,8 +6276,8 @@ function reactforum_print_recent_mod_activity($activity, $courseid, $detail, $mo
     $output = html_writer::start_tag('table', $tableoptions);
     $output .= html_writer::start_tag('tr');
 
-    $post = (object) ['parent' => $content->parent];
-    $reactforum = (object) ['type' => $content->reactforumtype];
+    $post = (object)['parent' => $content->parent];
+    $reactforum = (object)['type' => $content->reactforumtype];
     $authorhidden = reactforum_is_author_hidden($post, $reactforum);
 
     // Show user picture if author should not be hidden.
@@ -6271,7 +6339,8 @@ function reactforum_print_recent_mod_activity($activity, $courseid, $detail, $mo
  * @param int $discussionid
  * @return bool
  */
-function reactforum_change_discussionid($postid, $discussionid) {
+function reactforum_change_discussionid($postid, $discussionid)
+{
     global $DB;
     $DB->set_field('reactforum_posts', 'discussion', $discussionid, array('id' => $postid));
     if ($posts = $DB->get_records('reactforum_posts', array('parent' => $postid))) {
@@ -6291,7 +6360,8 @@ function reactforum_change_discussionid($postid, $discussionid) {
  * @param int $reactforumid
  * @return string
  */
-function reactforum_update_subscriptions_button($courseid, $reactforumid) {
+function reactforum_update_subscriptions_button($courseid, $reactforumid)
+{
     global $CFG, $USER;
 
     if (!empty($USER->subscriptionsediting)) {
@@ -6302,10 +6372,10 @@ function reactforum_update_subscriptions_button($courseid, $reactforumid) {
         $edit = "on";
     }
 
-    return "<form method=\"get\" action=\"$CFG->wwwroot/mod/reactforum/subscribers.php\">".
-           "<input type=\"hidden\" name=\"id\" value=\"$reactforumid\" />".
-           "<input type=\"hidden\" name=\"edit\" value=\"$edit\" />".
-           "<input type=\"submit\" value=\"$string\" /></form>";
+    return "<form method=\"get\" action=\"$CFG->wwwroot/mod/reactforum/subscribers.php\">" .
+        "<input type=\"hidden\" name=\"id\" value=\"$reactforumid\" />" .
+        "<input type=\"hidden\" name=\"edit\" value=\"$edit\" />" .
+        "<input type=\"submit\" value=\"$string\" /></form>";
 }
 
 // Functions to do with read tracking.
@@ -6319,7 +6389,8 @@ function reactforum_update_subscriptions_button($courseid, $reactforumid) {
  * @param array $postids array of post ids
  * @return boolean success
  */
-function reactforum_tp_mark_posts_read($user, $postids) {
+function reactforum_tp_mark_posts_read($user, $postids)
+{
     global $CFG, $DB;
 
     if (!reactforum_tp_can_track_reactforums(false, $user)) {
@@ -6354,10 +6425,10 @@ function reactforum_tp_mark_posts_read($user, $postids) {
     $params = array_merge($postidparams, $insertparams);
 
     if ($CFG->reactforum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_FORCED."
-                        OR (f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))";
+        $trackingsql = "AND (f.trackingtype = " . REACTFORUM_TRACKING_FORCED . "
+                        OR (f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . " AND tf.id IS NULL))";
     } else {
-        $trackingsql = "AND ((f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL."  OR f.trackingtype = ".REACTFORUM_TRACKING_FORCED.")
+        $trackingsql = "AND ((f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . "  OR f.trackingtype = " . REACTFORUM_TRACKING_FORCED . ")
                             AND tf.id IS NULL)";
     }
 
@@ -6404,7 +6475,8 @@ function reactforum_tp_mark_posts_read($user, $postids) {
  * @param int $userid
  * @param int $postid
  */
-function reactforum_tp_add_read_record($userid, $postid) {
+function reactforum_tp_add_read_record($userid, $postid)
+{
     global $CFG, $DB;
 
     $now = time();
@@ -6432,7 +6504,8 @@ function reactforum_tp_add_read_record($userid, $postid) {
  *
  * @return bool
  */
-function reactforum_tp_mark_post_read($userid, $post, $reactforumid) {
+function reactforum_tp_mark_post_read($userid, $post, $reactforumid)
+{
     if (!reactforum_tp_is_post_old($post)) {
         return reactforum_tp_add_read_record($userid, $post->id);
     } else {
@@ -6450,10 +6523,11 @@ function reactforum_tp_mark_post_read($userid, $post, $reactforumid) {
  * @param int|bool $groupid
  * @return bool
  */
-function reactforum_tp_mark_reactforum_read($user, $reactforumid, $groupid=false) {
+function reactforum_tp_mark_reactforum_read($user, $reactforumid, $groupid = false)
+{
     global $CFG, $DB;
 
-    $cutoffdate = time() - ($CFG->reactforum_oldpostdays*24*60*60);
+    $cutoffdate = time() - ($CFG->reactforum_oldpostdays * 24 * 60 * 60);
 
     $groupsel = "";
     $params = array($user->id, $reactforumid, $cutoffdate);
@@ -6488,10 +6562,11 @@ function reactforum_tp_mark_reactforum_read($user, $reactforumid, $groupid=false
  * @param int $discussionid
  * @return bool
  */
-function reactforum_tp_mark_discussion_read($user, $discussionid) {
+function reactforum_tp_mark_discussion_read($user, $discussionid)
+{
     global $CFG, $DB;
 
-    $cutoffdate = time() - ($CFG->reactforum_oldpostdays*24*60*60);
+    $cutoffdate = time() - ($CFG->reactforum_oldpostdays * 24 * 60 * 60);
 
     $sql = "SELECT p.id
               FROM {reactforum_posts} p
@@ -6512,10 +6587,11 @@ function reactforum_tp_mark_discussion_read($user, $discussionid) {
  * @param int $userid
  * @param object $post
  */
-function reactforum_tp_is_post_read($userid, $post) {
+function reactforum_tp_is_post_read($userid, $post)
+{
     global $DB;
     return (reactforum_tp_is_post_old($post) ||
-            $DB->record_exists('reactforum_read', array('userid' => $userid, 'postid' => $post->id)));
+        $DB->record_exists('reactforum_read', array('userid' => $userid, 'postid' => $post->id)));
 }
 
 /**
@@ -6523,7 +6599,8 @@ function reactforum_tp_is_post_read($userid, $post) {
  * @param object $post
  * @param int $time Defautls to time()
  */
-function reactforum_tp_is_post_old($post, $time=null) {
+function reactforum_tp_is_post_old($post, $time = null)
+{
     global $CFG;
 
     if (is_null($time)) {
@@ -6542,7 +6619,8 @@ function reactforum_tp_is_post_old($post, $time=null) {
  * @param int $courseid
  * @return array
  */
-function reactforum_tp_get_course_unread_posts($userid, $courseid) {
+function reactforum_tp_get_course_unread_posts($userid, $courseid)
+{
     global $CFG, $DB;
 
     $now = round(time(), -2); // DB cache friendliness.
@@ -6558,11 +6636,11 @@ function reactforum_tp_get_course_unread_posts($userid, $courseid) {
     }
 
     if ($CFG->reactforum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_FORCED."
-                            OR (f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." AND tf.id IS NULL
+        $trackingsql = "AND (f.trackingtype = " . REACTFORUM_TRACKING_FORCED . "
+                            OR (f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . " AND tf.id IS NULL
                                 AND (SELECT trackreactforums FROM {user} WHERE id = ?) = 1))";
     } else {
-        $trackingsql = "AND ((f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".REACTFORUM_TRACKING_FORCED.")
+        $trackingsql = "AND ((f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . " OR f.trackingtype = " . REACTFORUM_TRACKING_FORCED . ")
                             AND tf.id IS NULL
                             AND (SELECT trackreactforums FROM {user} WHERE id = ?) = 1)";
     }
@@ -6597,7 +6675,8 @@ function reactforum_tp_get_course_unread_posts($userid, $courseid) {
  * @param object $course
  * @return int
  */
-function reactforum_tp_count_reactforum_unread_posts($cm, $course) {
+function reactforum_tp_count_reactforum_unread_posts($cm, $course)
+{
     global $CFG, $USER, $DB;
 
     static $readcache = array();
@@ -6628,7 +6707,7 @@ function reactforum_tp_count_reactforum_unread_posts($cm, $course) {
         return $readcache[$course->id][$reactforumid];
     }
 
-    require_once($CFG->dirroot.'/course/lib.php');
+    require_once($CFG->dirroot . '/course/lib.php');
 
     $modinfo = get_fast_modinfo($course);
 
@@ -6640,7 +6719,7 @@ function reactforum_tp_count_reactforum_unread_posts($cm, $course) {
     list ($groups_sql, $groups_params) = $DB->get_in_or_equal($mygroups);
 
     $now = round(time(), -2); // db cache friendliness
-    $cutoffdate = $now - ($CFG->reactforum_oldpostdays*24*60*60);
+    $cutoffdate = $now - ($CFG->reactforum_oldpostdays * 24 * 60 * 60);
     $params = array($USER->id, $reactforumid, $cutoffdate);
 
     if (!empty($CFG->reactforum_enabletimedposts)) {
@@ -6675,7 +6754,8 @@ function reactforum_tp_count_reactforum_unread_posts($cm, $course) {
  * @param int $reactforumid
  * @return bool
  */
-function reactforum_tp_delete_read_records($userid=-1, $postid=-1, $discussionid=-1, $reactforumid=-1) {
+function reactforum_tp_delete_read_records($userid = -1, $postid = -1, $discussionid = -1, $reactforumid = -1)
+{
     global $DB;
     $params = array();
 
@@ -6702,11 +6782,11 @@ function reactforum_tp_delete_read_records($userid=-1, $postid=-1, $discussionid
     }
     if ($select == '') {
         return false;
-    }
-    else {
+    } else {
         return $DB->delete_records_select('reactforum_read', $select, $params);
     }
 }
+
 /**
  * Get a list of reactforums not tracked by the user.
  *
@@ -6716,16 +6796,17 @@ function reactforum_tp_delete_read_records($userid=-1, $postid=-1, $discussionid
  * @param int $courseid The id of the course being checked.
  * @return mixed An array indexed by reactforum id, or false.
  */
-function reactforum_tp_get_untracked_reactforums($userid, $courseid) {
+function reactforum_tp_get_untracked_reactforums($userid, $courseid)
+{
     global $CFG, $DB;
 
     if ($CFG->reactforum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_OFF."
-                            OR (f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." AND (ft.id IS NOT NULL
+        $trackingsql = "AND (f.trackingtype = " . REACTFORUM_TRACKING_OFF . "
+                            OR (f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . " AND (ft.id IS NOT NULL
                                 OR (SELECT trackreactforums FROM {user} WHERE id = ?) = 0)))";
     } else {
-        $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_OFF."
-                            OR ((f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".REACTFORUM_TRACKING_FORCED.")
+        $trackingsql = "AND (f.trackingtype = " . REACTFORUM_TRACKING_OFF . "
+                            OR ((f.trackingtype = " . REACTFORUM_TRACKING_OPTIONAL . " OR f.trackingtype = " . REACTFORUM_TRACKING_FORCED . ")
                                 AND (ft.id IS NOT NULL
                                     OR (SELECT trackreactforums FROM {user} WHERE id = ?) = 0)))";
     }
@@ -6759,7 +6840,8 @@ function reactforum_tp_get_untracked_reactforums($userid, $courseid) {
  * @param mixed $userid The user object to check for (optional).
  * @return boolean
  */
-function reactforum_tp_can_track_reactforums($reactforum=false, $user=false) {
+function reactforum_tp_can_track_reactforums($reactforum = false, $user = false)
+{
     global $USER, $CFG, $DB;
 
     // if possible, avoid expensive
@@ -6796,10 +6878,10 @@ function reactforum_tp_can_track_reactforums($reactforum=false, $user=false) {
 
     if ($CFG->reactforum_allowforcedreadtracking) {
         // If we allow forcing, then forced reactforums takes procidence over user setting.
-        return ($reactforumforced || ($reactforumallows  && (!empty($user->trackreactforums) && (bool)$user->trackreactforums)));
+        return ($reactforumforced || ($reactforumallows && (!empty($user->trackreactforums) && (bool)$user->trackreactforums)));
     } else {
         // If we don't allow forcing, user setting trumps.
-        return ($reactforumforced || $reactforumallows)  && !empty($user->trackreactforums);
+        return ($reactforumforced || $reactforumallows) && !empty($user->trackreactforums);
     }
 }
 
@@ -6814,7 +6896,8 @@ function reactforum_tp_can_track_reactforums($reactforum=false, $user=false) {
  * @param int $userid The id of the user being checked (optional).
  * @return boolean
  */
-function reactforum_tp_is_tracked($reactforum, $user=false) {
+function reactforum_tp_is_tracked($reactforum, $user = false)
+{
     global $USER, $CFG, $DB;
 
     if ($user === false) {
@@ -6842,7 +6925,7 @@ function reactforum_tp_is_tracked($reactforum, $user=false) {
     if ($CFG->reactforum_allowforcedreadtracking) {
         return $reactforumforced || ($reactforumallows && $userpref === false);
     } else {
-        return  ($reactforumallows || $reactforumforced) && $userpref === false;
+        return ($reactforumallows || $reactforumforced) && $userpref === false;
     }
 }
 
@@ -6852,7 +6935,8 @@ function reactforum_tp_is_tracked($reactforum, $user=false) {
  * @param int $reactforumid
  * @param int $userid
  */
-function reactforum_tp_start_tracking($reactforumid, $userid=false) {
+function reactforum_tp_start_tracking($reactforumid, $userid = false)
+{
     global $USER, $DB;
 
     if ($userid === false) {
@@ -6868,7 +6952,8 @@ function reactforum_tp_start_tracking($reactforumid, $userid=false) {
  * @param int $reactforumid
  * @param int $userid
  */
-function reactforum_tp_stop_tracking($reactforumid, $userid=false) {
+function reactforum_tp_stop_tracking($reactforumid, $userid = false)
+{
     global $USER, $DB;
 
     if ($userid === false) {
@@ -6892,14 +6977,15 @@ function reactforum_tp_stop_tracking($reactforumid, $userid=false) {
  * @global object
  * @return void
  */
-function reactforum_tp_clean_read_records() {
+function reactforum_tp_clean_read_records()
+{
     global $CFG, $DB;
 
     if (!isset($CFG->reactforum_oldpostdays)) {
         return;
     }
 // Look for records older than the cutoffdate that are still in the reactforum_read table.
-    $cutoffdate = time() - ($CFG->reactforum_oldpostdays*24*60*60);
+    $cutoffdate = time() - ($CFG->reactforum_oldpostdays * 24 * 60 * 60);
 
     //first get the oldest tracking present - we need tis to speedup the next delete query
     $sql = "SELECT MIN(fp.modified) AS first
@@ -6927,7 +7013,8 @@ function reactforum_tp_clean_read_records() {
  * @param into $discussionid
  * @return bool|int
  **/
-function reactforum_discussion_update_last_post($discussionid) {
+function reactforum_discussion_update_last_post($discussionid)
+{
     global $CFG, $DB;
 
 // Check the given discussion exists
@@ -6945,7 +7032,7 @@ function reactforum_discussion_update_last_post($discussionid) {
     if (($lastposts = $DB->get_records_sql($sql, array($discussionid), 0, 1))) {
         $lastpost = reset($lastposts);
         $discussionobject = new stdClass();
-        $discussionobject->id           = $discussionid;
+        $discussionobject->id = $discussionid;
         $discussionobject->usermodified = $lastpost->userid;
         $discussionobject->timemodified = $lastpost->modified;
         $DB->update_record('reactforum_discussions', $discussionobject);
@@ -6968,7 +7055,8 @@ function reactforum_discussion_update_last_post($discussionid) {
  *
  * @return array
  */
-function reactforum_get_view_actions() {
+function reactforum_get_view_actions()
+{
     return array('view discussion', 'search', 'reactforum', 'reactforums', 'subscribers', 'view reactforum');
 }
 
@@ -6982,8 +7070,9 @@ function reactforum_get_view_actions() {
  *
  * @return array
  */
-function reactforum_get_post_actions() {
-    return array('add discussion','add post','delete discussion','delete post','move discussion','prune post','update post');
+function reactforum_get_post_actions()
+{
+    return array('add discussion', 'add post', 'delete discussion', 'delete post', 'move discussion', 'prune post', 'update post');
 }
 
 /**
@@ -6995,7 +7084,8 @@ function reactforum_get_post_actions() {
  * @return stdClass|bool returns an object with the warning information, else
  *         returns false if no warning is required.
  */
-function reactforum_check_throttling($reactforum, $cm = null) {
+function reactforum_check_throttling($reactforum, $cm = null)
+{
     global $CFG, $DB, $USER;
 
     if (is_numeric($reactforum)) {
@@ -7034,7 +7124,7 @@ function reactforum_check_throttling($reactforum, $cm = null) {
     $a = new stdClass();
     $a->blockafter = $reactforum->blockafter;
     $a->numposts = $numposts;
-    $a->blockperiod = get_string('secondstotime'.$reactforum->blockperiod);
+    $a->blockperiod = get_string('secondstotime' . $reactforum->blockperiod);
 
     if ($reactforum->blockafter <= $numposts) {
         $warning = new stdClass();
@@ -7068,12 +7158,13 @@ function reactforum_check_throttling($reactforum, $cm = null) {
  * @param stdClass $thresholdwarning the warning information returned
  *        from the function reactforum_check_throttling.
  */
-function reactforum_check_blocking_threshold($thresholdwarning) {
+function reactforum_check_blocking_threshold($thresholdwarning)
+{
     if (!empty($thresholdwarning) && !$thresholdwarning->canpost) {
         print_error($thresholdwarning->errorcode,
-                    $thresholdwarning->module,
-                    $thresholdwarning->link,
-                    $thresholdwarning->additional);
+            $thresholdwarning->module,
+            $thresholdwarning->link,
+            $thresholdwarning->additional);
     }
 }
 
@@ -7086,7 +7177,8 @@ function reactforum_check_blocking_threshold($thresholdwarning) {
  * @param int $courseid
  * @param string $type optional
  */
-function reactforum_reset_gradebook($courseid, $type='') {
+function reactforum_reset_gradebook($courseid, $type = '')
+{
     global $CFG, $DB;
 
     $wheresql = '';
@@ -7117,9 +7209,10 @@ function reactforum_reset_gradebook($courseid, $type='') {
  * @param $data the data submitted from the reset course.
  * @return array status array
  */
-function reactforum_reset_userdata($data) {
+function reactforum_reset_userdata($data)
+{
     global $CFG, $DB;
-    require_once($CFG->dirroot.'/rating/lib.php');
+    require_once($CFG->dirroot . '/rating/lib.php');
 
     $componentstr = get_string('modulenameplural', 'reactforum');
     $status = array();
@@ -7127,15 +7220,15 @@ function reactforum_reset_userdata($data) {
     $params = array($data->courseid);
 
     $removeposts = false;
-    $typesql     = "";
+    $typesql = "";
     if (!empty($data->reset_reactforum_all)) {
         $removeposts = true;
-        $typesstr    = get_string('resetreactforumsall', 'reactforum');
-        $types       = array();
-    } else if (!empty($data->reset_reactforum_types)){
+        $typesstr = get_string('resetreactforumsall', 'reactforum');
+        $types = array();
+    } else if (!empty($data->reset_reactforum_types)) {
         $removeposts = true;
-        $types       = array();
-        $sqltypes    = array();
+        $types = array();
+        $sqltypes = array();
         $reactforum_types_all = reactforum_get_reactforum_types_all();
         foreach ($data->reset_reactforum_types as $type) {
             if (!array_key_exists($type, $reactforum_types_all)) {
@@ -7149,24 +7242,24 @@ function reactforum_reset_userdata($data) {
             $typesql = " AND f.type " . $typesql;
             $params = array_merge($params, $typeparams);
         }
-        $typesstr = get_string('resetreactforums', 'reactforum').': '.implode(', ', $types);
+        $typesstr = get_string('resetreactforums', 'reactforum') . ': ' . implode(', ', $types);
     }
     $alldiscussionssql = "SELECT fd.id
                             FROM {reactforum_discussions} fd, {reactforum} f
                            WHERE f.course=? AND f.id=fd.reactforum";
 
-    $allreactforumssql      = "SELECT f.id
+    $allreactforumssql = "SELECT f.id
                             FROM {reactforum} f
                            WHERE f.course=?";
 
-    $allpostssql       = "SELECT fp.id
+    $allpostssql = "SELECT fp.id
                             FROM {reactforum_posts} fp, {reactforum_discussions} fd, {reactforum} f
                            WHERE f.course=? AND f.id=fd.reactforum AND fd.id=fp.discussion";
 
     $reactforumssql = $reactforums = $rm = null;
 
-    if( $removeposts || !empty($data->reset_reactforum_ratings) ) {
-        $reactforumssql      = "$allreactforumssql $typesql";
+    if ($removeposts || !empty($data->reset_reactforum_ratings)) {
+        $reactforumssql = "$allreactforumssql $typesql";
         $reactforums = $reactforums = $DB->get_records_sql($reactforumssql, $params);
         $rm = new rating_manager();
         $ratingdeloptions = new stdClass;
@@ -7176,12 +7269,12 @@ function reactforum_reset_userdata($data) {
 
     if ($removeposts) {
         $discussionssql = "$alldiscussionssql $typesql";
-        $postssql       = "$allpostssql $typesql";
+        $postssql = "$allpostssql $typesql";
 
         // now get rid of all attachments
         $fs = get_file_storage();
         if ($reactforums) {
-            foreach ($reactforums as $reactforumid=>$unused) {
+            foreach ($reactforums as $reactforumid => $unused) {
                 if (!$cm = get_coursemodule_from_instance('reactforum', $reactforumid)) {
                     continue;
                 }
@@ -7222,13 +7315,13 @@ function reactforum_reset_userdata($data) {
             }
         }
 
-        $status[] = array('component'=>$componentstr, 'item'=>$typesstr, 'error'=>false);
+        $status[] = array('component' => $componentstr, 'item' => $typesstr, 'error' => false);
     }
 
     // remove all ratings in this course's reactforums
     if (!empty($data->reset_reactforum_ratings)) {
         if ($reactforums) {
-            foreach ($reactforums as $reactforumid=>$unused) {
+            foreach ($reactforums as $reactforumid => $unused) {
                 if (!$cm = get_coursemodule_from_instance('reactforum', $reactforumid)) {
                     continue;
                 }
@@ -7262,13 +7355,13 @@ function reactforum_reset_userdata($data) {
     // remove all tracking prefs unconditionally - even for users still enrolled in course
     if (!empty($data->reset_reactforum_track_prefs)) {
         $DB->delete_records_select('reactforum_track_prefs', "reactforumid IN ($allreactforumssql)", $params);
-        $status[] = array('component'=>$componentstr, 'item'=>get_string('resettrackprefs','reactforum'), 'error'=>false);
+        $status[] = array('component' => $componentstr, 'item' => get_string('resettrackprefs', 'reactforum'), 'error' => false);
     }
 
     /// updating dates - shift may be negative too
     if ($data->timeshift) {
         shift_course_mod_dates('reactforum', array('assesstimestart', 'assesstimefinish'), $data->timeshift, $data->courseid);
-        $status[] = array('component'=>$componentstr, 'item'=>get_string('datechanged'), 'error'=>false);
+        $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => false);
     }
 
     return $status;
@@ -7279,22 +7372,23 @@ function reactforum_reset_userdata($data) {
  *
  * @param $mform form passed by reference
  */
-function reactforum_reset_course_form_definition(&$mform) {
+function reactforum_reset_course_form_definition(&$mform)
+{
     $mform->addElement('header', 'reactforumheader', get_string('modulenameplural', 'reactforum'));
 
-    $mform->addElement('checkbox', 'reset_reactforum_all', get_string('resetreactforumsall','reactforum'));
+    $mform->addElement('checkbox', 'reset_reactforum_all', get_string('resetreactforumsall', 'reactforum'));
 
     $mform->addElement('select', 'reset_reactforum_types', get_string('resetreactforums', 'reactforum'), reactforum_get_reactforum_types_all(), array('multiple' => 'multiple'));
     $mform->setAdvanced('reset_reactforum_types');
     $mform->disabledIf('reset_reactforum_types', 'reset_reactforum_all', 'checked');
 
-    $mform->addElement('checkbox', 'reset_reactforum_digests', get_string('resetdigests','reactforum'));
+    $mform->addElement('checkbox', 'reset_reactforum_digests', get_string('resetdigests', 'reactforum'));
     $mform->setAdvanced('reset_reactforum_digests');
 
-    $mform->addElement('checkbox', 'reset_reactforum_subscriptions', get_string('resetsubscriptions','reactforum'));
+    $mform->addElement('checkbox', 'reset_reactforum_subscriptions', get_string('resetsubscriptions', 'reactforum'));
     $mform->setAdvanced('reset_reactforum_subscriptions');
 
-    $mform->addElement('checkbox', 'reset_reactforum_track_prefs', get_string('resettrackprefs','reactforum'));
+    $mform->addElement('checkbox', 'reset_reactforum_track_prefs', get_string('resettrackprefs', 'reactforum'));
     $mform->setAdvanced('reset_reactforum_track_prefs');
     $mform->disabledIf('reset_reactforum_track_prefs', 'reset_reactforum_all', 'checked');
 
@@ -7306,8 +7400,9 @@ function reactforum_reset_course_form_definition(&$mform) {
  * Course reset form defaults.
  * @return array
  */
-function reactforum_reset_course_form_defaults($course) {
-    return array('reset_reactforum_all'=>1, 'reset_reactforum_digests' => 0, 'reset_reactforum_subscriptions'=>0, 'reset_reactforum_track_prefs'=>0, 'reset_reactforum_ratings'=>1);
+function reactforum_reset_course_form_defaults($course)
+{
+    return array('reset_reactforum_all' => 1, 'reset_reactforum_digests' => 0, 'reset_reactforum_subscriptions' => 0, 'reset_reactforum_track_prefs' => 0, 'reset_reactforum_ratings' => 1);
 }
 
 /**
@@ -7315,11 +7410,12 @@ function reactforum_reset_course_form_defaults($course) {
  *
  * @return array
  */
-function reactforum_get_layout_modes() {
-    return array (REACTFORUM_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'reactforum'),
-                  REACTFORUM_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'reactforum'),
-                  REACTFORUM_MODE_THREADED   => get_string('modethreaded', 'reactforum'),
-                  REACTFORUM_MODE_NESTED     => get_string('modenested', 'reactforum'));
+function reactforum_get_layout_modes()
+{
+    return array(REACTFORUM_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'reactforum'),
+        REACTFORUM_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'reactforum'),
+        REACTFORUM_MODE_THREADED => get_string('modethreaded', 'reactforum'),
+        REACTFORUM_MODE_NESTED => get_string('modenested', 'reactforum'));
 }
 
 /**
@@ -7327,12 +7423,13 @@ function reactforum_get_layout_modes() {
  *
  * @return array
  */
-function reactforum_get_reactforum_types() {
-    return array ('general'  => get_string('generalreactforum', 'reactforum'),
-                  'eachuser' => get_string('eachuserreactforum', 'reactforum'),
-                  'single'   => get_string('singlereactforum', 'reactforum'),
-                  'qanda'    => get_string('qandareactforum', 'reactforum'),
-                  'blog'     => get_string('blogreactforum', 'reactforum'));
+function reactforum_get_reactforum_types()
+{
+    return array('general' => get_string('generalreactforum', 'reactforum'),
+        'eachuser' => get_string('eachuserreactforum', 'reactforum'),
+        'single' => get_string('singlereactforum', 'reactforum'),
+        'qanda' => get_string('qandareactforum', 'reactforum'),
+        'blog' => get_string('blogreactforum', 'reactforum'));
 }
 
 /**
@@ -7340,14 +7437,15 @@ function reactforum_get_reactforum_types() {
  *
  * @return array
  */
-function reactforum_get_reactforum_types_all() {
-    return array ('news'     => get_string('namenews','reactforum'),
-                  'social'   => get_string('namesocial','reactforum'),
-                  'general'  => get_string('generalreactforum', 'reactforum'),
-                  'eachuser' => get_string('eachuserreactforum', 'reactforum'),
-                  'single'   => get_string('singlereactforum', 'reactforum'),
-                  'qanda'    => get_string('qandareactforum', 'reactforum'),
-                  'blog'     => get_string('blogreactforum', 'reactforum'));
+function reactforum_get_reactforum_types_all()
+{
+    return array('news' => get_string('namenews', 'reactforum'),
+        'social' => get_string('namesocial', 'reactforum'),
+        'general' => get_string('generalreactforum', 'reactforum'),
+        'eachuser' => get_string('eachuserreactforum', 'reactforum'),
+        'single' => get_string('singlereactforum', 'reactforum'),
+        'qanda' => get_string('qandareactforum', 'reactforum'),
+        'blog' => get_string('blogreactforum', 'reactforum'));
 }
 
 /**
@@ -7355,7 +7453,8 @@ function reactforum_get_reactforum_types_all() {
  *
  * @return array
  */
-function reactforum_get_extra_capabilities() {
+function reactforum_get_extra_capabilities()
+{
     return array('moodle/site:accessallgroups', 'moodle/site:viewfullnames', 'moodle/site:trustcontent', 'moodle/rating:view', 'moodle/rating:viewany', 'moodle/rating:viewall', 'moodle/rating:rate');
 }
 
@@ -7365,7 +7464,8 @@ function reactforum_get_extra_capabilities() {
  * @param settings_navigation $settings The settings navigation object
  * @param navigation_node $reactforumnode The node to add module settings to
  */
-function reactforum_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $reactforumnode) {
+function reactforum_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $reactforumnode)
+{
     global $USER, $PAGE, $CFG, $DB, $OUTPUT;
 
     $reactforumobject = $DB->get_record("reactforum", array("id" => $PAGE->cm->instance));
@@ -7382,19 +7482,19 @@ function reactforum_extend_settings_navigation(settings_navigation $settingsnav,
     $enrolled = is_enrolled($PAGE->cm->context, $USER, '', false);
     $activeenrolled = is_enrolled($PAGE->cm->context, $USER, '', true);
 
-    $canmanage  = has_capability('mod/reactforum:managesubscriptions', $PAGE->cm->context);
+    $canmanage = has_capability('mod/reactforum:managesubscriptions', $PAGE->cm->context);
     $subscriptionmode = \mod_reactforum\subscriptions::get_subscription_mode($reactforumobject);
     $cansubscribe = $activeenrolled && !\mod_reactforum\subscriptions::is_forcesubscribed($reactforumobject) &&
-            (!\mod_reactforum\subscriptions::subscription_disabled($reactforumobject) || $canmanage);
+        (!\mod_reactforum\subscriptions::subscription_disabled($reactforumobject) || $canmanage);
 
     if ($canmanage) {
         $mode = $reactforumnode->add(get_string('subscriptionmode', 'reactforum'), null, navigation_node::TYPE_CONTAINER);
         $mode->add_class('subscriptionmode');
 
-        $allowchoice = $mode->add(get_string('subscriptionoptional', 'reactforum'), new moodle_url('/mod/reactforum/subscribe.php', array('id'=>$reactforumobject->id, 'mode'=>REACTFORUM_CHOOSESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceforever = $mode->add(get_string("subscriptionforced", "reactforum"), new moodle_url('/mod/reactforum/subscribe.php', array('id'=>$reactforumobject->id, 'mode'=>REACTFORUM_FORCESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceinitially = $mode->add(get_string("subscriptionauto", "reactforum"), new moodle_url('/mod/reactforum/subscribe.php', array('id'=>$reactforumobject->id, 'mode'=>REACTFORUM_INITIALSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'reactforum'), new moodle_url('/mod/reactforum/subscribe.php', array('id'=>$reactforumobject->id, 'mode'=>REACTFORUM_DISALLOWSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $allowchoice = $mode->add(get_string('subscriptionoptional', 'reactforum'), new moodle_url('/mod/reactforum/subscribe.php', array('id' => $reactforumobject->id, 'mode' => REACTFORUM_CHOOSESUBSCRIBE, 'sesskey' => sesskey())), navigation_node::TYPE_SETTING);
+        $forceforever = $mode->add(get_string("subscriptionforced", "reactforum"), new moodle_url('/mod/reactforum/subscribe.php', array('id' => $reactforumobject->id, 'mode' => REACTFORUM_FORCESUBSCRIBE, 'sesskey' => sesskey())), navigation_node::TYPE_SETTING);
+        $forceinitially = $mode->add(get_string("subscriptionauto", "reactforum"), new moodle_url('/mod/reactforum/subscribe.php', array('id' => $reactforumobject->id, 'mode' => REACTFORUM_INITIALSUBSCRIBE, 'sesskey' => sesskey())), navigation_node::TYPE_SETTING);
+        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'reactforum'), new moodle_url('/mod/reactforum/subscribe.php', array('id' => $reactforumobject->id, 'mode' => REACTFORUM_DISALLOWSUBSCRIBE, 'sesskey' => sesskey())), navigation_node::TYPE_SETTING);
 
         switch ($subscriptionmode) {
             case REACTFORUM_CHOOSESUBSCRIBE : // 0
@@ -7443,7 +7543,7 @@ function reactforum_extend_settings_navigation(settings_navigation $settingsnav,
         } else {
             $linktext = get_string('subscribe', 'reactforum');
         }
-        $url = new moodle_url('/mod/reactforum/subscribe.php', array('id'=>$reactforumobject->id, 'sesskey'=>sesskey()));
+        $url = new moodle_url('/mod/reactforum/subscribe.php', array('id' => $reactforumobject->id, 'sesskey' => sesskey()));
         $reactforumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
 
         if (isset($discussionid)) {
@@ -7453,32 +7553,32 @@ function reactforum_extend_settings_navigation(settings_navigation $settingsnav,
                 $linktext = get_string('subscribediscussion', 'reactforum');
             }
             $url = new moodle_url('/mod/reactforum/subscribe.php', array(
-                    'id' => $reactforumobject->id,
-                    'sesskey' => sesskey(),
-                    'd' => $discussionid,
-                    'returnurl' => $PAGE->url->out(),
-                ));
+                'id' => $reactforumobject->id,
+                'sesskey' => sesskey(),
+                'd' => $discussionid,
+                'returnurl' => $PAGE->url->out(),
+            ));
             $reactforumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
         }
     }
 
-    if (has_capability('mod/reactforum:viewsubscribers', $PAGE->cm->context)){
-        $url = new moodle_url('/mod/reactforum/subscribers.php', array('id'=>$reactforumobject->id));
+    if (has_capability('mod/reactforum:viewsubscribers', $PAGE->cm->context)) {
+        $url = new moodle_url('/mod/reactforum/subscribers.php', array('id' => $reactforumobject->id));
         $reactforumnode->add(get_string('showsubscribers', 'reactforum'), $url, navigation_node::TYPE_SETTING);
     }
 
     if ($enrolled && reactforum_tp_can_track_reactforums($reactforumobject)) { // keep tracking info for users with suspended enrolments
         if ($reactforumobject->trackingtype == REACTFORUM_TRACKING_OPTIONAL
-                || ((!$CFG->reactforum_allowforcedreadtracking) && $reactforumobject->trackingtype == REACTFORUM_TRACKING_FORCED)) {
+            || ((!$CFG->reactforum_allowforcedreadtracking) && $reactforumobject->trackingtype == REACTFORUM_TRACKING_FORCED)) {
             if (reactforum_tp_is_tracked($reactforumobject)) {
                 $linktext = get_string('notrackreactforum', 'reactforum');
             } else {
                 $linktext = get_string('trackreactforum', 'reactforum');
             }
             $url = new moodle_url('/mod/reactforum/settracking.php', array(
-                    'id' => $reactforumobject->id,
-                    'sesskey' => sesskey(),
-                ));
+                'id' => $reactforumobject->id,
+                'sesskey' => sesskey(),
+            ));
             $reactforumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
         }
     }
@@ -7499,9 +7599,9 @@ function reactforum_extend_settings_navigation(settings_navigation $settingsnav,
         }
 
         if ($reactforumobject->rsstype == 1) {
-            $string = get_string('rsssubscriberssdiscussions','reactforum');
+            $string = get_string('rsssubscriberssdiscussions', 'reactforum');
         } else {
-            $string = get_string('rsssubscriberssposts','reactforum');
+            $string = get_string('rsssubscriberssposts', 'reactforum');
         }
 
         $url = new moodle_url(rss_get_url($PAGE->cm->context->id, $userid, "mod_reactforum", $reactforumobject->id));
@@ -7514,7 +7614,8 @@ function reactforum_extend_settings_navigation(settings_navigation $settingsnav,
  * similar), to the course-module object.
  * @param cm_info $cm Course-module object
  */
-function reactforum_cm_info_view(cm_info $cm) {
+function reactforum_cm_info_view(cm_info $cm)
+{
     global $CFG;
 
     if (reactforum_tp_can_track_reactforums()) {
@@ -7537,11 +7638,12 @@ function reactforum_cm_info_view(cm_info $cm) {
  * @param stdClass $parentcontext Block's parent context
  * @param stdClass $currentcontext Current context of block
  */
-function reactforum_page_type_list($pagetype, $parentcontext, $currentcontext) {
+function reactforum_page_type_list($pagetype, $parentcontext, $currentcontext)
+{
     $reactforum_pagetype = array(
-        'mod-reactforum-*'=>get_string('page-mod-reactforum-x', 'reactforum'),
-        'mod-reactforum-view'=>get_string('page-mod-reactforum-view', 'reactforum'),
-        'mod-reactforum-discuss'=>get_string('page-mod-reactforum-discuss', 'reactforum')
+        'mod-reactforum-*' => get_string('page-mod-reactforum-x', 'reactforum'),
+        'mod-reactforum-view' => get_string('page-mod-reactforum-view', 'reactforum'),
+        'mod-reactforum-discuss' => get_string('page-mod-reactforum-discuss', 'reactforum')
     );
     return $reactforum_pagetype;
 }
@@ -7557,7 +7659,8 @@ function reactforum_page_type_list($pagetype, $parentcontext, $currentcontext) {
  * @param int $limitnum The number of records to return
  * @return array An array of courses
  */
-function reactforum_get_courses_user_posted_in($user, $discussionsonly = false, $includecontexts = true, $limitfrom = null, $limitnum = null) {
+function reactforum_get_courses_user_posted_in($user, $discussionsonly = false, $includecontexts = true, $limitfrom = null, $limitnum = null)
+{
     global $DB;
 
     // If we are only after discussions we need only look at the reactforum_discussions
@@ -7569,7 +7672,7 @@ function reactforum_get_courses_user_posted_in($user, $discussionsonly = false, 
                          JOIN {reactforum_posts} fp ON fp.discussion = fd.id
                         WHERE fp.userid = :userid )";
     } else {
-        $subquery= "(SELECT DISTINCT fd.course
+        $subquery = "(SELECT DISTINCT fd.course
                          FROM {reactforum_discussions} fd
                         WHERE fd.userid = :userid )";
     }
@@ -7612,12 +7715,13 @@ function reactforum_get_courses_user_posted_in($user, $discussionsonly = false, 
  * @param int $limitnum The number of records to return
  * @return array An array of reactforums the user has posted within in the provided courses
  */
-function reactforum_get_reactforums_user_posted_in($user, array $courseids = null, $discussionsonly = false, $limitfrom = null, $limitnum = null) {
+function reactforum_get_reactforums_user_posted_in($user, array $courseids = null, $discussionsonly = false, $limitfrom = null, $limitnum = null)
+{
     global $DB;
 
     if (!is_null($courseids)) {
         list($coursewhere, $params) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'courseid');
-        $coursewhere = ' AND f.course '.$coursewhere;
+        $coursewhere = ' AND f.course ' . $coursewhere;
     } else {
         $coursewhere = '';
         $params = array();
@@ -7678,7 +7782,8 @@ function reactforum_get_reactforums_user_posted_in($user, array $courseids = nul
  *                         property below.
  *               ->posts: An array containing the posts to show for this request.
  */
-function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = false, $discussionsonly = false, $limitfrom = 0, $limitnum = 50) {
+function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = false, $discussionsonly = false, $limitfrom = 0, $limitnum = 50)
+{
     global $DB, $USER, $CFG;
 
     $return = new stdClass;
@@ -7742,7 +7847,7 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
             // the capability to access all groups. This is because with that capability
             // a user in group A could post in the group B reactforum. Grrrr.
             if (groups_get_course_groupmode($course) == SEPARATEGROUPS && $course->groupmodeforce
-              && !has_capability('moodle/site:accessallgroups', $coursecontext) && !has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
+                && !has_capability('moodle/site:accessallgroups', $coursecontext) && !has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
                 // If its the guest user to bad... the guest user cannot access groups
                 if (!$isloggedin or $isguestuser) {
                     // do not use require_login() here because we might have already used require_login($course)
@@ -7761,7 +7866,7 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
                     // But they're not... if it was a specific course throw an error otherwise
                     // just skip this course so that it is not searched.
                     if ($musthaveaccess) {
-                        print_error("groupnotamember", '', $CFG->wwwroot."/course/view.php?id=$course->id");
+                        print_error("groupnotamember", '', $CFG->wwwroot . "/course/view.php?id=$course->id");
                     }
                     continue;
                 }
@@ -7840,7 +7945,7 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
                 if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $cm->context)) {
                     $groups = $modinfo->get_groups($cm->groupingid);
                     $groups[] = -1;
-                    list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED, 'grps'.$reactforumid.'_');
+                    list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED, 'grps' . $reactforumid . '_');
                     $reactforumsearchparams = array_merge($reactforumsearchparams, $groupid_params);
                     $reactforumsearchselect[] = "d.groupid $groupid_sql";
                 }
@@ -7848,9 +7953,9 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
                 // hidden timed discussions
                 if (!empty($CFG->reactforum_enabletimedposts) && !has_capability('mod/reactforum:viewhiddentimedposts', $cm->context)) {
                     $reactforumsearchselect[] = "(d.userid = :userid{$reactforumid} OR (d.timestart < :timestart{$reactforumid} AND (d.timeend = 0 OR d.timeend > :timeend{$reactforumid})))";
-                    $reactforumsearchparams['userid'.$reactforumid] = $user->id;
-                    $reactforumsearchparams['timestart'.$reactforumid] = $now;
-                    $reactforumsearchparams['timeend'.$reactforumid] = $now;
+                    $reactforumsearchparams['userid' . $reactforumid] = $user->id;
+                    $reactforumsearchparams['timestart' . $reactforumid] = $now;
+                    $reactforumsearchparams['timeend' . $reactforumid] = $now;
                 }
 
                 // qanda access
@@ -7862,7 +7967,7 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
                         foreach ($discussionspostedin as $d) {
                             $reactforumonlydiscussions[] = $d->id;
                         }
-                        list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($reactforumonlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$reactforumid.'_');
+                        list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($reactforumonlydiscussions, SQL_PARAMS_NAMED, 'qanda' . $reactforumid . '_');
                         $reactforumsearchparams = array_merge($reactforumsearchparams, $discussionid_params);
                         $reactforumsearchselect[] = "(d.id $discussionid_sql OR p.parent = 0)";
                     } else {
@@ -7872,8 +7977,8 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
                 }
 
                 if (count($reactforumsearchselect) > 0) {
-                    $reactforumsearchwhere[] = "(d.reactforum = :reactforum{$reactforumid} AND ".implode(" AND ", $reactforumsearchselect).")";
-                    $reactforumsearchparams['reactforum'.$reactforumid] = $reactforumid;
+                    $reactforumsearchwhere[] = "(d.reactforum = :reactforum{$reactforumid} AND " . implode(" AND ", $reactforumsearchselect) . ")";
+                    $reactforumsearchparams['reactforum' . $reactforumid] = $reactforumid;
                 } else {
                     $reactforumsearchfullaccess[] = $reactforumid;
                 }
@@ -7902,14 +8007,14 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
     // oracle and mssql.
     $userfields = user_picture::fields('u', null, 'useridx');
     $countsql = 'SELECT COUNT(*) ';
-    $selectsql = 'SELECT p.*, d.reactforum, d.name AS discussionname, '.$userfields.' ';
+    $selectsql = 'SELECT p.*, d.reactforum, d.name AS discussionname, ' . $userfields . ' ';
     $wheresql = implode(" OR ", $reactforumsearchwhere);
 
     if ($discussionsonly) {
         if ($wheresql == '') {
             $wheresql = 'p.parent = 0';
         } else {
-            $wheresql = 'p.parent = 0 AND ('.$wheresql.')';
+            $wheresql = 'p.parent = 0 AND (' . $wheresql . ')';
         }
     }
 
@@ -7922,9 +8027,9 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
     $reactforumsearchparams['userid'] = $user->id;
 
     // Set the total number posts made by the requested user that the current user can see
-    $return->totalcount = $DB->count_records_sql($countsql.$sql, $reactforumsearchparams);
+    $return->totalcount = $DB->count_records_sql($countsql . $sql, $reactforumsearchparams);
     // Set the collection of posts that has been requested
-    $return->posts = $DB->get_records_sql($selectsql.$sql.$orderby, $reactforumsearchparams, $limitfrom, $limitnum);
+    $return->posts = $DB->get_records_sql($selectsql . $sql . $orderby, $reactforumsearchparams, $limitfrom, $limitnum);
 
     // We need to build an array of reactforums for which posts will be displayed.
     // We do this here to save the caller needing to retrieve them themselves before
@@ -7947,7 +8052,8 @@ function reactforum_get_posts_by_user($user, array $courses, $musthaveaccess = f
  * @param stdClass $user The user object. This defaults to the global $USER object.
  * @throws invalid_digest_setting thrown if an invalid maildigest option is provided.
  */
-function reactforum_set_user_maildigest($reactforum, $maildigest, $user = null) {
+function reactforum_set_user_maildigest($reactforum, $maildigest, $user = null)
+{
     global $DB, $USER;
 
     if (is_number($reactforum)) {
@@ -7958,8 +8064,8 @@ function reactforum_set_user_maildigest($reactforum, $maildigest, $user = null) 
         $user = $USER;
     }
 
-    $course  = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
-    $cm      = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
     $context = context_module::instance($cm->id);
 
     // User must be allowed to see this reactforum.
@@ -8010,7 +8116,8 @@ function reactforum_set_user_maildigest($reactforum, $maildigest, $user = null) 
  * @param int $reactforumid The ID of the reactforum to check.
  * @return int The calculated maildigest setting for this user and reactforum.
  */
-function reactforum_get_user_maildigest_bulk($digests, $user, $reactforumid) {
+function reactforum_get_user_maildigest_bulk($digests, $user, $reactforumid)
+{
     if (isset($digests[$reactforumid]) && isset($digests[$reactforumid][$user->id])) {
         $maildigest = $digests[$reactforumid][$user->id];
         if ($maildigest === -1) {
@@ -8028,7 +8135,8 @@ function reactforum_get_user_maildigest_bulk($digests, $user, $reactforumid) {
  * @param stdClass $user The user object. This defaults to the global $USER object.
  * @return array The mapping of values to digest options.
  */
-function reactforum_get_user_digest_options($user = null) {
+function reactforum_get_user_digest_options($user = null)
+{
     global $USER;
 
     // Revert to the global user object.
@@ -8037,14 +8145,14 @@ function reactforum_get_user_digest_options($user = null) {
     }
 
     $digestoptions = array();
-    $digestoptions['0']  = get_string('emaildigestoffshort', 'mod_reactforum');
-    $digestoptions['1']  = get_string('emaildigestcompleteshort', 'mod_reactforum');
-    $digestoptions['2']  = get_string('emaildigestsubjectsshort', 'mod_reactforum');
+    $digestoptions['0'] = get_string('emaildigestoffshort', 'mod_reactforum');
+    $digestoptions['1'] = get_string('emaildigestcompleteshort', 'mod_reactforum');
+    $digestoptions['2'] = get_string('emaildigestsubjectsshort', 'mod_reactforum');
 
     // We need to add the default digest option at the end - it relies on
     // the contents of the existing values.
     $digestoptions['-1'] = get_string('emaildigestdefault', 'mod_reactforum',
-            $digestoptions[$user->maildigest]);
+        $digestoptions[$user->maildigest]);
 
     // Resort the options to be in a sensible order.
     ksort($digestoptions);
@@ -8062,13 +8170,14 @@ function reactforum_get_user_digest_options($user = null) {
  * @param context_module $context The current context.
  * @return context_module The context determined
  */
-function reactforum_get_context($reactforumid, $context = null) {
+function reactforum_get_context($reactforumid, $context = null)
+{
     global $PAGE;
 
     if (!$context || !($context instanceof context_module)) {
         // Find out reactforum context. First try to take current page context to save on DB query.
         if ($PAGE->cm && $PAGE->cm->modname === 'reactforum' && $PAGE->cm->instance == $reactforumid
-                && $PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->context->instanceid == $PAGE->cm->id) {
+            && $PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->context->instanceid == $PAGE->cm->id) {
             $context = $PAGE->context;
         } else {
             $cm = get_coursemodule_from_instance('reactforum', $reactforumid);
@@ -8082,13 +8191,14 @@ function reactforum_get_context($reactforumid, $context = null) {
 /**
  * Mark the activity completed (if required) and trigger the course_module_viewed event.
  *
- * @param  stdClass $reactforum   reactforum object
- * @param  stdClass $course  course object
- * @param  stdClass $cm      course module object
+ * @param  stdClass $reactforum reactforum object
+ * @param  stdClass $course course object
+ * @param  stdClass $cm course module object
  * @param  stdClass $context context object
  * @since Moodle 2.9
  */
-function reactforum_view($reactforum, $course, $cm, $context) {
+function reactforum_view($reactforum, $course, $cm, $context)
+{
 
     // Completion.
     $completion = new completion_info($course);
@@ -8112,11 +8222,12 @@ function reactforum_view($reactforum, $course, $cm, $context) {
  * Trigger the discussion viewed event
  *
  * @param  stdClass $modcontext module context object
- * @param  stdClass $reactforum      reactforum object
+ * @param  stdClass $reactforum reactforum object
  * @param  stdClass $discussion discussion object
  * @since Moodle 2.9
  */
-function reactforum_discussion_view($modcontext, $reactforum, $discussion) {
+function reactforum_discussion_view($modcontext, $reactforum, $discussion)
+{
     $params = array(
         'context' => $modcontext,
         'objectid' => $discussion->id,
@@ -8132,11 +8243,12 @@ function reactforum_discussion_view($modcontext, $reactforum, $discussion) {
  * Set the discussion to pinned and trigger the discussion pinned event
  *
  * @param  stdClass $modcontext module context object
- * @param  stdClass $reactforum      reactforum object
+ * @param  stdClass $reactforum reactforum object
  * @param  stdClass $discussion discussion object
  * @since Moodle 3.1
  */
-function reactforum_discussion_pin($modcontext, $reactforum, $discussion) {
+function reactforum_discussion_pin($modcontext, $reactforum, $discussion)
+{
     global $DB;
 
     $DB->set_field('reactforum_discussions', 'pinned', REACTFORUM_DISCUSSION_PINNED, array('id' => $discussion->id));
@@ -8156,11 +8268,12 @@ function reactforum_discussion_pin($modcontext, $reactforum, $discussion) {
  * Set discussion to unpinned and trigger the discussion unpin event
  *
  * @param  stdClass $modcontext module context object
- * @param  stdClass $reactforum      reactforum object
+ * @param  stdClass $reactforum reactforum object
  * @param  stdClass $discussion discussion object
  * @since Moodle 3.1
  */
-function reactforum_discussion_unpin($modcontext, $reactforum, $discussion) {
+function reactforum_discussion_unpin($modcontext, $reactforum, $discussion)
+{
     global $DB;
 
     $DB->set_field('reactforum_discussions', 'pinned', REACTFORUM_DISCUSSION_UNPINNED, array('id' => $discussion->id));
@@ -8186,7 +8299,8 @@ function reactforum_discussion_unpin($modcontext, $reactforum, $discussion) {
  *
  * @return bool
  */
-function mod_reactforum_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+function mod_reactforum_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course)
+{
     if (isguestuser($user)) {
         // The guest user cannot post, so it is not possible to view any posts.
         // May as well just bail aggressively here.
@@ -8220,7 +8334,8 @@ function mod_reactforum_myprofile_navigation(core_user\output\myprofile\tree $tr
  * @return bool
  * @throws coding_exception
  */
-function reactforum_is_author_hidden($post, $reactforum) {
+function reactforum_is_author_hidden($post, $reactforum)
+{
     if (!isset($post->parent)) {
         throw new coding_exception('$post->parent must be set.');
     }
@@ -8236,19 +8351,20 @@ function reactforum_is_author_hidden($post, $reactforum) {
 /**
  * Manage inplace editable saves.
  *
- * @param   string      $itemtype       The type of item.
- * @param   int         $itemid         The ID of the item.
- * @param   mixed       $newvalue       The new value
+ * @param   string $itemtype The type of item.
+ * @param   int $itemid The ID of the item.
+ * @param   mixed $newvalue The new value
  * @return  string
  */
-function mod_reactforum_inplace_editable($itemtype, $itemid, $newvalue) {
+function mod_reactforum_inplace_editable($itemtype, $itemid, $newvalue)
+{
     global $DB, $PAGE;
 
     if ($itemtype === 'digestoptions') {
         // The itemid is the reactforumid.
-        $reactforum   = $DB->get_record('reactforum', array('id' => $itemid), '*', MUST_EXIST);
-        $course  = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
-        $cm      = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
+        $reactforum = $DB->get_record('reactforum', array('id' => $itemid), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $reactforum->course), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('reactforum', $reactforum->id, $course->id, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
 
         $PAGE->set_context($context);
@@ -8263,11 +8379,12 @@ function mod_reactforum_inplace_editable($itemtype, $itemid, $newvalue) {
 /**
  * Determine whether the specified discussion is time-locked.
  *
- * @param   stdClass    $reactforum          The reactforum that the discussion belongs to
- * @param   stdClass    $discussion     The discussion to test
+ * @param   stdClass $reactforum The reactforum that the discussion belongs to
+ * @param   stdClass $discussion The discussion to test
  * @return  bool
  */
-function reactforum_discussion_is_locked($reactforum, $discussion) {
+function reactforum_discussion_is_locked($reactforum, $discussion)
+{
     if (empty($reactforum->lockdiscussionafter)) {
         return false;
     }
@@ -8289,11 +8406,12 @@ function reactforum_discussion_is_locked($reactforum, $discussion) {
  *
  * @param  cm_info $cm course module data
  * @param  int $from the time to check updates from
- * @param  array $filter  if we need to check only specific updates
+ * @param  array $filter if we need to check only specific updates
  * @return stdClass an object with the different type of areas indicating if they were updated or not
  * @since Moodle 3.2
  */
-function reactforum_check_updates_since(cm_info $cm, $from, $filter = array()) {
+function reactforum_check_updates_since(cm_info $cm, $from, $filter = array())
+{
 
     $context = $cm->context;
     $updates = new stdClass();
@@ -8304,7 +8422,7 @@ function reactforum_check_updates_since(cm_info $cm, $from, $filter = array()) {
     $updates = course_check_module_updates_since($cm, $from, array(), $filter);
 
     // Check if there are new discussions in the reactforum.
-    $updates->discussions = (object) array('updated' => false);
+    $updates->discussions = (object)array('updated' => false);
     $discussions = reactforum_get_discussions($cm, '', false, -1, -1, true, -1, 0, REACTFORUM_POSTS_ALL_USER_GROUPS, $from);
     if (!empty($discussions)) {
         $updates->discussions->updated = true;
@@ -8335,36 +8453,29 @@ function reactforum_remove_reaction($reactionID)
     global $DB;
 
     $reaction = $DB->get_record('reactforum_reactions', array('id' => $reactionID));
-    if($reaction->reactforum_id > 0)
-    {
+    if ($reaction->reactforum_id > 0) {
         $reactforum = $DB->get_record('reactforum', array('id' => $reaction->reactforum_id));
         $reactiontype = $reactforum->reactiontype;
-    }
-    else
-    {
+    } else {
         $discussion = $DB->get_record('reactforum_discussions', array('id' => $reaction->discussion_id));
         $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
         $reactiontype = $discussion->reactiontype;
     }
 
-    if($reactiontype == 'image')
-    {
+    if ($reactiontype == 'image') {
         $fs = get_file_storage();
 
         $files = $fs->get_area_files(reactforum_get_context($reactforum->id)->id, 'mod_reactforum', 'reactions', $reactionID);
-        foreach($files as $file)
-        {
+        foreach ($files as $file) {
             $file->delete();
         }
     }
 
-    if($DB->delete_records("reactforum_user_reactions", array("reaction_id" => $reactionID)) == false)
-    {
+    if ($DB->delete_records("reactforum_user_reactions", array("reaction_id" => $reactionID)) == false) {
         return false;
     }
 
-    if($DB->delete_records("reactforum_reactions", array("id" => $reactionID)) == false)
-    {
+    if ($DB->delete_records("reactforum_reactions", array("id" => $reactionID)) == false) {
         return false;
     }
 
@@ -8414,8 +8525,7 @@ function reactforum_move_uploaded_draft_to_temp($fs, $drafturl)
     );
 
     $draftfile = $fs->get_file($draftinfo['contextid'], $draftinfo['component'], $draftinfo['filearea'], $draftinfo['itemid'], '/', $draftinfo['filename']);
-    if(!$draftfile)
-    {
+    if (!$draftfile) {
         throw new moodle_exception('draftnotfound');
     }
 
@@ -8428,8 +8538,7 @@ function reactforum_move_uploaded_draft_to_temp($fs, $drafturl)
         'filename' => $draftinfo['filename']
     );
 
-    while($fs->file_exists(0, 'mod_reactforum', 'safetemp', $tempfileinfo['itemid'], '/', $tempfileinfo['filename']))
-    {
+    while ($fs->file_exists(0, 'mod_reactforum', 'safetemp', $tempfileinfo['itemid'], '/', $tempfileinfo['filename'])) {
         $tempfileinfo['itemid']++;
     }
 
@@ -8446,10 +8555,8 @@ function reactforum_clear_temp($fs)
 
     $files = $fs->get_area_files(7, 'user', 'mod_reactforum_temp');
 
-    foreach($files as $file)
-    {
-        if($file->get_filepath() == '/' . $USER->id . '/')
-        {
+    foreach ($files as $file) {
+        if ($file->get_filepath() == '/' . $USER->id . '/') {
             $file->delete();
         }
     }
@@ -8466,8 +8573,7 @@ function reactforum_clear_temp($fs)
 function reactforum_save_temp($fs, $contextid, $tempfile, $reactionid)
 {
     $files = $fs->get_area_files($contextid, 'mod_reactforum', 'reactions', $reactionid);
-    foreach ($files as $file)
-    {
+    foreach ($files as $file) {
         $file->delete();
     }
 
@@ -8498,8 +8604,7 @@ function reactforum_get_reactions_from_discussion($discussion)
     $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
     $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
 
-    if(count($reactions) > 0)
-    {
+    if (count($reactions) > 0) {
         return $reactions;
     }
 
