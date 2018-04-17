@@ -29,11 +29,9 @@
 /**
  * Define the complete reactforum structure for backup, with file and id annotations
  */
-class backup_reactforum_activity_structure_step extends backup_activity_structure_step
-{
+class backup_reactforum_activity_structure_step extends backup_activity_structure_step {
 
-    protected function define_structure()
-    {
+    protected function define_structure() {
 
         // To know if we are including userinfo
         $userinfo = $this->get_setting_value('userinfo');
@@ -46,7 +44,7 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
             'rsstype', 'rssarticles', 'timemodified', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
-            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies'));
+            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies', 'delayedcounter'));
 
         $discussions = new backup_nested_element('discussions');
 
@@ -138,8 +136,7 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $reactforum->set_source_table('reactforum', array('id' => backup::VAR_ACTIVITYID));
 
         // All these source definitions only happen if we are including user info
-        if ($userinfo)
-        {
+        if ($userinfo) {
             $discussion->set_source_sql('
                 SELECT *
                   FROM {reactforum_discussions}
@@ -158,9 +155,9 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             $track->set_source_table('reactforum_track_prefs', array('reactforumid' => backup::VAR_PARENTID));
 
             $rating->set_source_table('rating', array('contextid' => backup::VAR_CONTEXTID,
-                'component' => backup_helper::is_sqlparam('mod_reactforum'),
-                'ratingarea' => backup_helper::is_sqlparam('post'),
-                'itemid' => backup::VAR_PARENTID));
+                                                        'component' => backup_helper::is_sqlparam('mod_reactforum'),
+                                                        'ratingarea' => backup_helper::is_sqlparam('post'),
+                                                        'itemid' => backup::VAR_PARENTID));
             $rating->set_source_alias('rating', 'value');
 
             $reaction->set_source_table('reactforum_reactions', array('reactforum_id' => backup::VAR_PARENTID));

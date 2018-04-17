@@ -29,15 +29,12 @@ $reactionid = required_param('id', PARAM_INT);
 
 $reaction = $DB->get_record('reactforum_reactions', array('id' => $reactionid), '*', MUST_EXIST);
 
-if($reaction->reactforum_id == 0)
-{
+if ($reaction->reactforum_id == 0) {
     $discussion = $DB->get_record('reactforum_discussions', array('id' => $reaction->discussion_id), '*', MUST_EXIST);
     $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum), '*', MUST_EXIST);
     $level = 'discussion';
     $reactiontype = $discussion->reactiontype;
-}
-else
-{
+} else {
     $reactforum = $DB->get_record('reactforum', array('id' => $reaction->reactforum_id), '*', MUST_EXIST);
     $level = 'reactforum';
     $reactiontype = $reactforum->reactiontype;
@@ -55,28 +52,24 @@ require_capability('mod/reactforum:viewdiscussion', $context, NULL, true, 'novie
 
 $return = new stdClass();
 
-if (is_guest($context, $USER))
-{
+if (is_guest($context, $USER)) {
     // is_guest should be used here as this also checks whether the user is a guest in the current course.
     // Guests and visitors cannot subscribe - only enrolled users.
     throw new moodle_exception('error', 'mod_reactforum');
 }
 
-if($reactiontype != 'image')
-{
+if ($reactiontype != 'image') {
     throw new moodle_exception('error', 'mod_reactforum');
 }
 
 $fs = get_file_storage();
 $files = $fs->get_area_files(reactforum_get_context($reactforum->id)->id, 'mod_reactforum', 'reactions', $reactionid);
 
-if(count($files) == 0)
-{
+if (count($files) == 0) {
     exit;
 }
 
-foreach ($files as $file) if($file->is_valid_image())
-{
+foreach ($files as $file) if ($file->is_valid_image()) {
     header("Content-type: " . $file->get_mimetype());
     header("filename=" . $file->get_filename());
 //    header("Content-Disposition: attachment; filename=" . $file->get_filename());

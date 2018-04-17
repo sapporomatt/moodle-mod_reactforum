@@ -68,6 +68,9 @@ class mod_reactforum_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'reactionallreplies', get_string('reactions_allreplies', 'reactforum'));
         $mform->addHelpButton('reactionallreplies', 'reactions_allreplies', 'reactforum');
 
+        $mform->addElement('checkbox', 'delayedcounter', get_string('reactions_delayedcounter', 'reactforum'));
+        $mform->addHelpButton('delayedcounter', 'reactions_delayedcounter', 'reactforum');
+
         if(isset($_GET['update']))
         {
             $cmid = $_GET['update'];

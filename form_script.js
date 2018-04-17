@@ -21,10 +21,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require(['jquery'], function ($)
-{
-    $(document).ready(function ()
-    {
+require(['jquery'], function ($) {
+    $(document).ready(function () {
         var $maindiv = $('div#fgroup_id_reactions');
         var $area = $maindiv.find('fieldset');
 
@@ -32,15 +30,14 @@ require(['jquery'], function ($)
         $filepicker.hide();
 
         var $reactionallreplies = $('div#fitem_id_reactionallreplies');
+        var $delayedcounter = $('div#fitem_id_delayedcounter');
 
         var reaction_type = 'text';
         var reactions = [];
         var level = '';
 
-        $.prepare_text_reactions = function()
-        {
-            if(reaction_type !== 'text')
-            {
+        $.prepare_text_reactions = function () {
+            if (reaction_type !== 'text') {
                 return;
             }
 
@@ -59,8 +56,7 @@ require(['jquery'], function ($)
             var $addbtn = $('<input type="button">')
                 .val(M.str.reactforum.reactions_add);
 
-            $addbtn.click(function()
-            {
+            $addbtn.click(function () {
                 var $newelement = $reactioninputs_div.clone(true, true);
                 $newelement.find('input.reaction-text').val('');
 
@@ -68,17 +64,14 @@ require(['jquery'], function ($)
                 $newelement.find('input.reaction-text').focus();
             });
 
-            $deletebtn.click(function()
-            {
+            $deletebtn.click(function () {
                 var reaction_id = $(this).siblings('input.reaction-text').attr('reaction-id');
 
-                if(reaction_id !== '0' && !confirm(M.str.reactforum.reactions_delete_confirmation))
-                {
+                if (reaction_id !== '0' && !confirm(M.str.reactforum.reactions_delete_confirmation)) {
                     return;
                 }
 
-                if(reaction_id !== '0')
-                {
+                if (reaction_id !== '0') {
                     $(this).siblings('input.reaction-text')
                         .attr('type', 'hidden')
                         .attr('name', 'reactions[delete][]')
@@ -86,8 +79,7 @@ require(['jquery'], function ($)
 
                     $(this).closest('div.reaction-input').hide();
                 }
-                else
-                {
+                else {
                     $(this).closest('div.reaction-input').remove();
                 }
             });
@@ -95,29 +87,24 @@ require(['jquery'], function ($)
             $area.html($inputcontainer)
                 .append($addbtn);
 
-            if(reactions.length > 0)
-            {
+            if (reactions.length > 0) {
                 $inputcontainer.html('');
 
-                $.each(reactions, function(index, reaction)
-                {
+                $.each(reactions, function (index, reaction) {
                     var $newelement = $reactioninputs_div.clone(true, true);
                     $newelement.find('input.reaction-text')
                         .attr('reaction-id', reaction.id)
                         .val(reaction.value);
 
-                    if(reaction.id === '0')
-                    {
+                    if (reaction.id === '0') {
                         $newelement.find('input.reaction-text').attr('name', 'reactions[new][]');
                     }
-                    else
-                    {
+                    else {
                         $newelement.find('input.reaction-text')
                             .attr('name', '')
-                            .change(function()
-                        {
-                            $(this).attr('name', 'reactions[edit][' + $(this).attr('reaction-id') + ']');
-                        });
+                            .change(function () {
+                                $(this).attr('name', 'reactions[edit][' + $(this).attr('reaction-id') + ']');
+                            });
                     }
 
                     $inputcontainer.append($newelement);
@@ -125,10 +112,8 @@ require(['jquery'], function ($)
             }
         };
 
-        $.prepare_image_reactions = function()
-        {
-            if(reaction_type !== 'image')
-            {
+        $.prepare_image_reactions = function () {
+            if (reaction_type !== 'image') {
                 return;
             }
 
@@ -147,8 +132,7 @@ require(['jquery'], function ($)
             var $cancelbtn = $('<input type="button"/>');
             $cancelbtn.val(M.str.reactforum.reactions_cancel)
                 .addClass('reaction-img-edit')
-                .click(function()
-                {
+                .click(function () {
                     editid = 0;
                     $editheader.hide();
                     $('.reaction-img-change-btn').prop('disabled', false);
@@ -158,21 +142,18 @@ require(['jquery'], function ($)
                 .insertBefore($filepicker.find('input.fp-btn-choose'));
 
             // When new file uploaded
-            $input.change(function()
-            {
+            $input.change(function () {
                 var $filename = $(this).prev().find('div.filepicker-filename a');
 
-                if(typeof $filename.attr('href') === 'undefined')
-                {
+                if (typeof $filename.attr('href') === 'undefined') {
                     return;
                 }
 
                 $.post(M.cfg.wwwroot + '/mod/reactforum/reactionimg_movetemp.php',
                     {
                         'url': $filename.attr('href')
-                    }, function(tempfileid)
-                    {
-                        if(editid === 0)    // upload new reaction
+                    }, function (tempfileid) {
+                        if (editid === 0)    // upload new reaction
                         {
                             var $newimg = $("<img/>");
                             $newimg.attr('alt', $filename.html())
@@ -181,8 +162,7 @@ require(['jquery'], function ($)
 
                             var $deletebtn = $('<input type="button"/>');
                             $deletebtn.val(M.str.reactforum.reactions_delete)
-                                .click(function()
-                                {
+                                .click(function () {
                                     $(this).closest('div.reaction-item').remove();
                                 });
 
@@ -198,7 +178,7 @@ require(['jquery'], function ($)
 
                             $area.append($reaction_div);
                         }
-                        else if(editid > 0) // upload new image for existing reaction
+                        else if (editid > 0) // upload new image for existing reaction
                         {
                             var $editdiv = $area.find('div#reaction-item-' + editid);
                             $editdiv.find('img.reaction-img')
@@ -218,8 +198,7 @@ require(['jquery'], function ($)
             });
 
             // Editing discussion
-            $.each(reactions, function(index, reaction)
-            {
+            $.each(reactions, function (index, reaction) {
                 var $img = $('<img/>');
                 $img.attr('alt', reaction.id)
                     .attr('src', M.cfg.wwwroot + '/mod/reactforum/reactionimg.php?id=' + reaction.id + '&sesskey=' + M.cfg.sesskey)
@@ -229,8 +208,7 @@ require(['jquery'], function ($)
                 $changebtn
                     .addClass('reaction-img-change-btn')
                     .val(M.str.reactforum.reactions_changeimage)
-                    .click(function()
-                    {
+                    .click(function () {
                         $('.reaction-img-change-btn').prop('disabled', false);
                         $(this).prop('disabled', true);
 
@@ -240,10 +218,8 @@ require(['jquery'], function ($)
 
                 var $deletebtn = $('<input type="button"/>');
                 $deletebtn.val(M.str.reactforum.reactions_delete)
-                    .click(function()
-                    {
-                        if(confirm(M.str.reactforum.reactions_delete_confirmation))
-                        {
+                    .click(function () {
+                        if (confirm(M.str.reactforum.reactions_delete_confirmation)) {
                             var $deletevalue = $('<input type="hidden"/>');
                             $deletevalue.attr('name', 'reactions[delete][]')
                                 .val(reaction.id);
@@ -277,77 +253,70 @@ require(['jquery'], function ($)
             $filepicker.show();
         };
 
-        $("input[name='reactiontype']").change(function(e)
-        {
+        $("input[name='reactiontype']").change(function (e) {
             $filepicker.hide();
 
-            if($('input.reaction').length > 0)
-            {
-                if(!confirm(M.str.reactforum.reactionstype_change_confirmation))
-                {
+            if ($('input.reaction').length > 0) {
+                if (!confirm(M.str.reactforum.reactionstype_change_confirmation)) {
                     $(this).prop('checked', false);
                     $('input[name="reactiontype"][value="' + reaction_type + '"]').prop('checked', true);
                     return false;
                 }
             }
 
-            if($(this).val() !== 'text' && $(this).val() !== 'image' && $(this).val() !== 'none' && $(this).val() !== 'discussion')
-            {
+            if ($(this).val() !== 'text' && $(this).val() !== 'image' && $(this).val() !== 'none' && $(this).val() !== 'discussion') {
                 return;
             }
 
             reaction_type = $(this).val();
 
-            if(reaction_type === 'text')
-            {
-                reactions = [ { id: '0', value: ''} ];
+            if (reaction_type === 'text') {
+                reactions = [{id: '0', value: ''}];
                 $.prepare_text_reactions();
             }
-            else if(reaction_type === 'image')
-            {
+            else if (reaction_type === 'image') {
                 reactions = [];
                 $.prepare_image_reactions();
             }
 
-            if(reaction_type === 'none' || reaction_type === 'discussion')
-            {
+            if (reaction_type === 'none' || reaction_type === 'discussion') {
                 reactions = [];
                 $maindiv.hide();
                 $reactionallreplies.hide();
+                $delayedcounter.hide();
             }
-            else
-            {
+            else {
                 $maindiv.show();
                 $reactionallreplies.show();
+                $delayedcounter.show();
             }
         });
 
-        if(typeof reactions_oldvalues !== 'undefined')
-        {
+        if (typeof reactions_oldvalues !== 'undefined') {
             reactions = reactions_oldvalues.reactions;
             reaction_type = reactions_oldvalues.type;
             level = reactions_oldvalues.level;
 
             $maindiv.hide();
-            if(reaction_type === 'text')
-            {
+            if (reaction_type === 'text') {
                 $('input#id_reactiontype_text').prop('checked', true);
                 $.prepare_text_reactions();
                 $maindiv.show();
                 $reactionallreplies.show();
+                $delayedcounter.show();
             }
-            else if(reaction_type === 'image')
-            {
+            else if (reaction_type === 'image') {
                 $('input#id_reactiontype_image').prop('checked', true);
                 $.prepare_image_reactions();
                 $maindiv.show();
                 $reactionallreplies.show();
+                $delayedcounter.show();
             }
         }
-        else
-        {
+        else {
             $maindiv.hide();
             $reactionallreplies.hide();
+            $delayedcounter.hide();
         }
     });
 });
