@@ -110,8 +110,7 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
         print_error("invalidcoursemodule");
     }
 
-    if($reactforum->reactiontype == 'discussion')
-    {
+    if ($reactforum->reactiontype == 'discussion') {
         reactforum_form_call_js($PAGE);
     }
 
@@ -307,7 +306,7 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
             "reactions" => $reactions_values,
             'level' => 'discussion'
         ));
-        $PAGE->requires->js_init_code("reactions_oldvalues = {$reactions_js};", false);
+        $PAGE->requires->js_init_code('reactions_oldvalues = ' . $reactions_js . ';', false);
         reactforum_form_call_js($PAGE);
     }
 
@@ -389,7 +388,7 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
                 $event->add_record_snapshot('reactforum_discussions', $discussion);
                 $event->trigger();
 
-                redirect("view.php?f=$discussion->reactforum");
+                redirect(new moodle_url('/mod/reactforum/view.php', ['f' => $discussion->reactforum]));
 
             } else if (reactforum_delete_post($post, has_capability('mod/reactforum:deleteanypost', $modcontext),
                 $course, $cm, $reactforum)) {
@@ -677,8 +676,8 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     'parent'=>$post->parent,
                                     'discussion'=>$post->discussion,
                                     'course'=>$course->id,
-                                    'reactiontype' => $post->reactiontype,
-                                    'reactionallreplies' => $post->reactionallreplies) +
+                                    'reactiontype' => isset($post->reactiontype) ? $post->reactiontype : '',
+                                    'reactionallreplies' => isset($post->reactionallreplies) ? $post->reactionallreplies : 0) +
                                     $page_params +
 
                             (isset($post->format)?array(
@@ -821,40 +820,32 @@ if ($mform_post->is_cancelled()) {
         $event->trigger();
 
         // EDITING REACTIONS: START
-        if($fromform->parent == 0 && $reactforum->reactiontype == 'discussion')
-        {
+        if ($fromform->parent == 0 && $reactforum->reactiontype == 'discussion') {
             $editdiscussion = new stdClass();
             $editdiscussion->id = $discussion->id;
             $discussionchanged = false;
-            if($fromform->reactionallreplies != $discussion->reactionallreplies) {
+            if ($fromform->reactionallreplies != $discussion->reactionallreplies) {
                 $editdiscussion->reactionallreplies = $fromform->reactionallreplies ? 1 : 0;
                 $discussionchanged = true;
             }
 
-            if($fromform->reactiontype != $discussion->reactiontype || $fromform->reactiontype == 'none')
-            {
+            if ($fromform->reactiontype != $discussion->reactiontype || $fromform->reactiontype == 'none') {
                 $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
-                foreach ($reactions as $reaction)
-                {
+                foreach ($reactions as $reaction) {
                     reactforum_remove_reaction($reaction->id);
                 }
                 $editdiscussion->reactiontype = $fromform->reactiontype;
                 $discussionchanged = true;
             }
 
-            if($discussionchanged)
-            {
+            if ($discussionchanged) {
                 $DB->update_record('reactforum_discussions', $editdiscussion);
             }
 
-            if($fromform->reactiontype == 'text' && isset($_POST['reactions']))
-            {
-                if(isset($_POST['reactions']['edit']))
-                {
-                    foreach($_POST['reactions']['edit'] as $reactionid => $reaction)
-                    {
-                        if(trim($reaction) == '')
-                        {
+            if ($fromform->reactiontype == 'text' && isset($_POST['reactions'])) {
+                if (isset($_POST['reactions']['edit'])) {
+                    foreach ($_POST['reactions']['edit'] as $reactionid => $reaction) {
+                        if (trim($reaction) == '') {
                             continue;
                         }
                         $reactionobj = new stdClass();
@@ -863,20 +854,15 @@ if ($mform_post->is_cancelled()) {
                         $DB->update_record('reactforum_reactions', $reactionobj);
                     }
                 }
-                if(isset($_POST['reactions']['delete']))
-                {
-                    foreach($_POST['reactions']['delete'] as $reactionid)
-                    {
+                if (isset($_POST['reactions']['delete'])) {
+                    foreach ($_POST['reactions']['delete'] as $reactionid) {
                         reactforum_remove_reaction($reactionid);
                     }
                 }
-                if(isset($_POST['reactions']['new']))
-                {
+                if (isset($_POST['reactions']['new'])) {
                     $newreactions = array();
-                    foreach ($_POST['reactions']['new'] as $reaction)
-                    {
-                        if(trim($reaction) == '')
-                        {
+                    foreach ($_POST['reactions']['new'] as $reaction) {
+                        if (trim($reaction) == '') {
                             continue;
                         }
                         $reactionobj = new stdClass();
@@ -886,34 +872,25 @@ if ($mform_post->is_cancelled()) {
                     }
                     $DB->insert_records('reactforum_reactions', $newreactions);
                 }
-            }
-            else if($fromform->reactiontype == 'image' && isset($_POST['reactions']))
-            {
-                foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid)
-                {
-                    if($tempfileid > 0)
-                    {
-                        if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $reactionid))
-                        {
+            } else if ($fromform->reactiontype == 'image' && isset($_POST['reactions'])) {
+                foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid) {
+                    if ($tempfileid > 0) {
+                        if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $reactionid)) {
                             print_error("error", "reactforum", $errordestination);
                         }
                     }
                 }
-                if (isset($_POST['reactions']['delete']))
-                {
-                    foreach ($_POST['reactions']['delete'] as $reactionid)
-                    {
+                if (isset($_POST['reactions']['delete'])) {
+                    foreach ($_POST['reactions']['delete'] as $reactionid) {
                         reactforum_remove_reaction($reactionid);
                     }
                 }
-                foreach ($_POST['reactions']['new'] as $tempfileid)
-                {
+                foreach ($_POST['reactions']['new'] as $tempfileid) {
                     $reactionobj = new stdClass();
                     $reactionobj->discussion_id = $discussion->id;
                     $reactionobj->reaction = '';
                     $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-                    if(!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid))
-                    {
+                    if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid)) {
                         print_error("error", "reactforum", $errordestination);
                     }
                 }
@@ -937,6 +914,7 @@ if ($mform_post->is_cancelled()) {
         $addpost = $fromform;
         $addpost->reactforum=$reactforum->id;
         if ($fromform->id = reactforum_add_new_post($addpost, $mform_post)) {
+            $fromform->deleted = 0;
             $subscribemessage = reactforum_post_subscription($fromform, $reactforum, $discussion);
 
             if (!empty($fromform->mailnow)) {
@@ -990,7 +968,7 @@ if ($mform_post->is_cancelled()) {
 
     } else { // Adding a new discussion.
         // The location to redirect to after successfully posting.
-        $redirectto = new moodle_url('view.php', array('f' => $fromform->reactforum));
+        $redirectto = new moodle_url('/mod/reactforum/view.php', array('f' => $fromform->reactforum));
 
         $fromform->mailnow = empty($fromform->mailnow) ? 0 : 1;
 
@@ -1052,17 +1030,12 @@ if ($mform_post->is_cancelled()) {
             if ($discussion->id = reactforum_add_discussion($discussion, $mform_post)) {
 
                 // REACTIONS_ADD: START
-                if($reactforum->reactiontype == 'discussion')
-                {
-                    if ($fromform->reactiontype == 'text')
-                    {
-                        if (isset($_POST['reactions']['new']))
-                        {
+                if ($reactforum->reactiontype == 'discussion') {
+                    if ($fromform->reactiontype == 'text') {
+                        if (isset($_POST['reactions']['new'])) {
                             $reactionobjects = array();
-                            foreach ($_POST['reactions']['new'] as $reaction)
-                            {
-                                if (trim($reaction) == '')
-                                {
+                            foreach ($_POST['reactions']['new'] as $reaction) {
+                                if (trim($reaction) == '') {
                                     continue;
                                 }
                                 $reactionobj = new stdClass();
@@ -1072,17 +1045,13 @@ if ($mform_post->is_cancelled()) {
                             }
                             $DB->insert_records('reactforum_reactions', $reactionobjects);
                         }
-                    }
-                    else if ($fromform->reactiontype == 'image')
-                    {
-                        foreach ($tempfiles['new'] as $tempfile)
-                        {
+                    } else if ($fromform->reactiontype == 'image') {
+                        foreach ($tempfiles['new'] as $tempfile) {
                             $reactionobj = new stdClass();
                             $reactionobj->discussion_id = $discussion->id;
                             $reactionobj->reaction = '';
                             $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid))
-                            {
+                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid)) {
                                 print_error("error", "reactforum", $errordestination);
                             }
                         }
@@ -1098,6 +1067,10 @@ if ($mform_post->is_cancelled()) {
                     )
                 );
                 $event = \mod_reactforum\event\discussion_created::create($params);
+
+                $discussion->reactiontype = isset($discussion->reactiontype) ? $discussion->reactiontype : '';
+                $discussion->reactionallreplies = isset($discussion->reactionallreplies) ? $discussion->reactionallreplies : '';
+
                 $event->add_record_snapshot('reactforum_discussions', $discussion);
                 $event->trigger();
 
@@ -1229,12 +1202,13 @@ if (!empty($parent)) {
 } else {
     if (!empty($reactforum->intro)) {
         echo $OUTPUT->box(format_module_intro('reactforum', $reactforum, $cm->id), 'generalbox', 'intro');
-
-        if (!empty($CFG->enableplagiarism)) {
-            require_once($CFG->libdir.'/plagiarismlib.php');
-            echo plagiarism_print_disclosure($cm->id);
-        }
     }
+}
+
+// Call print disclosure for enabled plagiarism plugins.
+if (!empty($CFG->enableplagiarism)) {
+    require_once($CFG->libdir.'/plagiarismlib.php');
+    echo plagiarism_print_disclosure($cm->id);
 }
 
 if (!empty($formheading)) {

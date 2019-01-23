@@ -221,7 +221,7 @@ if (! $post = reactforum_get_post_full($parent)) {
     print_error("notexists", 'reactforum', "$CFG->wwwroot/mod/reactforum/view.php?f=$reactforum->id");
 }
 
-if (!reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm)) {
+if (!reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm, false)) {
     print_error('noviewdiscussionspermission', 'reactforum', "$CFG->wwwroot/mod/reactforum/view.php?id=$reactforum->id");
 }
 
@@ -375,7 +375,8 @@ if (has_capability('mod/reactforum:pindiscussions', $modcontext)) {
 echo "</div></div>";
 
 if (reactforum_discussion_is_locked($reactforum, $discussion)) {
-    echo html_writer::div(get_string('discussionlocked', 'reactforum'), 'discussionlocked');
+    echo $OUTPUT->notification(get_string('discussionlocked', 'reactforum'),
+        \core\output\notification::NOTIFY_INFO . ' discussionlocked');
 }
 
 if (!empty($reactforum->blockafter) && !empty($reactforum->blockperiod)) {

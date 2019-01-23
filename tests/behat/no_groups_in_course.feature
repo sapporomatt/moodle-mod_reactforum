@@ -75,12 +75,12 @@ Feature: Posting to reactforums in a course with no groups behaves correctly
     Given I log in as "student1"
     And I am on "Course 1" course homepage
     When I follow "Separate reactforum"
-    Then I should see "You do not have permission to add a new discussion topic for all participants."
+    Then I should see "You are not able to create a discussion because you are not a member of any group."
     And I should not see "Add a new discussion topic"
 
-  Scenario: Teachers can post in reactforum with visible groups
+  Scenario: Students cannot post in reactforum with visible groups
     Given I log in as "student1"
     And I am on "Course 1" course homepage
     When I follow "Visible reactforum"
-    Then I should see "You do not have permission to add a new discussion topic for all participants."
+    Then I should see "You are not able to create a discussion because you are not a member of any group."
     And I should not see "Add a new discussion topic"

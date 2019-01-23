@@ -40,22 +40,20 @@ Feature: Students can edit or delete their reactforum posts within a set time li
     And I press "Continue"
     Then I should not see "ReactForum post subject"
 
-  @javascript
+  @javascript @block_recent_activity
   Scenario: Time limit expires
     Given I log out
     And I log in as "admin"
-    And I navigate to "Security > Site policies" in site administration
+    And I navigate to "Security > Site security settings" in site administration
     And I set the field "Maximum time to edit posts" to "1 minutes"
     And I press "Save changes"
     And I am on "Course 1" course homepage with editing mode on
     And I add the "Recent activity" block
-    And I add a "ReactForum" to section "1" and I fill the form with:
-      | ReactForum name | Test reactforum name |
-      | ReactForum type | Standard reactforum for general use |
-      | Description | Test reactforum description |
     And I log out
     And I log in as "student1"
     And I am on "Course 1" course homepage
+    And I should see "New reactforum posts:" in the "Recent activity" "block"
+    And I should see "ReactForum post subject" in the "Recent activity" "block"
     When I wait "61" seconds
     And I follow "ReactForum post subject"
     Then I should not see "Edit" in the "region-main" "region"

@@ -232,6 +232,6 @@
 
     // Add the subscription toggle JS.
     $PAGE->requires->yui_module('moodle-mod_reactforum-subscriptiontoggle', 'Y.M.mod_reactforum.subscriptiontoggle.init');
-    $PAGE->requires->js(new moodle_url("/mod/reactforum/script.js"));
+    $PAGE->requires->js(new moodle_url('/mod/reactforum/script.js'));
 
     echo $OUTPUT->footer($course);

@@ -275,6 +275,15 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         // Create what we expect to be returned when querying the discussion.
         $expectedposts = array(
             'posts' => array(),
+            'ratinginfo' => array(
+                'contextid' => $reactforum1context->id,
+                'component' => 'mod_reactforum',
+                'ratingarea' => 'post',
+                'canviewall' => null,
+                'canviewany' => null,
+                'scales' => array(),
+                'ratings' => array(),
+            ),
             'warnings' => array(),
         );
 
@@ -299,7 +308,8 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
             'canreply' => true,
             'postread' => false,
             'userfullname' => fullname($user3),
-            'userpictureurl' => ''
+            'userpictureurl' => '',
+            'deleted' => false,
         );
 
         $expectedposts['posts'][] = array(
@@ -334,7 +344,8 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
             'canreply' => true,
             'postread' => false,
             'userfullname' => fullname($user2),
-            'userpictureurl' => ''
+            'userpictureurl' => '',
+            'deleted' => false,
         );
 
         // Test a discussion with two additional posts (total 3 posts).
@@ -403,6 +414,86 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
         foreach ($result as $f) {
             if ($f['id'] == $reactforum2->id) {
                 $this->assertEquals(0, $f['unreadpostscount']);
+            }
+        }
+    }
+
+    /**
+     * Test get reactforum posts
+     */
+    public function test_mod_reactforum_get_reactforum_discussion_posts_deleted() {
+        global $CFG, $PAGE;
+
+        $this->resetAfterTest(true);
+        $generator = self::getDataGenerator()->get_plugin_generator('mod_reactforum');
+
+        // Create a course and enrol some users in it.
+        $course1 = self::getDataGenerator()->create_course();
+
+        // Create users.
+        $user1 = self::getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user1->id, $course1->id);
+        $user2 = self::getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user2->id, $course1->id);
+
+        // Set the first created user to the test user.
+        self::setUser($user1);
+
+        // Create test data.
+        $reactforum1 = self::getDataGenerator()->create_module('reactforum', (object) [
+                'course' => $course1->id,
+            ]);
+        $reactforum1context = context_module::instance($reactforum1->cmid);
+
+        // Add discussions to the reactforum.
+        $discussion = $generator->create_discussion((object) [
+                'course' => $course1->id,
+                'userid' => $user1->id,
+                'reactforum' => $reactforum1->id,
+            ]);
+
+        $discussion2 = $generator->create_discussion((object) [
+                'course' => $course1->id,
+                'userid' => $user2->id,
+                'reactforum' => $reactforum1->id,
+            ]);
+
+        // Add replies to the discussion.
+        $discussionreply1 = $generator->create_post((object) [
+                'discussion' => $discussion->id,
+                'parent' => $discussion->firstpost,
+                'userid' => $user2->id,
+            ]);
+        $discussionreply2 = $generator->create_post((object) [
+                'discussion' => $discussion->id,
+                'parent' => $discussionreply1->id,
+                'userid' => $user2->id,
+                'subject' => '',
+                'message' => '',
+                'messageformat' => FORMAT_PLAIN,
+                'deleted' => 1,
+            ]);
+        $discussionreply3 = $generator->create_post((object) [
+                'discussion' => $discussion->id,
+                'parent' => $discussion->firstpost,
+                'userid' => $user2->id,
+            ]);
+
+        // Test where some posts have been marked as deleted.
+        $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion->id, 'modified', 'DESC');
+        $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
+        $deletedsubject = get_string('privacy:request:delete:post:subject', 'mod_reactforum');
+        $deletedmessage = get_string('privacy:request:delete:post:message', 'mod_reactforum');
+
+        foreach ($posts['posts'] as $post) {
+            if ($post['id'] == $discussionreply2->id) {
+                $this->assertTrue($post['deleted']);
+                $this->assertEquals($deletedsubject, $post['subject']);
+                $this->assertEquals($deletedmessage, $post['message']);
+            } else {
+                $this->assertFalse($post['deleted']);
+                $this->assertNotEquals($deletedsubject, $post['subject']);
+                $this->assertNotEquals($deletedmessage, $post['message']);
             }
         }
     }
@@ -1066,4 +1157,95 @@ class mod_reactforum_external_testcase extends externallib_advanced_testcase {
 
     }
 
+    /**
+     * Test get reactforum posts discussions including rating information.
+     */
+    public function test_mod_reactforum_get_reactforum_discussion_rating_information() {
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/rating/lib.php');
+
+        $this->resetAfterTest(true);
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $teacher = self::getDataGenerator()->create_user();
+
+        // Create course to add the module.
+        $course = self::getDataGenerator()->create_course();
+
+        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id, $studentrole->id, 'manual');
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id, $studentrole->id, 'manual');
+        $this->getDataGenerator()->enrol_user($user3->id, $course->id, $studentrole->id, 'manual');
+        $this->getDataGenerator()->enrol_user($teacher->id, $course->id, $teacherrole->id, 'manual');
+
+        // Create the reactforum.
+        $record = new stdClass();
+        $record->course = $course->id;
+        // Set Aggregate type = Average of ratings.
+        $record->assessed = RATING_AGGREGATE_AVERAGE;
+        $record->scale = 100;
+        $reactforum = self::getDataGenerator()->create_module('reactforum', $record);
+        $context = context_module::instance($reactforum->cmid);
+
+        // Add discussion to the reactforum.
+        $record = new stdClass();
+        $record->course = $course->id;
+        $record->userid = $user1->id;
+        $record->reactforum = $reactforum->id;
+        $discussion = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
+
+        // Retrieve the first post.
+        $post = $DB->get_record('reactforum_posts', array('discussion' => $discussion->id));
+
+        // Rate the discussion as user2.
+        $rating1 = new stdClass();
+        $rating1->contextid = $context->id;
+        $rating1->component = 'mod_reactforum';
+        $rating1->ratingarea = 'post';
+        $rating1->itemid = $post->id;
+        $rating1->rating = 50;
+        $rating1->scaleid = 100;
+        $rating1->userid = $user2->id;
+        $rating1->timecreated = time();
+        $rating1->timemodified = time();
+        $rating1->id = $DB->insert_record('rating', $rating1);
+
+        // Rate the discussion as user3.
+        $rating2 = new stdClass();
+        $rating2->contextid = $context->id;
+        $rating2->component = 'mod_reactforum';
+        $rating2->ratingarea = 'post';
+        $rating2->itemid = $post->id;
+        $rating2->rating = 100;
+        $rating2->scaleid = 100;
+        $rating2->userid = $user3->id;
+        $rating2->timecreated = time() + 1;
+        $rating2->timemodified = time() + 1;
+        $rating2->id = $DB->insert_record('rating', $rating2);
+
+        // Retrieve the rating for the post as student.
+        $this->setUser($user1);
+        $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion->id);
+        $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
+        $this->assertCount(1, $posts['ratinginfo']['ratings']);
+        $this->assertTrue($posts['ratinginfo']['ratings'][0]['canviewaggregate']);
+        $this->assertFalse($posts['ratinginfo']['canviewall']);
+        $this->assertFalse($posts['ratinginfo']['ratings'][0]['canrate']);
+        $this->assertEquals(2, $posts['ratinginfo']['ratings'][0]['count']);
+        $this->assertEquals(($rating1->rating + $rating2->rating) / 2, $posts['ratinginfo']['ratings'][0]['aggregate']);
+
+        // Retrieve the rating for the post as teacher.
+        $this->setUser($teacher);
+        $posts = mod_reactforum_external::get_reactforum_discussion_posts($discussion->id);
+        $posts = external_api::clean_returnvalue(mod_reactforum_external::get_reactforum_discussion_posts_returns(), $posts);
+        $this->assertCount(1, $posts['ratinginfo']['ratings']);
+        $this->assertTrue($posts['ratinginfo']['ratings'][0]['canviewaggregate']);
+        $this->assertTrue($posts['ratinginfo']['canviewall']);
+        $this->assertTrue($posts['ratinginfo']['ratings'][0]['canrate']);
+        $this->assertEquals(2, $posts['ratinginfo']['ratings'][0]['count']);
+        $this->assertEquals(($rating1->rating + $rating2->rating) / 2, $posts['ratinginfo']['ratings'][0]['aggregate']);
+    }
 }

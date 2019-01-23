@@ -56,17 +56,25 @@ class post extends \core_search\base_mod {
      * Returns recordset containing required data for indexing reactforum posts.
      *
      * @param int $modifiedfrom timestamp
-     * @return moodle_recordset
+     * @param \context|null $context Optional context to restrict scope of returned results
+     * @return moodle_recordset|null Recordset (or null if no results)
      */
-    public function get_recordset_by_timestamp($modifiedfrom = 0) {
+    public function get_document_recordset($modifiedfrom = 0, \context $context = null) {
         global $DB;
 
-        $sql = 'SELECT fp.*, f.id AS reactforumid, f.course AS courseid
+        list ($contextjoin, $contextparams) = $this->get_context_restriction_sql(
+                $context, 'reactforum', 'f');
+        if ($contextjoin === null) {
+            return null;
+        }
+
+        $sql = "SELECT fp.*, f.id AS reactforumid, f.course AS courseid, fd.groupid AS groupid
                   FROM {reactforum_posts} fp
                   JOIN {reactforum_discussions} fd ON fd.id = fp.discussion
                   JOIN {reactforum} f ON f.id = fd.reactforum
-                 WHERE fp.modified >= ? ORDER BY fp.modified ASC';
-        return $DB->get_recordset_sql($sql, array($modifiedfrom));
+          $contextjoin
+                 WHERE fp.modified >= ? ORDER BY fp.modified ASC";
+        return $DB->get_recordset_sql($sql, array_merge($contextparams, [$modifiedfrom]));
     }
 
     /**
@@ -102,6 +110,11 @@ class post extends \core_search\base_mod {
         $doc->set('owneruserid', \core_search\manager::NO_OWNER_ID);
         $doc->set('modified', $record->modified);
 
+        // Store group id if there is one. (0 and -1 both mean not restricted to group.)
+        if ($record->groupid > 0) {
+            $doc->set('groupid', $record->groupid);
+        }
+
         // Check if this document should be considered new.
         if (isset($options['lastindexedtime']) && ($options['lastindexedtime'] < $record->created)) {
             // If the document was created after the last index time, it must be new.
@@ -118,6 +131,21 @@ class post extends \core_search\base_mod {
      */
     public function uses_file_indexing() {
         return true;
+    }
+
+    /**
+     * Return the context info required to index files for
+     * this search area.
+     *
+     * @return array
+     */
+    public function get_search_fileareas() {
+        $fileareas = array(
+            'attachment',
+            'post'
+        );
+
+        return $fileareas;
     }
 
     /**
@@ -142,14 +170,21 @@ class post extends \core_search\base_mod {
         // Because this is used during indexing, we don't want to cache posts. Would result in memory leak.
         unset($this->postsdata[$postid]);
 
-        $cm = $this->get_cm('reactforum', $post->reactforum, $document->get('courseid'));
+        $cm = $this->get_cm($this->get_module_name(), $post->reactforum, $document->get('courseid'));
         $context = \context_module::instance($cm->id);
+        $contextid = $context->id;
+
+        $fileareas = $this->get_search_fileareas();
+        $component = $this->get_component_name();
 
         // Get the files and attach them.
-        $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'mod_reactforum', 'attachment', $postid, "filename", false);
-        foreach ($files as $file) {
-            $document->add_stored_file($file);
+        foreach ($fileareas as $filearea) {
+            $fs = get_file_storage();
+            $files = $fs->get_area_files($contextid, $component, $filearea, $postid, '', false);
+
+            foreach ($files as $file) {
+                $document->add_stored_file($file);
+            }
         }
     }
 
@@ -261,5 +296,27 @@ class post extends \core_search\base_mod {
                 array('id' => $discussionid), '*', MUST_EXIST);
         }
         return $this->discussionsdata[$discussionid];
+    }
+
+    /**
+     * Changes the context ordering so that the reactforums with most recent discussions are indexed
+     * first.
+     *
+     * @return string[] SQL join and ORDER BY
+     */
+    protected function get_contexts_to_reindex_extra_sql() {
+        return [
+            'JOIN {reactforum_discussions} fd ON fd.course = cm.course AND fd.reactforum = cm.instance',
+            'MAX(fd.timemodified) DESC'
+        ];
+    }
+
+    /**
+     * Confirms that data entries support group restrictions.
+     *
+     * @return bool True
+     */
+    public function supports_group_restriction() {
+        return true;
     }
 }

@@ -52,19 +52,23 @@ require(['jquery'], function ($) {
             }
 
             var $reactioninput = $('<input type="text">')
-                .attr('class', 'reaction reaction-text')
+                .attr('class', 'reaction reaction-text form-control')
                 .attr('reaction-id', '0')
                 .attr('name', 'reactions[new][]');
-            var $deletebtn = $('<input type="button">')
-                .val(M.str.reactforum.reactions_delete);
+            var $deletebtn = $('<button>')
+                .attr('type', 'button')
+                .attr('class', 'btn btn-danger')
+                .html(M.str.reactforum.reactions_delete);
             var $reactioninputs_div = $('<div>').attr('class', 'reaction-input')
                 .append($reactioninput)
                 .append($deletebtn);
 
             var $inputcontainer = $('<div>').attr('id', 'reactions-container');
 
-            var $addbtn = $('<input type="button">')
-                .val(M.str.reactforum.reactions_add);
+            var $addbtn = $('<button>')
+                .attr('type', 'button')
+                .attr('class', 'btn btn-primary')
+                .html(M.str.reactforum.reactions_add);
 
             $addbtn.click(function () {
                 var $newelement = $reactioninputs_div.clone(true, true);
@@ -95,7 +99,11 @@ require(['jquery'], function ($) {
             });
 
             $area.html($inputcontainer)
-                .append($addbtn);
+                .append(
+                    $('<div>').attr('class', 'container-fluid')
+                        .css('padding', '0')
+                        .html($addbtn)
+                );
 
             if (reactions.length > 0) {
                 $inputcontainer.html('');
@@ -139,9 +147,11 @@ require(['jquery'], function ($) {
                 .addClass('reaction-img-edit')
                 .hide();
 
-            var $cancelbtn = $('<input type="button"/>');
-            $cancelbtn.val(M.str.reactforum.reactions_cancel)
-                .addClass('reaction-img-edit')
+            var $cancelbtn = $('<button>');
+            $cancelbtn.html(M.str.reactforum.reactions_cancel)
+                .attr('type', 'button')
+                .attr('class', 'reaction-img-edit btn btn-default')
+                .css('margin', '0 5px')
                 .click(function () {
                     editid = 0;
                     $editheader.hide();
@@ -165,13 +175,15 @@ require(['jquery'], function ($) {
                     }, function (tempfileid) {
                         if (editid === 0)    // upload new reaction
                         {
-                            var $newimg = $("<img/>");
+                            var $newimg = $('<img/>');
                             $newimg.attr('alt', $filename.html())
                                 .addClass('reaction-img')
                                 .attr('src', $filename.attr('href'));
 
-                            var $deletebtn = $('<input type="button"/>');
-                            $deletebtn.val(M.str.reactforum.reactions_delete)
+                            var $deletebtn = $('<button>');
+                            $deletebtn.html(M.str.reactforum.reactions_delete)
+                                .attr('type', 'button')
+                                .attr('class', 'btn btn-danger')
                                 .click(function () {
                                     $(this).closest('div.reaction-item').remove();
                                 });
@@ -181,15 +193,14 @@ require(['jquery'], function ($) {
                                 .val(tempfileid);
 
                             var $reaction_div = $('<div/>');
-                            $reaction_div.addClass('reaction-item')
+                            $reaction_div.attr('class', 'reaction-item')
                                 .append($newimg)
                                 .append($deletebtn)
                                 .append($hiddenelement);
 
                             $area.append($reaction_div);
-                        }
-                        else if (editid > 0) // upload new image for existing reaction
-                        {
+                        } else if (editid > 0) {
+                            // upload new image for existing reaction
                             var $editdiv = $area.find('div#reaction-item-' + editid);
                             $editdiv.find('img.reaction-img')
                                 .attr('src', $filename.attr('href'));
@@ -214,10 +225,11 @@ require(['jquery'], function ($) {
                     .attr('src', M.cfg.wwwroot + '/mod/reactforum/reactionimg.php?id=' + reaction.id + '&sesskey=' + M.cfg.sesskey)
                     .addClass('reaction-img');
 
-                var $changebtn = $('<input type="button"/>');
+                var $changebtn = $('<button>');
                 $changebtn
-                    .addClass('reaction-img-change-btn')
-                    .val(M.str.reactforum.reactions_changeimage)
+                    .attr('type', 'button')
+                    .attr('class', 'reaction-img-change-btn btn btn-default')
+                    .html(M.str.reactforum.reactions_changeimage)
                     .click(function () {
                         $('.reaction-img-change-btn').prop('disabled', false);
                         $(this).prop('disabled', true);
@@ -226,8 +238,10 @@ require(['jquery'], function ($) {
                         $editheader.show();
                     });
 
-                var $deletebtn = $('<input type="button"/>');
-                $deletebtn.val(M.str.reactforum.reactions_delete)
+                var $deletebtn = $('<button>');
+                $deletebtn.html(M.str.reactforum.reactions_delete)
+                    .attr('type', 'button')
+                    .attr('class', 'btn btn-danger')
                     .click(function () {
                         if (confirm(M.str.reactforum.reactions_delete_confirmation)) {
                             var $deletevalue = $('<input type="hidden"/>');
