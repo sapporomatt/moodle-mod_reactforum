@@ -3547,16 +3547,16 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         $reactions = reactforum_get_reactions_from_discussion($discussion);
         $postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
         foreach ($reactions as $reaction) {
-            $countObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id), "COUNT(*) AS 'count'");
-            $userCountObj = $DB->get_record("reactforum_user_reactions", array("post_id" => $post->id, "reaction_id" => $reaction->id, "user_id" => $USER->id), "COUNT(*) AS 'count'");
+            $count = $DB->count_records('reactforum_user_reactions', ['post_id' => $post->id, 'reaction_id' => $reaction->id]);
+            $usercount = $DB->count_records('reactforum_user_reactions', ['post_id' => $post->id, 'reaction_id' => $reaction->id, 'user_id' => $USER->id]);
             $item = array(
                 'id' => $reaction->id,
                 'reaction' => $reaction->reaction,
-                'count' => $countObj->count,
+                'count' => $count,
                 'reacted' => false,
                 'enabled' => true
             );
-            if ($userCountObj->count == 1) {
+            if ($usercount == 1) {
                 $item['reacted'] = true;
             }
             if ($reactforum->delayedcounter && $post->userid != $USER->id && !$postisreacted) {

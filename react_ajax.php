@@ -98,24 +98,14 @@ $arrayResult = array();
 
 $postisreacted = ($DB->count_records('reactforum_user_reactions', array('post_id' => $post->id, 'user_id' => $USER->id)) > 0);
 foreach ($newObjArr as $obj) {
-    $countObj = $DB->get_record('reactforum_user_reactions',
-        array(
-            'post_id' => $post_id,
-            'reaction_id' => $obj->id
-        ), "COUNT(*) AS 'count'");
-
-    $userCountObj = $DB->get_record('reactforum_user_reactions',
-        array(
-            'post_id' => $post_id,
-            'reaction_id' => $obj->id,
-            'user_id' => $USER->id
-        ), "COUNT(*) AS 'count'");
+    $count = $DB->count_records('reactforum_user_reactions', ['post_id' => $post_id, 'reaction_id' => $obj->id]);
+    $usercount = $DB->count_records('reactforum_user_reactions', ['post_id' => $post_id, 'reaction_id' => $obj->id, 'user_id' => $USER->id]);
 
     $item = array(
         'post_id' => $post_id,
         'reaction_id' => $obj->id,
-        'count' => $countObj->count,
-        'reacted' => ($userCountObj->count == 1),
+        'count' => $count,
+        'reacted' => ($usercount == 1),
         'enabled' => true
     );
 
