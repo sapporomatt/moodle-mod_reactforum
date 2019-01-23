@@ -96,39 +96,39 @@ class mod_reactforum_observer {
         }
     }
 
-    /**
-     * Observer for \core\event\course_module_created event.
-     *
-     * @param \core\event\course_module_created $event
-     * @return void
-     */
-    public static function course_module_created(\core\event\course_module_created $event) {
-        global $CFG;
+//    /**
+//     * Observer for \core\event\course_module_created event.
+//     *
+//     * @param \core\event\course_module_created $event
+//     * @return void
+//     */
+//    public static function course_module_created(\core\event\course_module_created $event) {
+//        global $CFG;
+//
+//        if ($event->other['modulename'] === 'reactforum') {
+//            // Include the reactforum library to make use of the reactforum_instance_created function.
+//            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+//
+//            $reactforum = $event->get_record_snapshot('reactforum', $event->other['instanceid']);
+//            reactforum_instance_created($event->get_context(), $reactforum);
+//        }
+//    }
 
-        if ($event->other['modulename'] === 'reactforum') {
-            // Include the reactforum library to make use of the reactforum_instance_created function.
-            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
-
-            $reactforum = $event->get_record_snapshot('reactforum', $event->other['instanceid']);
-            reactforum_instance_created($event->get_context(), $reactforum);
-        }
-    }
-
-    /**
-     * Observer for \core\event\course_updated event.
-     *
-     * @param \core\event\course_updated $event
-     * @return void
-     */
-    public static function course_updated(\core\event\course_updated $event) {
-        global $CFG;
-
-        $course = $event->get_record_snapshot('course', $event->objectid);
-        $format = course_get_format($course);
-        if ($format->supports_news() && !empty($course->newsitems)) {
-            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
-            // Auto create the announcements reactforum.
-            reactforum_get_course_reactforum($event->objectid, 'news');
-        }
-    }
+//    /**
+//     * Observer for \core\event\course_updated event.
+//     *
+//     * @param \core\event\course_updated $event
+//     * @return void
+//     */
+//    public static function course_updated(\core\event\course_updated $event) {
+//        global $CFG;
+//
+//        $course = $event->get_record_snapshot('course', $event->objectid);
+//        $format = course_get_format($course);
+//        if ($format->supports_news() && !empty($course->newsitems)) {
+//            require_once($CFG->dirroot . '/mod/reactforum/lib.php');
+//            // Auto create the announcements reactforum.
+//            reactforum_get_course_reactforum($event->objectid, 'news');
+//        }
+//    }
 }
