@@ -44,14 +44,14 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
             'rsstype', 'rssarticles', 'timemodified', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
-            'completionposts', 'displaywordcount', 'lockdiscussionafter'));
+            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies', 'lockdiscussionafter', 'delayedcounter'));
 
         $discussions = new backup_nested_element('discussions');
 
         $discussion = new backup_nested_element('discussion', array('id'), array(
             'name', 'firstpost', 'userid', 'groupid',
             'assessed', 'timemodified', 'usermodified', 'timestart',
-            'timeend', 'pinned'));
+            'timeend', 'pinned', 'reactiontype', 'reactionallreplies'));
 
         $posts = new backup_nested_element('posts');
 
@@ -96,6 +96,12 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $track = new backup_nested_element('track', array('id'), array(
             'userid'));
 
+        $reactions = new backup_nested_element("reactions");
+        $reaction = new backup_nested_element("reaction", array("id"), array('reactforum_id', "discussion_id", "reaction"));
+
+        $userReactions = new backup_nested_element("user_reactions");
+        $userReaction = new backup_nested_element("user_reaction", array("id"), array("user_id", "post_id", "reaction_id"));
+
         // Build the tree
 
         $reactforum->add_child($discussions);
@@ -125,6 +131,12 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $discussion->add_child($discussionsubs);
         $discussionsubs->add_child($discussionsub);
 
+        $reactforum->add_child($reactions);
+        $reactions->add_child($reaction);
+
+        $reaction->add_child($userReactions);
+        $userReactions->add_child($userReaction);
+
         // Define sources
 
         $reactforum->set_source_table('reactforum', array('id' => backup::VAR_ACTIVITYID));
@@ -153,6 +165,9 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
                                                       'ratingarea' => backup_helper::is_sqlparam('post'),
                                                       'itemid'     => backup::VAR_PARENTID));
             $rating->set_source_alias('rating', 'value');
+
+            $reaction->set_source_table('reactforum_reactions', array('reactforum_id' => backup::VAR_PARENTID));
+            $userReaction->set_source_table('reactforum_user_reactions', array('reaction_id' => backup::VAR_PARENTID));
 
             if (core_tag_tag::is_enabled('mod_reactforum', 'reactforum_posts')) {
                 // Backup all tags for all reactforum posts in this reactforum.
@@ -196,6 +211,8 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
 
         $post->annotate_files('mod_reactforum', 'post', 'id');
         $post->annotate_files('mod_reactforum', 'attachment', 'id');
+
+        $reaction->annotate_files('mod_reactforum', 'reactions', 'id');
 
         // Return the root element (reactforum), wrapped into standard activity structure
         return $this->prepare_activity_structure($reactforum);

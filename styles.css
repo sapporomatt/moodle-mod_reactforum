@@ -248,7 +248,7 @@ span.unread {
 }
 
 /* ReactForumpost hash anchor target */
-.path-mod-reactforum :target ~ .reactforumpost:before {
+.path-mod-reactforum :target > .reactforumpost:before {
     display: block;
     content: '';
     width: 4px;
@@ -314,6 +314,18 @@ span.unread {
 
 #page-mod-reactforum-view img.timedpost {
     margin-right: 5px;
+}
+
+.path-mod-reactforum article .nav .nav-link:first-of-type {
+    margin-left: auto;
+}
+.path-mod-reactforum.dir-rtl article .nav .nav-link:first-of-type {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.path-mod-reactforum article .nav .nav-link + .nav-link {
+    border-left: 1px solid #ddd;
 }
 
 img.reaction-img {

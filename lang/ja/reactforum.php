@@ -16,9 +16,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'reactforum', language 'ja', branch 'MOODLE_35_STABLE'
+ * Strings for component 'reactforum', language 'ja', branch 'MOODLE_36_STABLE'
  *
- * @package   mod_reactforum
+ * @package   reactforum
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -152,6 +152,7 @@ $string['discussionpin'] = 'ピン留め';
 $string['discussionpinned'] = 'ピン留め';
 $string['discussionpinned_help'] = 'ピン留めディスカッションはReactフォーラムの最上部に表示されます。';
 $string['discussions'] = 'ディスカッション';
+$string['discussionsplit'] = 'ディスカッションが分割されました。';
 $string['discussionsstartedby'] = '{$a} によって開始されたディスカッション';
 $string['discussionsstartedbyrecent'] = '{$a} によって最近開始されたディスカッション';
 $string['discussionsstartedbyuserincourse'] = '{$a->fullname} によって {$a->coursename} で開始されたディスカッション';
@@ -388,8 +389,8 @@ $string['notpartofdiscussion'] = 'この投稿はディスカッションの一�
 $string['notrackreactforum'] = '投稿を未読管理しない';
 $string['notsubscribed'] = '購読する';
 $string['noviewdiscussionspermission'] = 'あなたにはこのReactフォーラムを閲覧するパーミッションがありません。';
-$string['nowallsubscribed'] = '{$a} のすべてのReactフォーラムの購読を登録しました。';
-$string['nowallunsubscribed'] = '{$a} のすべてのReactフォーラムの購読を解除しました。';
+$string['nowallsubscribed'] = 'あなたは {$a} のReactフォーラムすべてを購読しています。';
+$string['nowallunsubscribed'] = 'あなたは {$a} のReactフォーラムすべての購読を解除しました。';
 $string['nownotsubscribed'] = '{$a->name} には「 {$a->reactforum} 」の新しい投稿は通知されません。';
 $string['nownottracking'] = '{$a->name} は 「 {$a->reactforum} 」を未読管理していません。';
 $string['nowsubscribed'] = '{$a->name} には「 {$a->reactforum} 」の新しい投稿が通知されます。';
@@ -616,8 +617,6 @@ $string['warnformorepost'] = '警告! このReactフォーラムには2件以上
 $string['yournewquestion'] = 'あなたの新しい質問';
 $string['yournewtopic'] = 'あなたの新しいディスカッショントピック';
 $string['yourreply'] = 'あなたの返信';
-
-
 
 /** REACTIONS */
 

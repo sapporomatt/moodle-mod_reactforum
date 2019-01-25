@@ -155,7 +155,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         $roleids = $DB->get_records_menu('role', null, '', 'shortname, id');
         $context = \context_course::instance($course->id);
         assign_capability('moodle/course:viewhiddenactivities', CAP_ALLOW, $roleids['student'], $context);
-        $context->mark_dirty();
 
         // All of the unsubscribable reactforums should now be listed.
         $result = \mod_reactforum\subscriptions::get_unsubscribable_reactforums();
@@ -906,7 +905,6 @@ class mod_reactforum_subscriptions_testcase extends advanced_testcase {
         $cm = get_coursemodule_from_instance('reactforum', $reactforum->id);
         $context = \context_module::instance($cm->id);
         assign_capability('mod/reactforum:allowforcesubscribe', CAP_PROHIBIT, $roleids['student'], $context);
-        $context->mark_dirty();
         $this->assertFalse(has_capability('mod/reactforum:allowforcesubscribe', $context, $user->id));
 
         // Check that the user is no longer subscribed to the reactforum.

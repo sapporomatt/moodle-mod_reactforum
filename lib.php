@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
 /** Include required files */
 require_once(__DIR__ . '/deprecatedlib.php');
 require_once($CFG->libdir.'/filelib.php');
-require_once($CFG->libdir.'/eventslib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
@@ -1448,7 +1447,9 @@ function reactforum_user_complete($course, $user, $mod, $reactforum) {
             }
             $discussion = $discussions[$post->discussion];
 
+            reactforum_print_post_start($post);
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, false, false, false);
+            reactforum_print_post_end($post);
         }
     } else {
         echo "<p>".get_string("noposts", "reactforum")."</p>";
@@ -1756,7 +1757,7 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
 
         $list .= html_writer::start_tag('li');
         $list .= html_writer::start_div('head');
-        $list .= html_writer::div(userdate($post->modified, $strftimerecent), 'date');
+        $list .= html_writer::div(userdate_htmltime($post->modified, $strftimerecent), 'date');
         if (!$authorhidden) {
             $list .= html_writer::div(fullname($post, $viewfullnames), 'name');
         }
@@ -1769,7 +1770,7 @@ function reactforum_print_recent_activity($course, $viewfullnames, $timestart) {
             $discussionurl->set_anchor('p'. $post->id);
         }
         $post->subject = break_up_long_words(format_string($post->subject, true));
-        $list .= html_writer::link($discussionurl, $post->subject);
+        $list .= html_writer::link($discussionurl, $post->subject, ['rel' => 'bookmark']);
         $list .= html_writer::end_div(); // Info.
         $list .= html_writer::end_tag('li');
     }
@@ -3227,7 +3228,103 @@ function reactforum_get_course_reactforum($courseid, $type) {
 }
 
 /**
+ * Return a static array of posts that are open.
+ *
+ * @return array
+ */
+function reactforum_post_nesting_cache() {
+    static $nesting = array();
+    return $nesting;
+}
+
+/**
+ * Return true for the first time this post was started
+ *
+ * @param int $id The id of the post to start
+ * @return bool
+ */
+function reactforum_should_start_post_nesting($id) {
+    $cache = reactforum_post_nesting_cache();
+    if (!array_key_exists($id, $cache)) {
+        $cache[$id] = 1;
+        return true;
+    } else {
+        $cache[$id]++;
+        return false;
+    }
+}
+
+/**
+ * Return true when all the opens are nested with a close.
+ *
+ * @param int $id The id of the post to end
+ * @return bool
+ */
+function reactforum_should_end_post_nesting($id) {
+    $cache = reactforum_post_nesting_cache();
+    if (!array_key_exists($id, $cache)) {
+        return true;
+    } else {
+        $cache[$id]--;
+        if ($cache[$id] == 0) {
+            unset($cache[$id]);
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Start a reactforum post container
+ *
+ * @param object $post The post to print.
+ * @param bool $return Return the string or print it
+ * @return string
+ */
+function reactforum_print_post_start($post, $return = false) {
+    $output = '';
+
+    if (reactforum_should_start_post_nesting($post->id)) {
+        $attributes = [
+            'id' => 'p'.$post->id,
+            'tabindex' => -1,
+            'class' => 'relativelink'
+        ];
+        $output .= html_writer::start_tag('article', $attributes);
+    }
+    if ($return) {
+        return $output;
+    }
+    echo $output;
+    return;
+}
+
+/**
+ * End a reactforum post container
+ *
+ * @param object $post The post to print.
+ * @param bool $return Return the string or print it
+ * @return string
+ */
+function reactforum_print_post_end($post, $return = false) {
+    $output = '';
+
+    if (reactforum_should_end_post_nesting($post->id)) {
+        $output .= html_writer::end_tag('article');
+    }
+    if ($return) {
+        return $output;
+    }
+    echo $output;
+    return;
+}
+
+/**
  * Print a reactforum post
+ * This function should always be surrounded with calls to reactforum_print_post_start
+ * and reactforum_print_post_end to create the surrounding container for the post.
+ * Replies can be nested before reactforum_print_post_end and should reflect the structure of
+ * thread.
  *
  * @global object
  * @global object
@@ -3322,23 +3419,23 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             echo $output;
             return;
         }
-        $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
-        $output .= html_writer::start_tag('div', array('class'=>'reactforumpost clearfix',
-                                                       'role' => 'region',
+
+        $output .= html_writer::start_tag('div', array('class' => 'reactforumpost clearfix',
                                                        'aria-label' => get_string('hiddenreactforumpost', 'reactforum')));
-        $output .= html_writer::start_tag('div', array('class'=>'row header'));
-        $output .= html_writer::tag('div', '', array('class'=>'left picture')); // Picture
+        $output .= html_writer::start_tag('header', array('class' => 'row header'));
+        $output .= html_writer::tag('div', '', array('class' => 'left picture', 'role' => 'presentation')); // Picture.
         if ($post->parent) {
-            $output .= html_writer::start_tag('div', array('class'=>'topic'));
+            $output .= html_writer::start_tag('div', array('class' => 'topic'));
         } else {
-            $output .= html_writer::start_tag('div', array('class'=>'topic starter'));
+            $output .= html_writer::start_tag('div', array('class' => 'topic starter'));
         }
         $output .= html_writer::tag('div', get_string('reactforumsubjecthidden','reactforum'), array('class' => 'subject',
-                                                                                           'role' => 'header')); // Subject.
-        $output .= html_writer::tag('div', get_string('reactforumauthorhidden', 'reactforum'), array('class' => 'author',
-                                                                                           'role' => 'header')); // Author.
+                                                                                           'role' => 'header',
+                                                                                           'id' => ('headp' . $post->id))); // Subject.
+        $authorclasses = array('class' => 'author');
+        $output .= html_writer::tag('address', get_string('reactforumauthorhidden', 'reactforum'), $authorclasses); // Author.
         $output .= html_writer::end_tag('div');
-        $output .= html_writer::end_tag('div'); // row
+        $output .= html_writer::end_tag('header'); // Header.
         $output .= html_writer::start_tag('div', array('class'=>'row'));
         $output .= html_writer::tag('div', '&nbsp;', array('class'=>'left side')); // Groups
         $output .= html_writer::tag('div', get_string('reactforumbodyhidden','reactforum'), array('class'=>'content')); // Content
@@ -3363,17 +3460,13 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
             echo $output;
             return;
         }
-        $output .= html_writer::tag('a', '', [
-                'id' => "p{$post->id}",
-            ]);
         $output .= html_writer::start_tag('div', [
                 'class' => 'reactforumpost clearfix',
-                'role' => 'region',
                 'aria-label' => get_string('reactforumbodydeleted', 'reactforum'),
             ]);
 
-        $output .= html_writer::start_tag('div', array('class' => 'row header'));
-        $output .= html_writer::tag('div', '', array('class' => 'left picture'));
+        $output .= html_writer::start_tag('header', array('class' => 'row header'));
+        $output .= html_writer::tag('div', '', array('class' => 'left picture', 'role' => 'presentation'));
 
         $classes = ['topic'];
         if (!empty($post->parent)) {
@@ -3385,16 +3478,14 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         $output .= html_writer::tag('div', get_string('reactforumsubjectdeleted', 'reactforum'), [
                 'class' => 'subject',
                 'role' => 'header',
+                'id' => ('headp' . $post->id)
             ]);
 
         // Author.
-        $output .= html_writer::tag('div', '', [
-                'class' => 'author',
-                'role' => 'header',
-            ]);
+        $output .= html_writer::tag('address', '', ['class' => 'author']);
 
         $output .= html_writer::end_tag('div');
-        $output .= html_writer::end_tag('div'); // End row.
+        $output .= html_writer::end_tag('header'); // End header.
         $output .= html_writer::start_tag('div', ['class' => 'row']);
         $output .= html_writer::tag('div', '&nbsp;', ['class' => 'left side']); // Groups.
         $output .= html_writer::tag('div', get_string('reactforumbodydeleted', 'reactforum'), ['class' => 'content']); // Content.
@@ -3449,14 +3540,13 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     // Determine if we need to shorten this post
     $shortenpost = ($link && (strlen(strip_tags($post->message)) > $CFG->reactforum_longpost));
 
-
     // Prepare an array of commands
     $commands = array();
 
     // Add a permalink.
     $permalink = new moodle_url($discussionlink);
     $permalink->set_anchor('p' . $post->id);
-    $commands[] = array('url' => $permalink, 'text' => get_string('permalink', 'reactforum'));
+    $commands[] = array('url' => $permalink, 'text' => get_string('permalink', 'reactforum'), 'attributes' => ['rel' => 'bookmark']);
 
     // SPECIAL CASE: The front page can display a news item post to non-logged in users.
     // Don't display the mark read / unread controls in this case.
@@ -3472,7 +3562,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         } else {
             $url->set_anchor('p'.$post->id);
         }
-        $commands[] = array('url'=>$url, 'text'=>$text);
+        $commands[] = array('url'=>$url, 'text'=>$text, 'attributes' => ['rel' => 'bookmark']);
     }
 
     // Zoom in to the parent specifically
@@ -3483,7 +3573,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         } else {
             $url->set_anchor('p'.$post->parent);
         }
-        $commands[] = array('url'=>$url, 'text'=>$str->parent);
+        $commands[] = array('url'=>$url, 'text'=>$str->parent, 'attributes' => ['rel' => 'bookmark']);
     }
 
     // Hack for allow to edit news posts those are not displayed yet until they are displayed
@@ -3569,7 +3659,6 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
         }
     }
 
-
     // Begin output
 
     $output  = '';
@@ -3605,17 +3694,16 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     $postbyuser->post = $post->subject;
     $postbyuser->user = $postuser->fullname;
     $discussionbyuser = get_string('postbyuser', 'reactforum', $postbyuser);
-    $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
     // Begin reactforum post.
     $output .= html_writer::start_div('reactforumpost clearfix' . $reactforumpostclass . $topicclass,
-        ['role' => 'region', 'aria-label' => $discussionbyuser]);
+        ['aria-label' => $discussionbyuser]);
     // Begin header row.
-    $output .= html_writer::start_div('row header clearfix');
+    $output .= html_writer::start_tag('header', ['class' => 'row header clearfix']);
 
     // User picture.
     if (!$authorhidden) {
         $picture = $OUTPUT->user_picture($postuser, ['courseid' => $course->id]);
-        $output .= html_writer::div($picture, 'left picture');
+        $output .= html_writer::div($picture, 'left picture', ['role' => 'presentation']);
         $topicclass = 'topic' . $topicclass;
     }
 
@@ -3625,26 +3713,25 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     if (empty($post->subjectnoformat)) {
         $postsubject = format_string($postsubject);
     }
-    $output .= html_writer::div($postsubject, 'subject', ['role' => 'heading', 'aria-level' => '2']);
+    $output .= html_writer::div($postsubject, 'subject', ['role' => 'heading', 'aria-level' => '1', 'id' => ('headp' . $post->id)]);
 
     if ($authorhidden) {
-        $bytext = userdate($post->created);
+        $bytext = userdate_htmltime($post->created);
     } else {
         $by = new stdClass();
-        $by->date = userdate($post->created);
+        $by->date = userdate_htmltime($post->created);
         $by->name = html_writer::link($postuser->profilelink, $postuser->fullname);
         $bytext = get_string('bynameondate', 'reactforum', $by);
     }
     $bytextoptions = [
-        'role' => 'heading',
-        'aria-level' => '2',
+        'class' => 'author'
     ];
-    $output .= html_writer::div($bytext, 'author', $bytextoptions);
+    $output .= html_writer::tag('address', $bytext, $bytextoptions);
     // End topic column.
     $output .= html_writer::end_div();
 
     // End header row.
-    $output .= html_writer::end_div();
+    $output .= html_writer::end_tag('header');
 
     // Row with the reactforum post content.
     $output .= html_writer::start_div('row maincontent clearfix');
@@ -3701,7 +3788,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     $output .= html_writer::end_tag('div'); // Content mask
     $output .= html_writer::end_tag('div'); // Row
 
-    $output .= html_writer::start_tag('div', array('class'=>'row side'));
+    $output .= html_writer::start_tag('nav', array('class' => 'row side'));
     $output .= html_writer::tag('div','&nbsp;', array('class'=>'left'));
     $output .= html_writer::start_tag('div', array('class'=>'options clearfix'));
 
@@ -3757,12 +3844,16 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
     $commandhtml = array();
     foreach ($commands as $command) {
         if (is_array($command)) {
-            $commandhtml[] = html_writer::link($command['url'], $command['text']);
+            $attributes = ['class' => 'nav-item nav-link'];
+            if (isset($command['attributes'])) {
+                $attributes = array_merge($attributes, $command['attributes']);
+            }
+            $commandhtml[] = html_writer::link($command['url'], $command['text'], $attributes);
         } else {
             $commandhtml[] = $command;
         }
     }
-    $output .= html_writer::tag('div', implode(' | ', $commandhtml), array('class'=>'commands'));
+    $output .= html_writer::tag('div', implode(' ', $commandhtml), array('class' => 'commands nav'));
 
     // Output link to post if required
     if ($link) {
@@ -3800,7 +3891,7 @@ function reactforum_print_post($post, $discussion, $reactforum, &$cm, $course, $
 
     // Close remaining open divs
     $output .= html_writer::end_tag('div'); // content
-    $output .= html_writer::end_tag('div'); // row
+    $output .= html_writer::end_tag('nav'); // row
     $output .= html_writer::end_tag('div'); // reactforumpost
 
     // Mark the reactforum post as read if required
@@ -4134,7 +4225,7 @@ function reactforum_print_discussion_header(&$post, $reactforum, $group = -1, $d
     }
 
     echo '<a href="'.$CFG->wwwroot.'/mod/reactforum/discuss.php?d='.$post->discussion.$parenturl.'">'.
-          userdate($usedate, $datestring).'</a>';
+          userdate_htmltime($usedate, $datestring).'</a>';
     echo "</td>\n";
 
     // is_guest should be used here as this also checks whether the user is a guest in the current course.
@@ -4976,7 +5067,7 @@ function reactforum_delete_post($post, $children, $course, $cm, $reactforum, $sk
     }
 
     // DELETE REACTIONS
-    $DB->delete_records("reactforum_user_reactions", array("post_id" => $post->id));
+    $DB->delete_records('reactforum_user_reactions', array('post_id' => $post->id));
 
     if ($DB->delete_records("reactforum_posts", array("id" => $post->id))) {
 
@@ -5896,8 +5987,10 @@ function reactforum_print_latest_discussions($course, $reactforum, $maxdiscussio
 
                 $discussion->reactforum = $reactforum->id;
 
+                reactforum_print_post_start($discussion);
                 reactforum_print_post($discussion, $discussion, $reactforum, $cm, $course, $ownpost, 0, $link, false,
                         '', null, true, $reactforumtracked);
+                reactforum_print_post_end($discussion);
             break;
         }
     }
@@ -6018,6 +6111,7 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
 
     $postread = !empty($post->postread);
 
+    reactforum_print_post_start($post);
     reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, false,
                          '', '', $postread, true, $reactforumtracked);
 
@@ -6036,6 +6130,7 @@ function reactforum_print_discussion($course, $cm, $reactforum, $discussion, $po
             reactforum_print_posts_nested($course, $cm, $reactforum, $discussion, $post, $reply, $reactforumtracked, $posts);
             break;
     }
+    reactforum_print_post_end($post);
 }
 
 
@@ -6068,8 +6163,10 @@ function reactforum_print_posts_flat($course, &$cm, $reactforum, $discussion, $p
 
         $postread = !empty($post->postread);
 
+        reactforum_print_post_start($post);
         reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
                              '', '', $postread, true, $reactforumtracked);
+        reactforum_print_post_end($post);
     }
 }
 
@@ -6101,8 +6198,10 @@ function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion
 
                 $postread = !empty($post->postread);
 
+                reactforum_print_post_start($post);
                 reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
                                      '', '', $postread, true, $reactforumtracked);
+                reactforum_print_post_end($post);
             } else {
                 if (!reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm, true)) {
                     if (reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm, false)) {
@@ -6117,7 +6216,7 @@ function reactforum_print_posts_threaded($course, &$cm, $reactforum, $discussion
                 } else {
                     $by = new stdClass();
                     $by->name = fullname($post, $canviewfullnames);
-                    $by->date = userdate($post->modified);
+                    $by->date = userdate_htmltime($post->modified);
                     $byline = ' ' . get_string("bynameondate", "reactforum", $by);
                     $subject = format_string($post->subject, true);
                 }
@@ -6174,9 +6273,11 @@ function reactforum_print_posts_nested($course, &$cm, $reactforum, $discussion, 
             $post->subject = format_string($post->subject);
             $postread = !empty($post->postread);
 
+            reactforum_print_post_start($post);
             reactforum_print_post($post, $discussion, $reactforum, $cm, $course, $ownpost, $reply, $link,
                                  '', '', $postread, true, $reactforumtracked);
             reactforum_print_posts_nested($course, $cm, $reactforum, $discussion, $post, $reply, $reactforumtracked, $posts);
+            reactforum_print_post_end($post);
             echo "</div>\n";
         }
     }
@@ -6363,7 +6464,7 @@ function reactforum_print_recent_mod_activity($activity, $courseid, $detail, $mo
     $output .= html_writer::link($discussionurl, $content->subject);
     $output .= html_writer::end_div();
 
-    $timestamp = userdate($activity->timestamp);
+    $timestamp = userdate_htmltime($activity->timestamp);
     if ($authorhidden) {
         $authornamedate = $timestamp;
     } else {
@@ -8669,22 +8770,19 @@ function mod_reactforum_get_completion_active_rule_descriptions($cm) {
     foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
         switch ($key) {
             case 'completiondiscussions':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completiondiscussionsdesc', 'reactforum', $val);
                 }
-                $descriptions[] = get_string('completiondiscussionsdesc', 'reactforum', $val);
                 break;
             case 'completionreplies':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionrepliesdesc', 'reactforum', $val);
                 }
-                $descriptions[] = get_string('completionrepliesdesc', 'reactforum', $val);
                 break;
             case 'completionposts':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionpostsdesc', 'reactforum', $val);
                 }
-                $descriptions[] = get_string('completionpostsdesc', 'reactforum', $val);
                 break;
             default:
                 break;

@@ -97,17 +97,17 @@ if (is_null($mode) and !is_enrolled($context, $USER, '', true)) {   // Guests an
     if (isguestuser()) {
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(get_string('subscribeenrolledonly', 'reactforum').'<br /><br />'.get_string('liketologin'),
-            get_login_url(), new moodle_url('/mod/reactforum/view.php', array('f'=>$id)));
+                     get_login_url(), new moodle_url('/mod/reactforum/view.php', array('f'=>$id)));
         echo $OUTPUT->footer();
         exit;
     } else {
         // There should not be any links leading to this place, just redirect.
         redirect(
-            new moodle_url('/mod/reactforum/view.php', array('f'=>$id)),
-            get_string('subscribeenrolledonly', 'reactforum'),
-            null,
-            \core\output\notification::NOTIFY_ERROR
-        );
+                new moodle_url('/mod/reactforum/view.php', array('f'=>$id)),
+                get_string('subscribeenrolledonly', 'reactforum'),
+                null,
+                \core\output\notification::NOTIFY_ERROR
+            );
     }
 }
 
@@ -125,20 +125,20 @@ if (!is_null($mode) and has_capability('mod/reactforum:managesubscriptions', $co
         case REACTFORUM_CHOOSESUBSCRIBE : // 0
             \mod_reactforum\subscriptions::set_subscription_mode($reactforum->id, REACTFORUM_CHOOSESUBSCRIBE);
             redirect(
-                $returnto,
-                get_string('everyonecannowchoose', 'reactforum'),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('everyonecannowchoose', 'reactforum'),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
             break;
         case REACTFORUM_FORCESUBSCRIBE : // 1
             \mod_reactforum\subscriptions::set_subscription_mode($reactforum->id, REACTFORUM_FORCESUBSCRIBE);
             redirect(
-                $returnto,
-                get_string('everyoneisnowsubscribed', 'reactforum'),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('everyoneisnowsubscribed', 'reactforum'),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
             break;
         case REACTFORUM_INITIALSUBSCRIBE : // 2
             if ($reactforum->forcesubscribe <> REACTFORUM_INITIALSUBSCRIBE) {
@@ -149,20 +149,20 @@ if (!is_null($mode) and has_capability('mod/reactforum:managesubscriptions', $co
             }
             \mod_reactforum\subscriptions::set_subscription_mode($reactforum->id, REACTFORUM_INITIALSUBSCRIBE);
             redirect(
-                $returnto,
-                get_string('everyoneisnowsubscribed', 'reactforum'),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('everyoneisnowsubscribed', 'reactforum'),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
             break;
         case REACTFORUM_DISALLOWSUBSCRIBE : // 3
             \mod_reactforum\subscriptions::set_subscription_mode($reactforum->id, REACTFORUM_DISALLOWSUBSCRIBE);
             redirect(
-                $returnto,
-                get_string('noonecansubscribenow', 'reactforum'),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('noonecansubscribenow', 'reactforum'),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
             break;
         default:
             print_error(get_string('invalidforcesubscribe', 'reactforum'));
@@ -171,11 +171,11 @@ if (!is_null($mode) and has_capability('mod/reactforum:managesubscriptions', $co
 
 if (\mod_reactforum\subscriptions::is_forcesubscribed($reactforum)) {
     redirect(
-        $returnto,
-        get_string('everyoneisnowsubscribed', 'reactforum'),
-        null,
-        \core\output\notification::NOTIFY_SUCCESS
-    );
+            $returnto,
+            get_string('everyoneisnowsubscribed', 'reactforum'),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
 }
 
 $info = new stdClass();
@@ -195,10 +195,10 @@ if ($issubscribed) {
             $a->reactforum = format_string($reactforum->name);
             $a->discussion = format_string($discussion->name);
             echo $OUTPUT->confirm(get_string('confirmunsubscribediscussion', 'reactforum', $a),
-                $PAGE->url, $viewurl);
+                    $PAGE->url, $viewurl);
         } else {
             echo $OUTPUT->confirm(get_string('confirmunsubscribe', 'reactforum', format_string($reactforum->name)),
-                $PAGE->url, $viewurl);
+                    $PAGE->url, $viewurl);
         }
         echo $OUTPUT->footer();
         exit;
@@ -207,11 +207,11 @@ if ($issubscribed) {
     if ($discussionid === null) {
         if (\mod_reactforum\subscriptions::unsubscribe_user($user->id, $reactforum, $context, true)) {
             redirect(
-                $returnto,
-                get_string('nownotsubscribed', 'reactforum', $info),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('nownotsubscribed', 'reactforum', $info),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
         } else {
             print_error('cannotunsubscribe', 'reactforum', get_local_referer(false));
         }
@@ -219,11 +219,11 @@ if ($issubscribed) {
         if (\mod_reactforum\subscriptions::unsubscribe_user_from_discussion($user->id, $discussion, $context)) {
             $info->discussion = $discussion->name;
             redirect(
-                $returnto,
-                get_string('discussionnownotsubscribed', 'reactforum', $info),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+                    $returnto,
+                    get_string('discussionnownotsubscribed', 'reactforum', $info),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
         } else {
             print_error('cannotunsubscribe', 'reactforum', get_local_referer(false));
         }
@@ -248,10 +248,10 @@ if ($issubscribed) {
             $a->reactforum = format_string($reactforum->name);
             $a->discussion = format_string($discussion->name);
             echo $OUTPUT->confirm(get_string('confirmsubscribediscussion', 'reactforum', $a),
-                $PAGE->url, $viewurl);
+                    $PAGE->url, $viewurl);
         } else {
             echo $OUTPUT->confirm(get_string('confirmsubscribe', 'reactforum', format_string($reactforum->name)),
-                $PAGE->url, $viewurl);
+                    $PAGE->url, $viewurl);
         }
         echo $OUTPUT->footer();
         exit;
@@ -260,19 +260,19 @@ if ($issubscribed) {
     if ($discussionid == null) {
         \mod_reactforum\subscriptions::subscribe_user($user->id, $reactforum, $context, true);
         redirect(
-            $returnto,
-            get_string('nowsubscribed', 'reactforum', $info),
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+                $returnto,
+                get_string('nowsubscribed', 'reactforum', $info),
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
     } else {
         $info->discussion = $discussion->name;
         \mod_reactforum\subscriptions::subscribe_user_to_discussion($user->id, $discussion, $context);
         redirect(
-            $returnto,
-            get_string('discussionnowsubscribed', 'reactforum', $info),
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+                $returnto,
+                get_string('discussionnowsubscribed', 'reactforum', $info),
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
     }
 }
