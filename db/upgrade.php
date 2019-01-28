@@ -377,5 +377,15 @@ function xmldb_reactforum_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2018041601, 'reactforum');
     }
 
+    if ($oldversion < 2019012201) {
+        $DB->execute(
+            'UPDATE {reactforum_reactions} r
+            SET reactforum_id = (SELECT reactforum FROM {reactforum_discussions} d WHERE d.id = r.discussion_id)
+            WHERE r.reactforum_id = 0'
+        );
+
+        upgrade_mod_savepoint(true, 2019012201, 'reactforum');
+    }
+
     return true;
 }

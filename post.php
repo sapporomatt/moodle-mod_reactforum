@@ -296,9 +296,8 @@ if (!empty($reactforum)) {      // User is starting a new discussion in a reactf
         $post->reactiontype = $discussion->reactiontype;
         $post->reactionallreplies = $discussion->reactionallreplies;
         $reactions_values = array();
-        $reactions = $DB->get_records("reactforum_reactions", array("discussion_id" => $discussion->id));
-        foreach($reactions as $reactionObj)
-        {
+        $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
+        foreach ($reactions as $reactionObj) {
             array_push($reactions_values, array("id" => $reactionObj->id, "value" => $reactionObj->reaction));
         }
         $reactions_js = json_encode(array(
@@ -877,6 +876,8 @@ if ($mform_post->is_cancelled()) {
                 }
             } else if ($fromform->reactiontype == 'image' && isset($_POST['reactions'])) {
 
+                $fs = get_file_storage();
+
                 if (isset($_POST['reactions']['edit'])) {
                     foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid) {
                         if ($tempfileid > 0) {
@@ -896,6 +897,7 @@ if ($mform_post->is_cancelled()) {
                 if (isset($_POST['reactions']['new'])) {
                     foreach ($_POST['reactions']['new'] as $tempfileid) {
                         $reactionobj = new stdClass();
+                        $reactionobj->reactforum_id = $discussion->reactforum;
                         $reactionobj->discussion_id = $discussion->id;
                         $reactionobj->reaction = '';
                         $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
@@ -1056,12 +1058,16 @@ if ($mform_post->is_cancelled()) {
                             $DB->insert_records('reactforum_reactions', $reactionobjects);
                         }
                     } else if ($fromform->reactiontype == 'image') {
-                        foreach ($tempfiles['new'] as $tempfile) {
+
+                        $fs = get_file_storage();
+
+                        foreach ($_POST['reactions']['new'] as $tempfileid) {
                             $reactionobj = new stdClass();
+                            $reactionobj->reactforum_id = $discussion->reactforum;
                             $reactionobj->discussion_id = $discussion->id;
                             $reactionobj->reaction = '';
                             $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid)) {
+                            if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid)) {
                                 print_error("error", "reactforum", $errordestination);
                             }
                         }

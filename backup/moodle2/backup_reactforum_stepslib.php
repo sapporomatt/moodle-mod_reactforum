@@ -44,7 +44,8 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
             'rsstype', 'rssarticles', 'timemodified', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
-            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies', 'lockdiscussionafter', 'delayedcounter'));
+            'completionposts', 'displaywordcount', 'reactiontype', 'reactionallreplies',
+            'lockdiscussionafter', 'delayedcounter'));
 
         $discussions = new backup_nested_element('discussions');
 
@@ -96,11 +97,13 @@ class backup_reactforum_activity_structure_step extends backup_activity_structur
         $track = new backup_nested_element('track', array('id'), array(
             'userid'));
 
-        $reactions = new backup_nested_element("reactions");
-        $reaction = new backup_nested_element("reaction", array("id"), array('reactforum_id', "discussion_id", "reaction"));
+        $reactions = new backup_nested_element('reactions');
+        $reaction = new backup_nested_element('reaction', array('id'),
+            array('reactforum_id', 'discussion_id', 'reaction'));
 
-        $userReactions = new backup_nested_element("user_reactions");
-        $userReaction = new backup_nested_element("user_reaction", array("id"), array("user_id", "post_id", "reaction_id"));
+        $userReactions = new backup_nested_element('user_reactions');
+        $userReaction = new backup_nested_element('user_reaction', array('id'),
+            array('user_id', 'post_id', 'reaction_id'));
 
         // Build the tree
 
