@@ -241,19 +241,17 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data = (object)$data;
         $oldID = $data->id;
 
-        if($data->reactforum_id > 0)
-        {
+        if ($data->reactforum_id > 0) {
             $data->reactforum_id = $this->get_new_parentid('reactforum');
         }
 
-        if($data->discussion_id > 0)
-        {
+        if ($data->discussion_id > 0) {
             $data->discussion_id = $this->get_mappingid('reactforum_discussion', $data->discussion_id);
         }
 
-        $newItemID = $DB->insert_record("reactforum_reactions", $data);
+        $newItemID = $DB->insert_record('reactforum_reactions', $data);
 
-        $this->set_mapping("reactforum_reactions", $oldID, $newItemID, true);
+        $this->set_mapping('reactforum_reactions', $oldID, $newItemID, true);
     }
 
     protected function process_reactforum_user_reactions($data)
@@ -267,7 +265,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->post_id = $this->get_mappingid('reactforum_post', $data->post_id);
         $data->user_id = $this->get_mappingid('user', $data->user_id);
 
-        $newItemID = $DB->insert_record("reactforum_user_reactions", $data);
+        $DB->insert_record('reactforum_user_reactions', $data);
     }
 
     protected function after_execute() {

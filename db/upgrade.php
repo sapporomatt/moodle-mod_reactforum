@@ -172,5 +172,15 @@ function xmldb_reactforum_upgrade($oldversion) {
     // Automatically generated Moodle v3.6.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2019012501) {
+        $DB->execute(
+            'UPDATE {reactforum_reactions} r
+            SET reactforum_id = (SELECT reactforum FROM {reactforum_discussions} d WHERE d.id = r.discussion_id)
+            WHERE r.reactforum_id = 0'
+        );
+
+        upgrade_mod_savepoint(true, 2019012501, 'reactforum');
+    }
+
     return true;
 }

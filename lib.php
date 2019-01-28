@@ -8954,7 +8954,13 @@ function reactforum_save_temp($fs, $contextid, $tempfile, $reactionid) {
 function reactforum_get_reactions_from_discussion($discussion) {
     global $DB;
     $reactforum = $DB->get_record('reactforum', array('id' => $discussion->reactforum));
-    $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
+    if ($reactforum->reactiontype == 'text' || $reactforum->reactiontype == 'image') {
+        $reactions = $DB->get_records('reactforum_reactions', array('reactforum_id' => $reactforum->id));
+    } else if ($reactforum->reactiontype == 'discussion') {
+        $reactions = $DB->get_records('reactforum_reactions', array('discussion_id' => $discussion->id));
+    } else {
+        return [];
+    }
 
     if (count($reactions) > 0) {
         return $reactions;

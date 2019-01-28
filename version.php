@@ -24,6 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2019012500;       // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2019012501;       // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2018112800;       // Requires this Moodle version
 $plugin->component = 'mod_reactforum';      // Full name of the plugin (used for diagnostics)
