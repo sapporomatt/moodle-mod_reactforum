@@ -882,6 +882,8 @@ if ($mformpost->is_cancelled()) {
                 }
             } else if ($fromform->reactiontype == 'image' && isset($_POST['reactions'])) {
 
+                $fs = get_file_storage();
+
                 if (isset($_POST['reactions']['edit'])) {
                     foreach ($_POST['reactions']['edit'] as $reactionid => $tempfileid) {
                         if ($tempfileid > 0) {
@@ -1042,7 +1044,7 @@ if ($mformpost->is_cancelled()) {
 
             $discussion->groupid = $group;
             $message = '';
-            if ($discussion->id = reactforum_add_discussion($discussion, $mform_post)) {
+            if ($discussion->id = reactforum_add_discussion($discussion, $mformpost)) {
 
                 // REACTIONS_ADD: START
                 if ($reactforum->reactiontype == 'discussion') {
@@ -1061,15 +1063,19 @@ if ($mformpost->is_cancelled()) {
                             $DB->insert_records('reactforum_reactions', $reactionobjects);
                         }
                     } else if ($fromform->reactiontype == 'image') {
-                        foreach ($tempfiles['new'] as $tempfile) {
+
+                        $fs = get_file_storage();
+
+                        foreach ($_POST['reactions']['new'] as $tempfileid) {
                             $reactionobj = new stdClass();
                             $reactionobj->discussion_id = $discussion->id;
                             $reactionobj->reaction = '';
                             $newreactionid = $DB->insert_record('reactforum_reactions', $reactionobj);
-                            if (!reactforum_save_temp($fs, $modcontext->id, $tempfile, $newreactionid)) {
+                            if (!reactforum_save_temp($fs, $modcontext->id, $fs->get_file_by_id($tempfileid), $newreactionid)) {
                                 print_error("error", "reactforum", $errordestination);
                             }
                         }
+
                     }
                 }
                 // REACTIONS_ADD: END
