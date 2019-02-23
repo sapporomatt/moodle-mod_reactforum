@@ -67,15 +67,14 @@ Feature: Blog posts are always displayed in reverse chronological order
       | Message | Reply to the first post |
     And I press "Post to reactforum"
     And I wait to be redirected
-    And I am on site homepage
     And I am on "Course 1" course homepage
     And I follow "Course blog reactforum"
     #
     # Make sure the order of the blog posts is still reverse chronological.
     #
-    Then I should see "This is the third post" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' reactforumpost ')][position()=1]" "xpath_element"
-    And I should see "This is the second post" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' reactforumpost ')][position()=2]" "xpath_element"
-    And I should see "This is the first post" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' reactforumpost ')][position()=3]" "xpath_element"
+    Then I should see "This is the third post" in the "//article[position()=1]" "xpath_element"
+    And I should see "This is the second post" in the "//article[position()=2]" "xpath_element"
+    And I should see "This is the first post" in the "//article[position()=3]" "xpath_element"
     #
     # Make sure the next/prev navigation uses the same order of the posts.
     #

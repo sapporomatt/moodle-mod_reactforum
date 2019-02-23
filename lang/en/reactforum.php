@@ -53,6 +53,7 @@ $string['bynameondate'] = 'by {$a->name} - {$a->date}';
 $string['cannotadd'] = 'Could not add the discussion for this reactforum';
 $string['cannotadddiscussion'] = 'Adding discussions to this reactforum requires group membership.';
 $string['cannotadddiscussionall'] = 'You do not have permission to add a new discussion topic for all participants.';
+$string['cannotadddiscussiongroup'] = 'You are not able to create a discussion because you are not a member of any group.';
 $string['cannotaddsubscriber'] = 'Could not add subscriber with id {$a} to this reactforum!';
 $string['cannotaddteacherreactforumto'] = 'Could not add converted teacher reactforum instance to section 0 in the course';
 $string['cannotcreatediscussion'] = 'Could not create new discussion';
@@ -106,6 +107,7 @@ $string['configoldpostdays'] = 'Number of days old any post is considered read.'
 $string['configreplytouser'] = 'When a reactforum post is mailed out, should it contain the user\'s email address so that recipients can reply personally rather than via the reactforum? Even if set to \'Yes\' users can choose in their profile to keep their email address secret.';
 $string['configrsstypedefault'] = 'If RSS feeds are enabled, sets the default activity type.';
 $string['configrssarticlesdefault'] = 'If RSS feeds are enabled, sets the default number of articles (either discussions or posts).';
+$string['configsubscriptiontype'] = 'Default setting for subscription mode.';
 $string['configshortpost'] = 'Any post under this length (in characters not including HTML) is considered short (see below).';
 $string['configtrackingtype'] = 'Default setting for read tracking.';
 $string['configtrackreadposts'] = 'Set to \'yes\' if you want to track read/unread for each user.';
@@ -147,6 +149,7 @@ $string['discussionnowsubscribed'] = '{$a->name} will be notified of new posts i
 $string['discussionpin'] = 'Pin';
 $string['discussionpinned'] = 'Pinned';
 $string['discussionpinned_help'] = 'Pinned discussions will appear at the top of a reactforum.';
+$string['discussionsplit'] = 'Discussion has been split';
 $string['discussionsubscribestop'] = 'I don\'t want to be notified of new posts in this discussion';
 $string['discussionsubscribestart'] = 'Send me notifications of new posts in this discussion';
 $string['discussionsubscription'] = 'Discussion subscription';
@@ -235,7 +238,7 @@ $string['reactforum:exportdiscussion'] = 'Export whole discussion';
 $string['reactforum:exportownpost'] = 'Export own post';
 $string['reactforum:exportpost'] = 'Export post';
 $string['reactforumintro'] = 'Description';
-$string['reactforum:managesubscriptions'] = 'Manage subscriptions';
+$string['reactforum:managesubscriptions'] = 'Manage subscribers';
 $string['reactforum:movediscussions'] = 'Move discussions';
 $string['reactforum:pindiscussions'] = 'Pin discussions';
 $string['reactforum:postwithoutthrottling'] = 'Exempt from post threshold';
@@ -268,6 +271,10 @@ $string['reactforum:viewsubscribers'] = 'View subscribers';
 $string['generalreactforum'] = 'Standard reactforum for general use';
 $string['generalreactforums'] = 'General reactforums';
 $string['hiddenreactforumpost'] = 'Hidden reactforum post';
+$string['indicator:cognitivedepth'] = 'ReactForum cognitive';
+$string['indicator:cognitivedepth_help'] = 'This indicator is based on the cognitive depth reached by the student in a ReactForum activity.';
+$string['indicator:socialbreadth'] = 'ReactForum social';
+$string['indicator:socialbreadth_help'] = 'This indicator is based on the social breadth reached by the student in a ReactForum activity.';
 $string['inreactforum'] = 'in {$a}';
 $string['introblog'] = 'The posts in this reactforum were copied here automatically from blogs of users in this course because those blog entries are no longer available';
 $string['intronews'] = 'General news and announcements';
@@ -290,7 +297,7 @@ $string['longpost'] = 'Long post';
 $string['mailnow'] = 'Send reactforum post notifications with no editing-time delay';
 $string['manydiscussions'] = 'Discussions per page';
 $string['managesubscriptionsoff'] = 'Finish managing subscriptions';
-$string['managesubscriptionson'] = 'Manage subscriptions';
+$string['managesubscriptionson'] = 'Manage subscribers';
 $string['markalldread'] = 'Mark all posts in this discussion read.';
 $string['markallread'] = 'Mark all posts in this reactforum read.';
 $string['markasreadonnotification'] = 'When sending reactforum post notifications';
@@ -380,8 +387,8 @@ $string['notinstalled'] = 'The reactforum module is not installed';
 $string['notpartofdiscussion'] = 'This post is not part of a discussion!';
 $string['notrackreactforum'] = 'Don\'t track unread posts';
 $string['noviewdiscussionspermission'] = 'You do not have the permission to view discussions in this reactforum';
-$string['nowallsubscribed'] = 'All reactforums in {$a} are subscribed.';
-$string['nowallunsubscribed'] = 'All reactforums in {$a} are not subscribed.';
+$string['nowallsubscribed'] = 'You are now subscribed to all reactforums in {$a}.';
+$string['nowallunsubscribed'] = 'You are now unsubscribed from all reactforums in {$a}.';
 $string['nownotsubscribed'] = '{$a->name} will NOT be notified of new posts in \'{$a->reactforum}\'';
 $string['nownottracking'] = '{$a->name} is no longer tracking \'{$a->reactforum}\'.';
 $string['nowsubscribed'] = '{$a->name} will be notified of new posts in \'{$a->reactforum}\'';
@@ -424,6 +431,61 @@ $string['postsmadebyuserincourse'] = 'Posts made by {$a->fullname} in {$a->cours
 $string['posttoreactforum'] = 'Post to reactforum';
 $string['postupdated'] = 'Your post was updated';
 $string['potentialsubscribers'] = 'Potential subscribers';
+$string['privacy:digesttypenone'] = 'We do not hold any data relating to a preferred reactforum digest type for this reactforum.';
+$string['privacy:digesttypepreference'] = 'You have chosen to receive the following reactforum digest type: "{$a->type}".';
+$string['privacy:discussionsubscriptionpreference'] = 'You have chosen the following discussion subscription preference for this reactforum: "{$a->preference}"';
+$string['privacy:metadata:core_tag'] = 'The reactforum makes use of the tag subsystem to support tagging of posts.';
+$string['privacy:metadata:core_rating'] = 'The reactforum makes use of the rating subsystem to support the rating of posts.';
+$string['privacy:metadata:reactforum_digests'] = 'Information about the digest preferences for each reactforum.';
+$string['privacy:metadata:reactforum_digests:reactforum'] = 'The reactforum subscribed to.';
+$string['privacy:metadata:reactforum_digests:maildigest'] = 'The digest preference.';
+$string['privacy:metadata:reactforum_digests:userid'] = 'The ID of the user with the digest preference.';
+$string['privacy:metadata:reactforum_discussion_subs'] = 'Information about the subscriptions to individual reactforum discussions';
+$string['privacy:metadata:reactforum_discussion_subs:discussionid'] = 'The ID of the discussion that was subscribed to.';
+$string['privacy:metadata:reactforum_discussion_subs:preference'] = 'The start time of the subscription.';
+$string['privacy:metadata:reactforum_discussion_subs:userid'] = 'The ID of the user with the discussion subscription.';
+$string['privacy:metadata:reactforum_discussions'] = 'Information about the individual reactforum discussions that a user has created';
+$string['privacy:metadata:reactforum_discussions:assessed'] = 'TODOD - what does this field store';
+$string['privacy:metadata:reactforum_discussions:name'] = 'The name of the discussion, as chosen by the author.';
+$string['privacy:metadata:reactforum_discussions:timemodified'] = 'The time that the discussion was last modified.';
+$string['privacy:metadata:reactforum_discussions:userid'] = 'The ID of the user who created the discussion';
+$string['privacy:metadata:reactforum_discussions:usermodified'] = 'The ID of the user who last modified the discussion in some way.';
+$string['privacy:metadata:reactforum_posts'] = 'Information about the digest preferences for each reactforum.';
+$string['privacy:metadata:reactforum_posts:created'] = 'The time that the post was created.';
+$string['privacy:metadata:reactforum_posts:discussion'] = 'The discussion that the post is in.';
+$string['privacy:metadata:reactforum_posts:message'] = 'The message of the reactforum post.';
+$string['privacy:metadata:reactforum_posts:modified'] = 'The time that the post was last modified.';
+$string['privacy:metadata:reactforum_posts:parent'] = 'The parent post that was replied to.';
+$string['privacy:metadata:reactforum_posts:subject'] = 'The subject of the reactforum post.';
+$string['privacy:metadata:reactforum_posts:totalscore'] = 'The message of the reactforum post.';
+$string['privacy:metadata:reactforum_posts:userid'] = 'The ID of the user who authored the reactforum post.';
+$string['privacy:metadata:reactforum_queue'] = 'Temporary log of posts that will be mailed in digest form';
+$string['privacy:metadata:reactforum_queue:discussionid'] = 'ReactForum discussion ID';
+$string['privacy:metadata:reactforum_queue:postid'] = 'ReactForum post ID';
+$string['privacy:metadata:reactforum_queue:timemodified'] = 'The modified time of the original post';
+$string['privacy:metadata:reactforum_queue:userid'] = 'User who needs to be notified of the post';
+$string['privacy:metadata:reactforum_read'] = 'Information about which posts have been read by the user.';
+$string['privacy:metadata:reactforum_read:discussionid'] = 'The discussion that the post is in.';
+$string['privacy:metadata:reactforum_read:firstread'] = 'The first time that the post was read.';
+$string['privacy:metadata:reactforum_read:lastread'] = 'The most recent time that the post was read.';
+$string['privacy:metadata:reactforum_read:postid'] = 'The post that was read.';
+$string['privacy:metadata:reactforum_read:userid'] = 'The ID of the user that this record relates to.';
+$string['privacy:metadata:reactforum_subscriptions'] = 'Information about which reactforums the user has subscribed to.';
+$string['privacy:metadata:reactforum_subscriptions:reactforum'] = 'The reactforum that was subscribed to.';
+$string['privacy:metadata:reactforum_subscriptions:userid'] = 'The ID of the user that this reactforum subscription relates to.';
+$string['privacy:metadata:reactforum_track_prefs'] = 'Information about which reactforums the user has chosen to track post reads for.';
+$string['privacy:metadata:reactforum_track_prefs:reactforumid'] = 'The reactforum that has read tracking enabled.';
+$string['privacy:metadata:reactforum_track_prefs:userid'] = 'The ID of the user that this reactforum tracking preference relates to.';
+$string['privacy:metadata:preference:autosubscribe'] = 'Whether to subscribe to discussions when replying to posts within them.';
+$string['privacy:metadata:preference:maildigest'] = 'The site-wide mail digest preference';
+$string['privacy:metadata:preference:markasreadonnotification'] = 'Whether to mark reactforum posts as read when receiving them as messages.';
+$string['privacy:metadata:preference:trackreactforums'] = 'Whether to enable read tracking.';
+$string['privacy:postwasread'] = 'This post was first read on {$a->firstread} and most recently read on {$a->lastread}';
+$string['privacy:readtrackingdisabled'] = 'You have chosen to not track posts you have read within this reactforum.';
+$string['privacy:request:delete:discussion:name'] = 'Delete at the request of the author';
+$string['privacy:request:delete:post:message'] = 'The content of this post has been deleted at the request of its author.';
+$string['privacy:request:delete:post:subject'] = 'Delete at the request of the author';
+$string['privacy:subscribedtoreactforum'] = 'You are subscribed to this reactforum.';
 $string['processingdigest'] = 'Processing email digest for user {$a}';
 $string['processingpost'] = 'Processing post {$a}';
 $string['prune'] = 'Split';
@@ -500,9 +562,7 @@ $string['subscriptionmode_help'] = 'When a participant is subscribed to a reactf
 * Optional subscription - Participants can choose whether to be subscribed
 * Forced subscription - Everyone is subscribed and cannot unsubscribe
 * Auto subscription - Everyone is subscribed initially but can choose to unsubscribe at any time
-* Subscription disabled - Subscriptions are not allowed
-
-Note: Any subscription mode changes will only affect users who enrol in the course in the future, and not existing users.';
+* Subscription disabled - Subscriptions are not allowed';
 $string['subscriptionoptional'] = 'Optional subscription';
 $string['subscriptionforced'] = 'Forced subscription';
 $string['subscriptionauto'] = 'Auto subscription';
@@ -510,7 +570,6 @@ $string['subscriptiondisabled'] = 'Subscription disabled';
 $string['subscriptions'] = 'Subscriptions';
 $string['tagarea_reactforum_posts'] = 'ReactForum posts';
 $string['tagsdeleted'] = 'ReactForum tags have been deleted';
-$string['tagtitle'] = 'See the "{$a}" tag';
 $string['thisreactforumisthrottled'] = 'This reactforum has a limit to the number of reactforum postings you can make in a given time period - this is currently set at {$a->blockafter} posting(s) in {$a->blockperiod}';
 $string['timedhidden'] = 'Timed status: Hidden from students';
 $string['timedposts'] = 'Timed posts';
@@ -553,22 +612,8 @@ $string['warnformorepost'] = 'Warning! There is more than one discussion in this
 $string['yournewquestion'] = 'Your new question';
 $string['yournewtopic'] = 'Your new discussion topic';
 $string['yourreply'] = 'Your reply';
-
-// Deprecated since Moodle 3.0.
-$string['subscribersto'] = 'Subscribers to "{$a->name}"';
-
-// Deprecated since Moodle 3.1.
-$string['postmailinfo'] = 'This is a copy of a message posted on the {$a} website.
-
-To reply click on this link:';
-$string['emaildigestupdated'] = 'The e-mail digest option was changed to \'{$a->maildigesttitle}\' for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}';
-$string['emaildigestupdated_default'] = 'Your default profile setting of \'{$a->maildigesttitle}\' was used for the reactforum \'{$a->reactforum}\'. {$a->maildigestdescription}.';
-$string['emaildigest_0'] = 'You will receive one e-mail per reactforum post.';
-$string['emaildigest_1'] = 'You will receive one digest e-mail per day containing the complete contents of each reactforum post.';
-$string['emaildigest_2'] = 'You will receive one digest e-mail per day containing the subject of each reactforum post.';
-
-
-/** REACTIONS */
+$string['reactforumsubjectdeleted'] = 'This reactforum post has been removed';
+$string['reactforumbodydeleted'] = 'The content of this reactforum post has been removed and can no longer be accessed.';
 
 $string['reactionstype'] = 'Reaction Buttons Type';
 $string['reactionstype_text'] = 'Text';

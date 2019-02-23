@@ -56,9 +56,16 @@ class renderer extends \mod_reactforum_renderer {
      */
     public function format_message_text($cm, $post) {
         $context = \context_module::instance($cm->id);
-        $message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php',
+        $message = file_rewrite_pluginfile_urls(
+            $post->message,
+            'pluginfile.php',
             $context->id,
-            'mod_reactforum', 'post', $post->id);
+            'mod_reactforum',
+            'post',
+            $post->id,
+            [
+                'includetoken' => true,
+            ]);
         $options = new \stdClass();
         $options->para = true;
         $options->context = $context;

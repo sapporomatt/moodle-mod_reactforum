@@ -54,6 +54,11 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('reactforum_maxattachments', get_string('maxattachments', 'reactforum'),
                        get_string('configmaxattachments', 'reactforum'), 9, PARAM_INT));
 
+    // Default Subscription mode setting.
+    $options = reactforum_get_subscriptionmode_options();
+    $settings->add(new admin_setting_configselect('reactforum_subscription', get_string('subscriptionmode', 'reactforum'),
+        get_string('configsubscriptiontype', 'reactforum'), REACTFORUM_CHOOSESUBSCRIBE, $options));
+
     // Default Read Tracking setting.
     $options = array();
     $options[REACTFORUM_TRACKING_OPTIONAL] = get_string('trackingoptional', 'reactforum');
