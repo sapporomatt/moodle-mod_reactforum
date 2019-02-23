@@ -151,8 +151,7 @@ class mod_reactforum_post_form extends moodleform {
         }
 
         // REACTIONS
-        if($post->parent == 0 && $reactforum->reactiontype == 'discussion')
-        {
+        if ($post->parent == 0 && $reactforum->reactiontype == 'discussion') {
             $radioarray = array();
             array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_text', 'reactforum'), 'text'));
             array_push($radioarray, $mform->createElement('radio', 'reactiontype', '', get_string('reactionstype_image', 'reactforum'), 'image'));

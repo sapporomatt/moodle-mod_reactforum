@@ -262,6 +262,40 @@ function xmldb_reactforum_upgrade($oldversion) {
     }
 
     // Upgrade for ReactForum Moodle 3.2
+
+    // Automatically generated Moodle v3.3.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2017092200) {
+
+        // Remove duplicate entries from reactforum_subscriptions.
+        // Find records with multiple userid/reactforum combinations and find the highest ID.
+        // Later we will remove all those entries.
+        $sql = "
+            SELECT MIN(id) as minid, userid, reactforum
+            FROM {reactforum_subscriptions}
+            GROUP BY userid, reactforum
+            HAVING COUNT(id) > 1";
+
+        if ($duplicatedrows = $DB->get_recordset_sql($sql)) {
+            foreach ($duplicatedrows as $row) {
+                $DB->delete_records_select('reactforum_subscriptions',
+                    'userid = :userid AND reactforum = :reactforum AND id <> :minid', (array)$row);
+            }
+        }
+        $duplicatedrows->close();
+
+        // Define key useridreactforum (primary) to be added to reactforum_subscriptions.
+        $table = new xmldb_table('reactforum_subscriptions');
+        $key = new xmldb_key('useridreactforum', XMLDB_KEY_UNIQUE, array('userid', 'reactforum'));
+
+        // Launch add key useridreactforum.
+        $dbman->add_key($table, $key);
+
+        // ReactForum savepoint reached.
+        upgrade_mod_savepoint(true, 2017092200, 'reactforum');
+    }
+
     if ($oldversion < 2017100900) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('lockdiscussionafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, false, '0', 'reactiontype');
@@ -302,6 +336,27 @@ function xmldb_reactforum_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2017110100, 'reactforum');
     }
 
+    // Automatically generated Moodle v3.4.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2018032900) {
+
+        // Define field deleted to be added to reactforum_posts.
+        $table = new xmldb_table('reactforum_posts');
+        $field = new xmldb_field('deleted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'mailnow');
+
+        // Conditionally launch add field deleted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // ReactForum savepoint reached.
+        upgrade_mod_savepoint(true, 2018032900, 'reactforum');
+    }
+
+    // Automatically generated Moodle v3.5.0 release upgrade line.
+    // Put any upgrade step following this.
+
     if ($oldversion < 2018041600) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('delayedcounter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
@@ -312,7 +367,7 @@ function xmldb_reactforum_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2018041600, 'reactforum');
     }
 
-    if($oldversion < 2018041601) {
+    if ($oldversion < 2018041601) {
         $table = new xmldb_table('reactforum');
         $field = new xmldb_field('delayed_counter', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'reactionallreplies');
         if ($dbman->field_exists($table, $field)) {
@@ -320,6 +375,16 @@ function xmldb_reactforum_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2018041601, 'reactforum');
+    }
+
+    if ($oldversion < 2019012201) {
+        $DB->execute(
+            'UPDATE {reactforum_reactions} r
+            SET reactforum_id = (SELECT reactforum FROM {reactforum_discussions} d WHERE d.id = r.discussion_id)
+            WHERE r.reactforum_id = 0'
+        );
+
+        upgrade_mod_savepoint(true, 2019012201, 'reactforum');
     }
 
     return true;

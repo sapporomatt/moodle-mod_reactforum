@@ -146,7 +146,7 @@ function reactforum_rss_feed_discussions_sql($reactforum, $cm, $newsince=0) {
 
     $modcontext = null;
 
-    $now = round(time(), -2);
+    $now = floor(time() / 60) * 60; // DB Cache Friendly.
     $params = array();
 
     $modcontext = context_module::instance($cm->id);
@@ -189,7 +189,7 @@ function reactforum_rss_feed_discussions_sql($reactforum, $cm, $newsince=0) {
               FROM {reactforum_discussions} d
                    JOIN {reactforum_posts} p ON p.discussion = d.id
                    JOIN {user} u ON p.userid = u.id
-             WHERE d.reactforum = {$reactforum->id} AND p.parent = 0
+             WHERE d.reactforum = {$reactforum->id} AND p.parent = 0 AND p.deleted <> 1
                    $timelimit $groupselect $newsince
           ORDER BY $reactforumsort";
     return array($sql, $params);
@@ -243,7 +243,7 @@ function reactforum_rss_feed_posts_sql($reactforum, $cm, $newsince=0) {
                {reactforum_posts} p,
                {user} u
             WHERE d.reactforum = {$reactforum->id} AND
-                p.discussion = d.id AND
+                p.discussion = d.id AND p.deleted <> 1 AND
                 u.id = p.userid $newsince
                 $groupselect
             ORDER BY p.created desc";
@@ -339,10 +339,17 @@ function reactforum_rss_feed_contents($reactforum, $sql, $params, $context) {
                 $message = get_string('reactforumbodyhidden', 'reactforum');
                 $item->author = get_string('reactforumauthorhidden', 'reactforum');
             } else if (!$isdiscussion && !reactforum_user_can_see_post($reactforum, $discussion, $post, $USER, $cm)) {
-                // This is a post which the user has no permission to view
-                $item->title = get_string('reactforumsubjecthidden', 'reactforum');
-                $message = get_string('reactforumbodyhidden', 'reactforum');
-                $item->author = get_string('reactforumauthorhidden', 'reactforum');
+                if (reactforum_user_can_see_post($reactforum, $discussion, $post, $USER, $cm, false)) {
+                    // This is a post which the user has no permission to view.
+                    $item->title = get_string('reactforumsubjecthidden', 'reactforum');
+                    $message = get_string('reactforumbodyhidden', 'reactforum');
+                    $item->author = get_string('reactforumauthorhidden', 'reactforum');
+                } else {
+                    // This is a post which has been deleted.
+                    $item->title = get_string('privacy:request:delete:post:subject', 'mod_reactforum');
+                    $message = get_string('privacy:request:delete:post:subject', 'mod_reactforum');
+                    $item->author = get_string('reactforumauthorhidden', 'reactforum');
+                }
             } else {
                 // The user must have permission to view
                 if ($isdiscussion && !empty($rec->discussionname)) {

@@ -144,6 +144,26 @@ class mod_reactforum_search_testcase extends advanced_testcase {
         // No new records.
         $this->assertFalse($recordset->valid());
         $recordset->close();
+
+        // Context test: create another reactforum with 1 post.
+        $reactforum2 = self::getDataGenerator()->create_module('reactforum', ['course' => $course1->id]);
+        $record = new stdClass();
+        $record->course = $course1->id;
+        $record->userid = $user1->id;
+        $record->reactforum = $reactforum2->id;
+        $record->message = 'discussion';
+        self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
+
+        // Test indexing with each reactforum then combined course context.
+        $rs = $searcharea->get_document_recordset(0, context_module::instance($reactforum1->cmid));
+        $this->assertEquals(2, iterator_count($rs));
+        $rs->close();
+        $rs = $searcharea->get_document_recordset(0, context_module::instance($reactforum2->cmid));
+        $this->assertEquals(1, iterator_count($rs));
+        $rs->close();
+        $rs = $searcharea->get_document_recordset(0, context_course::instance($course1->id));
+        $this->assertEquals(3, iterator_count($rs));
+        $rs->close();
     }
 
     /**
@@ -176,6 +196,7 @@ class mod_reactforum_search_testcase extends advanced_testcase {
         $record->userid = $user->id;
         $record->reactforum = $reactforum1->id;
         $record->message = 'discussion';
+        $record->groupid = 0;
         $discussion1 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_discussion($record);
 
         // Create post1 in discussion1.
@@ -185,11 +206,13 @@ class mod_reactforum_search_testcase extends advanced_testcase {
         $record->userid = $user->id;
         $record->subject = 'subject1';
         $record->message = 'post1';
+        $record->groupid = -1;
         $discussion1reply1 = self::getDataGenerator()->get_plugin_generator('mod_reactforum')->create_post($record);
 
         $post1 = $DB->get_record('reactforum_posts', array('id' => $discussion1reply1->id));
         $post1->reactforumid = $reactforum1->id;
         $post1->courseid = $reactforum1->course;
+        $post1->groupid = -1;
 
         $doc = $searcharea->get_document($post1);
         $this->assertInstanceOf('\core_search\document', $doc);
@@ -199,6 +222,72 @@ class mod_reactforum_search_testcase extends advanced_testcase {
         $this->assertEquals($user->id, $doc->get('userid'));
         $this->assertEquals($discussion1reply1->subject, $doc->get('title'));
         $this->assertEquals($discussion1reply1->message, $doc->get('content'));
+    }
+
+    /**
+     * Group support for reactforum posts.
+     */
+    public function test_posts_group_support() {
+        // Get the search area and test generators.
+        $searcharea = \core_search\manager::get_search_area($this->reactforumpostareaid);
+        $generator = $this->getDataGenerator();
+        $reactforumgenerator = $generator->get_plugin_generator('mod_reactforum');
+
+        // Create a course, a user, and two groups.
+        $course = $generator->create_course();
+        $user = $generator->create_user();
+        $generator->enrol_user($user->id, $course->id, 'teacher');
+        $group1 = $generator->create_group(['courseid' => $course->id]);
+        $group2 = $generator->create_group(['courseid' => $course->id]);
+
+        // Separate groups reactforum.
+        $reactforum = self::getDataGenerator()->create_module('reactforum', ['course' => $course->id,
+                'groupmode' => SEPARATEGROUPS]);
+
+        // Create discussion with each group and one for all groups. One has a post in.
+        $discussion1 = $reactforumgenerator->create_discussion(['course' => $course->id,
+                'userid' => $user->id, 'reactforum' => $reactforum->id, 'message' => 'd1',
+                'groupid' => $group1->id]);
+        $reactforumgenerator->create_discussion(['course' => $course->id,
+                'userid' => $user->id, 'reactforum' => $reactforum->id, 'message' => 'd2',
+                'groupid' => $group2->id]);
+        $reactforumgenerator->create_discussion(['course' => $course->id,
+                'userid' => $user->id, 'reactforum' => $reactforum->id, 'message' => 'd3']);
+
+        // Create a reply in discussion1.
+        $reactforumgenerator->create_post(['discussion' => $discussion1->id, 'parent' => $discussion1->firstpost,
+                'userid' => $user->id, 'message' => 'p1']);
+
+        // Do the indexing of all 4 posts.
+        $rs = $searcharea->get_recordset_by_timestamp(0);
+        $results = [];
+        foreach ($rs as $rec) {
+            $results[$rec->message] = $rec;
+        }
+        $rs->close();
+        $this->assertCount(4, $results);
+
+        // Check each document has the correct groupid.
+        $doc = $searcharea->get_document($results['d1']);
+        $this->assertTrue($doc->is_set('groupid'));
+        $this->assertEquals($group1->id, $doc->get('groupid'));
+        $doc = $searcharea->get_document($results['d2']);
+        $this->assertTrue($doc->is_set('groupid'));
+        $this->assertEquals($group2->id, $doc->get('groupid'));
+        $doc = $searcharea->get_document($results['d3']);
+        $this->assertFalse($doc->is_set('groupid'));
+        $doc = $searcharea->get_document($results['p1']);
+        $this->assertTrue($doc->is_set('groupid'));
+        $this->assertEquals($group1->id, $doc->get('groupid'));
+
+        // While we're here, also test that the search area requests restriction by group.
+        $modinfo = get_fast_modinfo($course);
+        $this->assertTrue($searcharea->restrict_cm_access_by_group($modinfo->get_cm($reactforum->cmid)));
+
+        // In visible groups mode, it won't request restriction by group.
+        set_coursemodule_groupmode($reactforum->cmid, VISIBLEGROUPS);
+        $modinfo = get_fast_modinfo($course);
+        $this->assertFalse($searcharea->restrict_cm_access_by_group($modinfo->get_cm($reactforum->cmid)));
     }
 
     /**
@@ -369,5 +458,63 @@ class mod_reactforum_search_testcase extends advanced_testcase {
         }
         $recordset->close();
         $this->assertEquals(3, $nrecords);
+    }
+
+    /**
+     * Tests that reindexing works in order starting from the reactforum with most recent discussion.
+     */
+    public function test_posts_get_contexts_to_reindex() {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $adminuser = get_admin();
+
+        $course1 = $generator->create_course();
+        $course2 = $generator->create_course();
+
+        $time = time() - 1000;
+
+        // Create 3 reactforums (two in course 1, one in course 2 - doesn't make a difference).
+        $reactforum1 = $generator->create_module('reactforum', ['course' => $course1->id]);
+        $reactforum2 = $generator->create_module('reactforum', ['course' => $course1->id]);
+        $reactforum3 = $generator->create_module('reactforum', ['course' => $course2->id]);
+        $reactforum4 = $generator->create_module('reactforum', ['course' => $course2->id]);
+
+        // Hack added time for the course_modules entries. These should not be used (they would
+        // be used by the base class implementation). We are setting this so that the order would
+        // be 4, 3, 2, 1 if this ordering were used (newest first).
+        $DB->set_field('course_modules', 'added', $time + 100, ['id' => $reactforum1->cmid]);
+        $DB->set_field('course_modules', 'added', $time + 110, ['id' => $reactforum2->cmid]);
+        $DB->set_field('course_modules', 'added', $time + 120, ['id' => $reactforum3->cmid]);
+        $DB->set_field('course_modules', 'added', $time + 130, ['id' => $reactforum4->cmid]);
+
+        $reactforumgenerator = $generator->get_plugin_generator('mod_reactforum');
+
+        // Create one discussion in reactforums 1 and 3, three in reactforum 2, and none in reactforum 4.
+        $reactforumgenerator->create_discussion(['course' => $course1->id,
+                'reactforum' => $reactforum1->id, 'userid' => $adminuser->id, 'timemodified' => $time + 20]);
+
+        $reactforumgenerator->create_discussion(['course' => $course1->id,
+                'reactforum' => $reactforum2->id, 'userid' => $adminuser->id, 'timemodified' => $time + 10]);
+        $reactforumgenerator->create_discussion(['course' => $course1->id,
+                'reactforum' => $reactforum2->id, 'userid' => $adminuser->id, 'timemodified' => $time + 30]);
+        $reactforumgenerator->create_discussion(['course' => $course1->id,
+                'reactforum' => $reactforum2->id, 'userid' => $adminuser->id, 'timemodified' => $time + 11]);
+
+        $reactforumgenerator->create_discussion(['course' => $course2->id,
+                'reactforum' => $reactforum3->id, 'userid' => $adminuser->id, 'timemodified' => $time + 25]);
+
+        // Get the contexts in reindex order.
+        $area = \core_search\manager::get_search_area($this->reactforumpostareaid);
+        $contexts = iterator_to_array($area->get_contexts_to_reindex(), false);
+
+        // We expect them in order of newest discussion. ReactForum 4 is not included at all (which is
+        // correct because it has no content).
+        $expected = [
+            \context_module::instance($reactforum2->cmid),
+            \context_module::instance($reactforum3->cmid),
+            \context_module::instance($reactforum1->cmid)
+        ];
+        $this->assertEquals($expected, $contexts);
     }
 }

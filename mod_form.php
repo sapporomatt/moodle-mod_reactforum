@@ -25,13 +25,11 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
-require_once($CFG->dirroot . '/course/moodleform_mod.php');
+require_once ($CFG->dirroot.'/course/moodleform_mod.php');
 
-class mod_reactforum_mod_form extends moodleform_mod
-{
+class mod_reactforum_mod_form extends moodleform_mod {
 
-    function definition()
-    {
+    function definition() {
         global $CFG, $COURSE, $DB, $PAGE;
 
         reactforum_include_styles();
@@ -94,7 +92,7 @@ class mod_reactforum_mod_form extends moodleform_mod
                 'level' => 'reactforum'
             ));
 
-            $PAGE->requires->js_init_code("reactions_oldvalues = {$reactions_js};", false);
+            $PAGE->requires->js_init_code('reactions_oldvalues = ' . $reactions_js . ';', false);
         }
 
         reactforum_form_call_js($PAGE);
@@ -135,13 +133,15 @@ class mod_reactforum_mod_form extends moodleform_mod
         // Subscription and tracking.
         $mform->addElement('header', 'subscriptionandtrackinghdr', get_string('subscriptionandtracking', 'reactforum'));
 
-        $options = array();
-        $options[REACTFORUM_CHOOSESUBSCRIBE] = get_string('subscriptionoptional', 'reactforum');
-        $options[REACTFORUM_FORCESUBSCRIBE] = get_string('subscriptionforced', 'reactforum');
-        $options[REACTFORUM_INITIALSUBSCRIBE] = get_string('subscriptionauto', 'reactforum');
-        $options[REACTFORUM_DISALLOWSUBSCRIBE] = get_string('subscriptiondisabled','reactforum');
+        $options = reactforum_get_subscriptionmode_options();
         $mform->addElement('select', 'forcesubscribe', get_string('subscriptionmode', 'reactforum'), $options);
         $mform->addHelpButton('forcesubscribe', 'subscriptionmode', 'reactforum');
+        if (isset($CFG->reactforum_subscription)) {
+            $defaultreactforumsubscription = $CFG->reactforum_subscription;
+        } else {
+            $defaultreactforumsubscription = REACTFORUM_CHOOSESUBSCRIBE;
+        }
+        $mform->setDefault('forcesubscribe', $defaultreactforumsubscription);
 
         $options = array();
         $options[REACTFORUM_TRACKING_OPTIONAL] = get_string('trackingoptional', 'reactforum');

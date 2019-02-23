@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'reactforum', language 'ja', branch 'MOODLE_33_STABLE'
+ * Strings for component 'reactforum', language 'ja', branch 'MOODLE_35_STABLE'
  *
  * @package   mod_reactforum
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
@@ -55,6 +55,7 @@ $string['bynameondate'] = '{$a->date} - {$a->name} の投稿';
 $string['cannotadd'] = 'このReactフォーラムにディスカッションを追加できませんでした。';
 $string['cannotadddiscussion'] = 'このReactフォーラムにディスカッションを追加するにはグループのメンバーである必要があります。';
 $string['cannotadddiscussionall'] = 'あなたにはすべての参加者のための新しいディスカッショントピックを追加するパーミッションがありません。';
+$string['cannotadddiscussiongroup'] = 'あなたはどのグループにも属していないため、ディスカッションを作成することはできません。';
 $string['cannotaddsubscriber'] = 'このReactフォーラムにID {$a} の購読者を追加できませんでした!';
 $string['cannotaddteacherreactforumto'] = 'コースのセクションゼロに対してコンバートされた教師Reactフォーラムインスタンスを追加できませんでした。';
 $string['cannotcreatediscussion'] = '新しいディスカッションを作成できませんでした。';
@@ -109,6 +110,7 @@ $string['configreplytouser'] = 'Reactフォーラムの投稿がメール送信�
 $string['configrssarticlesdefault'] = 'RSSフィードが有効にされた場合、デフォルト投稿数 (ディスカッションまたは投稿) を設定してください。';
 $string['configrsstypedefault'] = 'RSSフィードが有効にされた場合、デフォルト活動タイプを設定してください。';
 $string['configshortpost'] = 'この文字長以下の長さ (HTMLは含まない) は短いとみなされます (下記参照)。';
+$string['configsubscriptiontype'] = '購読モードのデフォルト設定です。';
 $string['configtrackingtype'] = '未読管理のデフォルト設定';
 $string['configtrackreadposts'] = 'ユーザごとに未読管理したい場合、「Yes」を選択してください。';
 $string['configusermarksread'] = '「Yes」に設定した場合、ユーザは投稿を手動で既読にする必要があります。「No」に設定した場合、投稿が閲覧された時点で既読にされます。';
@@ -172,9 +174,6 @@ $string['edit'] = '編集';
 $string['editedby'] = '{$a->name} により編集 - 最初の投稿日時 {$a->date}';
 $string['editedpostupdated'] = '{$a} の投稿が更新されました。';
 $string['editing'] = '編集';
-$string['emaildigest_0'] = 'あなたはReactフォーラム投稿ごとに1通のメールを受信します。';
-$string['emaildigest_1'] = 'あなたはそれぞれのReactフォーラム投稿に関する完全なコンテンツを含むメールダイジェストを1日1通受信します。';
-$string['emaildigest_2'] = 'あなたはそれぞれのReactフォーラム投稿に関する件名を含むメールダイジェストを1日1通受信します。';
 $string['emaildigestcompleteshort'] = '完全な投稿';
 $string['emaildigestdefault'] = 'デフォルト ({$a})';
 $string['emaildigestoffshort'] = 'ダイジェストなし';
@@ -186,10 +185,6 @@ $string['emaildigesttype_help'] = 'あなたがそれぞれの投稿に関して
 * ダイジェストなし - あなたはReactフォーラム投稿ごとに1通のメールを受信します。
 * ダイジェスト - 完全な投稿 - あなたはそれぞれのReactフォーラム投稿に関する完全なコンテンツを含むメールダイジェストを1日1通受信します。
 * ダイジェスト - 件名のみ - あなたはそれぞれのReactフォーラム投稿に関する件名を含むメールダイジェストを1日1通受信します。';
-$string['emaildigestupdated'] = 'Reactフォーラム「 {$a->reactforum} 」に関するメールダイジェストオプションが「 {$a->maildigesttitle} 」に変更されました。
-{$a->maildigestdescription}';
-$string['emaildigestupdated_default'] = 'あなたの「 {$a->maildigesttitle} 」のデフォルトプロファイル設定はReactフォーラム「 {$a->reactforum} 」に使用されました。
-{$a->maildigestdescription}';
 $string['emptymessage'] = 'あなたの投稿に問題があります。おそらく投稿が空白のままか、添付ファイルのサイズが大きすぎます。あなたの変更は保存されませんでした。';
 $string['erroremptymessage'] = '投稿メッセージを空にすることはできません。';
 $string['erroremptysubject'] = '投稿件名を空にすることはできません。';
@@ -232,6 +227,7 @@ $string['reactforum:addquestion'] = '質問を追加する';
 $string['reactforum:allowforcesubscribe'] = '強制購読を許可する';
 $string['reactforumauthorhidden'] = '投稿者 (非表示)';
 $string['reactforumblockingalmosttoomanyposts'] = 'あなたは投稿数の上限に近づきつつあります。あなたは直近の {$a->blockperiod} に {$a->numposts} 回投稿しています。投稿数の上限は {$a->blockafter} 回です。';
+$string['reactforumbodydeleted'] = 'このReactフォーラム投稿のコンテンツは削除されたため現在アクセスすることはできません。';
 $string['reactforumbodyhidden'] = 'あなたはこの投稿を閲覧できません。恐らく、あなたがまだディスカッションに投稿していない、最大編集時間を経過していない、ディスカッションが開始されていない、またはディスカッションの有効期限が切れています。';
 $string['reactforum:canoverridediscussionlock'] = 'ロックされたディスカッションに返信する';
 $string['reactforum:canposttomygroups'] = 'あなたがアクセスできるグループすべてに投稿できる';
@@ -243,7 +239,7 @@ $string['reactforum:exportdiscussion'] = 'すべてのディスカッション�
 $string['reactforum:exportownpost'] = '自分の投稿をエクスポートする';
 $string['reactforum:exportpost'] = '投稿をエクスポートする';
 $string['reactforumintro'] = '説明';
-$string['reactforum:managesubscriptions'] = '購読を管理する';
+$string['reactforum:managesubscriptions'] = '購読者を管理する';
 $string['reactforum:movediscussions'] = 'ディスカッションを移動する';
 $string['reactforumname'] = 'Reactフォーラム名';
 $string['reactforum:pindiscussions'] = 'ディスカッションをピン留めする';
@@ -255,6 +251,7 @@ $string['reactforum:replypost'] = '投稿に返信する';
 $string['reactforums'] = 'Reactフォーラム';
 $string['reactforum:splitdiscussions'] = 'ディスカッションを分割する';
 $string['reactforum:startdiscussion'] = '新しいディスカッションを開始する';
+$string['reactforumsubjectdeleted'] = 'このReactフォーラム投稿は削除されました。';
 $string['reactforumsubjecthidden'] = '件名 (非表示)';
 $string['reactforumtracked'] = '投稿は未読管理されています。';
 $string['reactforumtrackednot'] = '投稿は未読管理されていません。';
@@ -276,6 +273,10 @@ $string['reactforum:viewsubscribers'] = '購読者を表示する';
 $string['generalreactforum'] = '一般利用のための標準Reactフォーラム';
 $string['generalreactforums'] = '一般Reactフォーラム';
 $string['hiddenreactforumpost'] = '非表示Reactフォーラム投稿';
+$string['indicator:cognitivedepth'] = 'Reactフォーラム認知的';
+$string['indicator:cognitivedepth_help'] = 'この指標はReactフォーラム活動で学生が到達した認識深度に基づきます。';
+$string['indicator:socialbreadth'] = 'Reactフォーラム社会的';
+$string['indicator:socialbreadth_help'] = 'この指標はReactフォーラム活動で学生が到達した社会的広がりに基づきます。';
 $string['inreactforum'] = '{$a}';
 $string['introblog'] = '今後ブログエントリが利用できないため、このReactフォーラムの投稿はコース内のユーザブログから自動的にコピーされました。';
 $string['intronews'] = '一般ニュースおよびアナウンスメント';
@@ -297,7 +298,7 @@ $string['lockdiscussionafter_help'] = '最後の返信以後 、指定された�
 $string['longpost'] = '長い投稿';
 $string['mailnow'] = '編集遅延時間なしにReactフォーラム投稿通知を送信する';
 $string['managesubscriptionsoff'] = '購読管理を終了する';
-$string['managesubscriptionson'] = '購読を管理する';
+$string['managesubscriptionson'] = '購読者を管理する';
 $string['manydiscussions'] = '1ページあたりのディスカッション数';
 $string['markalldread'] = 'このディスカッションの投稿すべてを既読にします。';
 $string['markallread'] = 'このReactフォーラムの投稿すべてを既読にします。';
@@ -321,7 +322,7 @@ $string['messageinboundfilesizeexceeded'] = '合計添付サイズ ({$a->filesiz
 $string['messageinboundreactforumhidden'] = '現在、Reactフォーラムを利用できないため、あなたの返信を投稿することはできません。';
 $string['messageinboundnopostreactforum'] = 'あなたには {$a->reactforum->name} に投稿するパーミッションがないため、あなたの返信を投稿することはできません。';
 $string['messageinboundthresholdhit'] = 'あなたの返信を投稿できません。あなたはこのReactフォーラムに設定された投稿閾値を超過しています。';
-$string['messageprovider:digests'] = '購読Reactフォーラムダイジェスト';
+$string['messageprovider:digests'] = '購読済みReactフォーラムダイジェスト';
 $string['messageprovider:posts'] = '購読Reactフォーラム投稿';
 $string['missingsearchterms'] = '次の検索語はこのメッセージのHTMLマークアップにのみ表示されます。';
 $string['modeflatnewestfirst'] = '返信を新しいものからフラット表示する';
@@ -415,9 +416,6 @@ $string['postbymailsuccess'] = 'おめでとうございます、あなたの件
 $string['postbymailsuccess_html'] = 'おめでとうございます、あなたの件名「 $a->subject 」の<a href="{$a->discussionurl}">Reactフォーラム投稿</a>が正常に投稿されました。';
 $string['postbyuser'] = '{$a->post} by {$a->user}';
 $string['postincontext'] = 'この投稿をコンテクスト内に表示する';
-$string['postmailinfo'] = 'これはウェブサイト {$a} に投稿されたメッセージのコピーです。
-
-返信するにはこのリンクをクリックしてください:';
 $string['postmailinfolink'] = 'これは {$a->coursename} に投稿されたメッセージのコピーです。
 
 返信するにはこのリンクをクリックしてください: {$a->replylink}';
@@ -435,6 +433,61 @@ $string['posttomygroups_help'] = 'あなたがアクセスすることのでき�
 $string['postupdated'] = 'あなたの投稿が更新されました。';
 $string['potentialsubscribers'] = '潜在的購読者';
 $string['prevdiscussiona'] = '前のディスカッション: {$a}';
+$string['privacy:digesttypenone'] = '私たちはこのReactフォーラムの推奨Reactフォーラムダイジェストタイプに関するどのようなデータも保持しません。';
+$string['privacy:digesttypepreference'] = 'あなたは次のReactフォーラムダイジェストタイプの受信を選択しました: 「 {$a->type} 」';
+$string['privacy:discussionsubscriptionpreference'] = 'あなたはこのReactフォーラムに関して次のディスカッション購読プリファレンスを選択しました: 「 {$a->preference} 」';
+$string['privacy:metadata:core_rating'] = 'Reactフォーラムは投稿の評価のサポートにレーティングサブシステムを使用します。';
+$string['privacy:metadata:core_tag'] = 'Reactフォーラムは投稿のタグのサポートにタグサブシステムを使用します。';
+$string['privacy:metadata:reactforum_digests'] = 'それぞれのReactフォーラムのダイジェストプリファレンスに関する情報です。';
+$string['privacy:metadata:reactforum_digests:reactforum'] = '購読しているReactフォーラムです。';
+$string['privacy:metadata:reactforum_digests:maildigest'] = 'ダイジェストプリファレンスです。';
+$string['privacy:metadata:reactforum_digests:userid'] = 'ダイジェストプリファレンスのユーザのIDです。';
+$string['privacy:metadata:reactforum_discussions'] = 'ユーザが作成した個別のReactフォーラムディスカッションに関する情報です。';
+$string['privacy:metadata:reactforum_discussions:assessed'] = 'TODOD - このフィールドに保存されるものです。';
+$string['privacy:metadata:reactforum_discussions:name'] = '投稿者によって選択されたディスカッション名です。';
+$string['privacy:metadata:reactforum_discussions:timemodified'] = 'ディスカッションの最終更新日時です。';
+$string['privacy:metadata:reactforum_discussion_subs'] = '個別のReactフォーラムディスカッションの購読に関する情報です。';
+$string['privacy:metadata:reactforum_discussion_subs:discussionid'] = '購読されたディスカッションのIDです。';
+$string['privacy:metadata:reactforum_discussion_subs:preference'] = '購読の開始日時です。';
+$string['privacy:metadata:reactforum_discussion_subs:userid'] = 'ディスカッション購読のユーザのIDです。';
+$string['privacy:metadata:reactforum_discussions:userid'] = 'ディスカッションを作成したユーザのIDです。';
+$string['privacy:metadata:reactforum_discussions:usermodified'] = '何らかの方法により最後にディスカッションを更新したユーザのIDです。';
+$string['privacy:metadata:reactforum_posts'] = 'それぞれのReactフォーラムのダイジェストプリファレンスに関する情報です。';
+$string['privacy:metadata:reactforum_posts:created'] = '投稿の作成日時です。';
+$string['privacy:metadata:reactforum_posts:discussion'] = '投稿が含まれるディスカッションです。';
+$string['privacy:metadata:reactforum_posts:message'] = 'Reactフォーラム投稿のメッセージです。';
+$string['privacy:metadata:reactforum_posts:modified'] = '投稿の最終更新日時です。';
+$string['privacy:metadata:reactforum_posts:parent'] = '返信の親投稿です。';
+$string['privacy:metadata:reactforum_posts:subject'] = 'Reactフォーラム投稿の件名です。';
+$string['privacy:metadata:reactforum_posts:totalscore'] = 'Reactフォーラム投稿のメッセージです。';
+$string['privacy:metadata:reactforum_posts:userid'] = 'Reactフォーラム記事を投稿したユーザのIDです。';
+$string['privacy:metadata:reactforum_queue'] = 'ダイジェストフォームでメール送信される投稿の一時ログです。';
+$string['privacy:metadata:reactforum_queue:discussionid'] = 'ReactフォーラムディスカッションIDです。';
+$string['privacy:metadata:reactforum_queue:postid'] = 'Reactフォーラム投稿IDです。';
+$string['privacy:metadata:reactforum_queue:timemodified'] = 'オリジナル投稿の修正日時です。';
+$string['privacy:metadata:reactforum_queue:userid'] = '投稿の通知を必要とするユーザです。';
+$string['privacy:metadata:reactforum_read'] = 'ユーザによって読まれた投稿に関する情報です。';
+$string['privacy:metadata:reactforum_read:discussionid'] = '投稿が含まれるディスカッションです。';
+$string['privacy:metadata:reactforum_read:firstread'] = '投稿が最初に読まれた日時です。';
+$string['privacy:metadata:reactforum_read:lastread'] = '投稿が読まれた最新日時です。';
+$string['privacy:metadata:reactforum_read:postid'] = '投稿が読まれました。';
+$string['privacy:metadata:reactforum_read:userid'] = 'このレコードに関連するユーザのIDです。';
+$string['privacy:metadata:reactforum_subscriptions'] = 'ユーザが購読したReactフォーラムに関する情報です。';
+$string['privacy:metadata:reactforum_subscriptions:reactforum'] = '購読されたReactフォーラムです。';
+$string['privacy:metadata:reactforum_subscriptions:userid'] = 'このReactフォーラム購読に関連するユーザのIDです。';
+$string['privacy:metadata:reactforum_track_prefs'] = 'ユーザが未読管理を選択したReactフォーラムに関する情報です。';
+$string['privacy:metadata:reactforum_track_prefs:reactforumid'] = '未読管理が有効にされたReactフォーラムです。';
+$string['privacy:metadata:reactforum_track_prefs:userid'] = 'Reactフォーラム未読管理プリファレンスに関連するユーザのIDです。';
+$string['privacy:metadata:preference:autosubscribe'] = '投稿に返信する場合にディスかションを購読するか示します。';
+$string['privacy:metadata:preference:maildigest'] = 'サイト全体のメールダイジェストプリファレンスです。';
+$string['privacy:metadata:preference:markasreadonnotification'] = 'メッセージとして受信する場合にReactフォーラム投稿を既読マークするか示します。';
+$string['privacy:metadata:preference:trackreactforums'] = '未読管理が有効にされているかどうか示します。';
+$string['privacy:postwasread'] = 'この投稿は最初に {$a->firstread} に読まれました。また、直近では {$a->lastread} に読まれました。';
+$string['privacy:readtrackingdisabled'] = 'あなたはこのReactフォーラム内で読んだ投稿を追跡しないよう選択しました。';
+$string['privacy:request:delete:discussion:name'] = '投稿者の依頼により削除します。';
+$string['privacy:request:delete:post:message'] = 'この投稿のコンテンツは投稿者の依頼により削除されました。';
+$string['privacy:request:delete:post:subject'] = '投稿者の依頼により削除します。';
+$string['privacy:subscribedtoreactforum'] = 'あなたはこのReactフォーラムを購読しています。';
 $string['processingdigest'] = 'ユーザ {$a} のメールダイジェストを処理中';
 $string['processingpost'] = '投稿 {$a} を処理中';
 $string['prune'] = '分割';
@@ -499,7 +552,6 @@ $string['subscribediscussion'] = 'このディスカッションを購読する'
 $string['subscribeenrolledonly'] = '申し訳ございません、登録しているユーザのみReactフォーラム投稿通知を購読することができます。';
 $string['subscribenone'] = 'このReactフォーラムのすべての人の購読を解除する';
 $string['subscribers'] = '購読者';
-$string['subscribersto'] = '「 {$a->name} 」の購読者';
 $string['subscriberstowithcount'] = '「 {$a->name} 」 ({$a->count}) の購読者';
 $string['subscribestart'] = 'このReactフォーラムの新しい投稿を私にメール通知してください';
 $string['subscribestop'] = 'このReactフォーラムの新しい投稿を私にメール通知しないでください';
@@ -522,7 +574,6 @@ $string['subscriptionoptional'] = '任意購読';
 $string['subscriptions'] = '購読';
 $string['tagarea_reactforum_posts'] = 'Reactフォーラム投稿';
 $string['tagsdeleted'] = 'Reactフォーラムタグが削除されました。';
-$string['tagtitle'] = '「 {$a} 」タグを表示する';
 $string['thisreactforumisthrottled'] = 'このReactフォーラムでは期限内にあなたが投稿できる投稿数を制限しています - 現在 {$a->blockperiod} で {$a->blockafter} 回に設定されています。';
 $string['timedhidden'] = '時間制限ステータス: 学生から隠す';
 $string['timedposts'] = '時間制限投稿';

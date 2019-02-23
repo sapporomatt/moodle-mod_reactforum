@@ -63,6 +63,8 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
+        // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
+        // See MDL-9367.
         $data->assesstimestart = $this->apply_date_offset($data->assesstimestart);
         $data->assesstimefinish = $this->apply_date_offset($data->assesstimefinish);
         if ($data->scale < 0) { // scale found, get mapping
@@ -86,7 +88,6 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->course = $this->get_courseid();
 
         $data->reactforum = $this->get_new_parentid('reactforum');
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->timestart = $this->apply_date_offset($data->timestart);
         $data->timeend = $this->apply_date_offset($data->timeend);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -104,8 +105,6 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $oldid = $data->id;
 
         $data->discussion = $this->get_new_parentid('reactforum_discussion');
-        $data->created = $this->apply_date_offset($data->created);
-        $data->modified = $this->apply_date_offset($data->modified);
         $data->userid = $this->get_mappingid('user', $data->userid);
         // If post has parent, map it (it has been already restored)
         if (!empty($data->parent)) {
@@ -151,8 +150,6 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         }
         $data->rating = $data->value;
         $data->userid = $this->get_mappingid('user', $data->userid);
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         // We need to check that component and ratingarea are both set here.
         if (empty($data->component)) {
@@ -174,8 +171,14 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->reactforum = $this->get_new_parentid('reactforum');
         $data->userid = $this->get_mappingid('user', $data->userid);
 
-        $newitemid = $DB->insert_record('reactforum_subscriptions', $data);
-        $this->set_mapping('reactforum_subscription', $oldid, $newitemid, true);
+        // Create only a new subscription if it does not already exist (see MDL-59854).
+        if ($subscription = $DB->get_record('reactforum_subscriptions',
+                array('reactforum' => $data->reactforum, 'userid' => $data->userid))) {
+            $this->set_mapping('reactforum_subscription', $oldid, $subscription->id, true);
+        } else {
+            $newitemid = $DB->insert_record('reactforum_subscriptions', $data);
+            $this->set_mapping('reactforum_subscription', $oldid, $newitemid, true);
+        }
 
     }
 
@@ -238,19 +241,17 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data = (object)$data;
         $oldID = $data->id;
 
-        if($data->reactforum_id > 0)
-        {
+        if ($data->reactforum_id > 0) {
             $data->reactforum_id = $this->get_new_parentid('reactforum');
         }
 
-        if($data->discussion_id > 0)
-        {
+        if ($data->discussion_id > 0) {
             $data->discussion_id = $this->get_mappingid('reactforum_discussion', $data->discussion_id);
         }
 
-        $newItemID = $DB->insert_record("reactforum_reactions", $data);
+        $newItemID = $DB->insert_record('reactforum_reactions', $data);
 
-        $this->set_mapping("reactforum_reactions", $oldID, $newItemID, true);
+        $this->set_mapping('reactforum_reactions', $oldID, $newItemID, true);
     }
 
     protected function process_reactforum_user_reactions($data)
@@ -264,7 +265,7 @@ class restore_reactforum_activity_structure_step extends restore_activity_struct
         $data->post_id = $this->get_mappingid('reactforum_post', $data->post_id);
         $data->user_id = $this->get_mappingid('user', $data->user_id);
 
-        $newItemID = $DB->insert_record("reactforum_user_reactions", $data);
+        $DB->insert_record('reactforum_user_reactions', $data);
     }
 
     protected function after_execute() {

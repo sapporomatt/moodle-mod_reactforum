@@ -122,10 +122,6 @@
     margin: 0 .3em;
 }
 
-.path-mod-reactforum .reactforumheaderlist .picture {
-    width: 35px;
-}
-
 .path-mod-reactforum .reactforumheaderlist .discussion .starter {
     vertical-align: middle;
 }
@@ -139,8 +135,7 @@
     text-align: right;
 }
 
-.path-mod-reactforum .reactforumheaderlist .replies,
-.path-mod-reactforum .reactforumheaderlist .discussion .author {
+.path-mod-reactforum .reactforumheaderlist .replies {
     white-space: nowrap;
 }
 
@@ -321,8 +316,12 @@ span.unread {
     margin-right: 5px;
 }
 
-img.reaction-img
-{
+img.reaction-img {
     width: auto;
     height: 40px;
+}
+
+.reaction-item {
+    width: 100%;
+    margin: 5px 0;
 }
