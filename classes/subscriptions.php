@@ -410,10 +410,11 @@ class subscriptions {
                       u.timezone,
                       u.theme,
                       u.lang,
-                      u.trackreactforums,
+                      u.trackforums,
                       u.mnethostid";
         }
-
+                /// JLH u.trackreactforums above changed to u.trackforums
+        
         // Retrieve the reactforum context if it wasn't specified.
         $context = reactforum_get_context($reactforum->id, $context);
 
