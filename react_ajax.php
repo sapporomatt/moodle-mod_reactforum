@@ -56,10 +56,10 @@ if (is_guest($context, $USER)) {
 if (reactforum_user_can_see_post($reactforum, $discussion, $post, null, $cm) == false) {
     throw new moodle_exception('error', 'mod_reactforum');
 }
-
-if ($post->userid == $USER->id) {
-    throw new moodle_exception('error', 'mod_reactforum');
-}
+// JLH - The following 3 lines need to be commented out to enable own post react write to db
+//if ($post->userid == $USER->id) {
+//    throw new moodle_exception('error', 'mod_reactforum');
+//}
 
 $userReactionObj = $DB->get_record(
     'reactforum_user_reactions',
@@ -113,7 +113,8 @@ foreach ($newObjArr as $obj) {
         $item['count'] = '';
     }
     if ($post->userid == $USER->id || ($reactforum->delayedcounter && $postisreacted)) {
-        $item['enabled'] = false;
+      //  $item['enabled'] = false; // JLH - Change to below to enable button after own select
+        $item['enabled'] = true;
     }
 
     array_push($arrayResult, $item);

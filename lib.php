@@ -6790,11 +6790,11 @@ function reactforum_tp_get_course_unread_posts($userid, $courseid) {
     if ($CFG->reactforum_allowforcedreadtracking) {
         $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_FORCED."
                             OR (f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." AND tf.id IS NULL
-                                AND (SELECT trackreactforums FROM {user} WHERE id = ?) = 1))";
+                                AND (SELECT trackforums FROM {user} WHERE id = ?) = 1))";
     } else {
         $trackingsql = "AND ((f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".REACTFORUM_TRACKING_FORCED.")
                             AND tf.id IS NULL
-                            AND (SELECT trackreactforums FROM {user} WHERE id = ?) = 1)";
+                            AND (SELECT trackforums FROM {user} WHERE id = ?) = 1)";
     }
 
     $sql = "SELECT f.id, COUNT(p.id) AS unread
@@ -6957,12 +6957,12 @@ function reactforum_tp_get_untracked_reactforums($userid, $courseid) {
     if ($CFG->reactforum_allowforcedreadtracking) {
         $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_OFF."
                             OR (f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." AND (ft.id IS NOT NULL
-                                OR (SELECT trackreactforums FROM {user} WHERE id = ?) = 0)))";
+                                OR (SELECT trackforums FROM {user} WHERE id = ?) = 0)))";
     } else {
         $trackingsql = "AND (f.trackingtype = ".REACTFORUM_TRACKING_OFF."
                             OR ((f.trackingtype = ".REACTFORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".REACTFORUM_TRACKING_FORCED.")
                                 AND (ft.id IS NOT NULL
-                                    OR (SELECT trackreactforums FROM {user} WHERE id = ?) = 0)))";
+                                    OR (SELECT trackforums FROM {user} WHERE id = ?) = 0)))";
     }
 
     $sql = "SELECT f.id
@@ -7016,7 +7016,7 @@ function reactforum_tp_can_track_reactforums($reactforum=false, $user=false) {
             // Since we can force tracking, assume yes without a specific reactforum.
             return true;
         } else {
-            return (bool)$user->trackreactforums;
+            return (bool)$user->trackforums;
         }
     }
 
@@ -7031,10 +7031,10 @@ function reactforum_tp_can_track_reactforums($reactforum=false, $user=false) {
 
     if ($CFG->reactforum_allowforcedreadtracking) {
         // If we allow forcing, then forced reactforums takes procidence over user setting.
-        return ($reactforumforced || ($reactforumallows  && (!empty($user->trackreactforums) && (bool)$user->trackreactforums)));
+        return ($reactforumforced || ($reactforumallows  && (!empty($user->trackforums) && (bool)$user->trackforums)));
     } else {
         // If we don't allow forcing, user setting trumps.
-        return ($reactforumforced || $reactforumallows)  && !empty($user->trackreactforums);
+        return ($reactforumforced || $reactforumallows)  && !empty($user->trackforums);
     }
 }
 
