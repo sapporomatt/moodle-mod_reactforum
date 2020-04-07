@@ -24,7 +24,7 @@
 require(['jquery'], function ($) {
     $(document).ready(function () {
         var $maindiv = $('div#fgroup_id_reactions');
-        var $area = $maindiv.find('fieldset');
+        var $area = $maindiv.find('div.felement');
 
         var $filepicker = $('div#fitem_id_reactionimage');
         var $reactionallreplies = $('div#fitem_id_reactionallreplies');
